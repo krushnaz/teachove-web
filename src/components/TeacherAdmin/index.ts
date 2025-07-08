@@ -1,0 +1,1 @@
+export { default as TeacherAdminDashboard } from './Dashboard/TeacherAdminDashboard'; 
