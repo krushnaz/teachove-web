@@ -1,46 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import SchoolAdminLayout from '../Layout';
-
-interface Teacher {
-  id: number;
-  name: string;
-  email: string;
-  subject: string;
-  experience: string;
-  qualification: string;
-  status: 'active' | 'inactive';
-  avatar: string;
-  phone: string;
-}
+import { teacherService } from '../../../services/teacherService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Teacher } from '../../../models';
 
 const Teachers: React.FC = () => {
+  const { user } = useAuth();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
 
-  const teachers: Teacher[] = [
-    { id: 1, name: 'Dr. Rajesh Kumar', email: 'rajesh.kumar@school.com', subject: 'Mathematics', experience: '8 years', qualification: 'Ph.D. Mathematics', status: 'active', avatar: 'RK', phone: '+91 98765-43210' },
-    { id: 2, name: 'Prof. Sunita Sharma', email: 'sunita.sharma@school.com', subject: 'English', experience: '12 years', qualification: 'M.A. English', status: 'active', avatar: 'SS', phone: '+91 98765-43211' },
-    { id: 3, name: 'Mr. Amit Patel', email: 'amit.patel@school.com', subject: 'Science', experience: '6 years', qualification: 'M.Sc. Physics', status: 'active', avatar: 'AP', phone: '+91 98765-43212' },
-    { id: 4, name: 'Ms. Priya Verma', email: 'priya.verma@school.com', subject: 'History', experience: '4 years', qualification: 'M.A. History', status: 'active', avatar: 'PV', phone: '+91 98765-43213' },
-    { id: 5, name: 'Dr. Sanjay Singh', email: 'sanjay.singh@school.com', subject: 'Computer Science', experience: '10 years', qualification: 'Ph.D. Computer Science', status: 'active', avatar: 'SS', phone: '+91 98765-43214' },
-    { id: 6, name: 'Mrs. Kavita Desai', email: 'kavita.desai@school.com', subject: 'Geography', experience: '7 years', qualification: 'M.A. Geography', status: 'inactive', avatar: 'KD', phone: '+91 98765-43215' },
-    { id: 7, name: 'Mr. Ramesh Gupta', email: 'ramesh.gupta@school.com', subject: 'Physical Education', experience: '15 years', qualification: 'M.P.Ed', status: 'active', avatar: 'RG', phone: '+91 98765-43216' },
-    { id: 8, name: 'Ms. Anjali Reddy', email: 'anjali.reddy@school.com', subject: 'Art & Craft', experience: '5 years', qualification: 'B.F.A', status: 'active', avatar: 'AR', phone: '+91 98765-43217' }
-  ];
+  // Fetch teachers on component mount
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        if (user?.schoolId) {
+          const response = await teacherService.getTeachersBySchool(user.schoolId);
+          if (response.teachers) {
+            setTeachers(response.teachers);
+          } else {
+            setError('Failed to fetch teachers');
+          }
+        } else {
+          setError('School ID not found');
+        }
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+        setError('Failed to load teachers');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, [user?.schoolId]);
 
   const filteredTeachers = teachers.filter(teacher => {
     const matchesSearch = teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         teacher.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSubject = selectedSubject === 'all' || teacher.subject === selectedSubject;
-    return matchesSearch && matchesSubject;
+                         teacher.email.toLowerCase().includes(searchTerm.toLowerCase());
+    // Since the API doesn't provide subject info, we'll filter by name and email only
+    return matchesSearch;
   });
 
-  const subjects = ['Mathematics', 'English', 'Science', 'History', 'Computer Science', 'Geography', 'Physical Education', 'Art & Craft'];
+  // Since the API doesn't provide subject info, we'll show a placeholder
+  const subjects = ['All Teachers'];
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading teachers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">⚠️</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Teachers</h3>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <SchoolAdminLayout title="Teachers" subtitle="Manage and view all teachers">
+    <div>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -66,7 +108,7 @@ const Teachers: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Teachers</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.filter(t => t.status === 'active').length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length}</p>
             </div>
           </div>
         </div>
@@ -79,8 +121,8 @@ const Teachers: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Subjects</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{subjects.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">School</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length > 0 ? teachers[0].schoolName : 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -93,8 +135,8 @@ const Teachers: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Avg Experience</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">8.5 yrs</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Teachers</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length}</p>
             </div>
           </div>
         </div>
@@ -156,41 +198,28 @@ const Teachers: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SR No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teacher</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subject</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Experience</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Qualification</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">School</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredTeachers.map((teacher, index) => (
-                <tr key={teacher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={teacher.teacherId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm">
-                        {teacher.avatar}
+                        {teacher.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">{teacher.name}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-300">{teacher.phone}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{teacher.subject}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{teacher.experience}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.qualification}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      teacher.status === 'active' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {teacher.status}
-                    </span>
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{teacher.schoolName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.role}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
@@ -221,7 +250,7 @@ const Teachers: React.FC = () => {
           </div>
         )}
       </div>
-    </SchoolAdminLayout>
+    </div>
   );
 };
 

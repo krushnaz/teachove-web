@@ -1,42 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import SchoolAdminLayout from '../Layout';
+import { studentService } from '../../../services/studentService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { Student } from '../../../models';
 
-interface Student {
-  id: number;
-  name: string;
-  email: string;
-  class: string;
-  division: string;
-  rollNo: number;
-  status: 'active' | 'inactive';
-  avatar: string;
-}
+// Remove the old interface since we're importing Student from api config
 
 const Students: React.FC = () => {
+  const { user } = useAuth();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
 
-  const students: Student[] = [
-    { id: 1, name: 'Rahul Sharma', email: 'rahul.sharma@school.com', class: '10', division: 'A', rollNo: 1, status: 'active', avatar: 'RS' },
-    { id: 2, name: 'Priya Patel', email: 'priya.patel@school.com', class: '10', division: 'A', rollNo: 2, status: 'active', avatar: 'PP' },
-    { id: 3, name: 'Amit Kumar', email: 'amit.kumar@school.com', class: '10', division: 'B', rollNo: 1, status: 'active', avatar: 'AK' },
-    { id: 4, name: 'Neha Singh', email: 'neha.singh@school.com', class: '9', division: 'A', rollNo: 1, status: 'active', avatar: 'NS' },
-    { id: 5, name: 'Vikram Mehta', email: 'vikram.mehta@school.com', class: '9', division: 'B', rollNo: 1, status: 'inactive', avatar: 'VM' },
-    { id: 6, name: 'Anjali Desai', email: 'anjali.desai@school.com', class: '11', division: 'A', rollNo: 1, status: 'active', avatar: 'AD' },
-    { id: 7, name: 'Rohan Gupta', email: 'rohan.gupta@school.com', class: '11', division: 'B', rollNo: 1, status: 'active', avatar: 'RG' },
-    { id: 8, name: 'Kavya Reddy', email: 'kavya.reddy@school.com', class: '12', division: 'A', rollNo: 1, status: 'active', avatar: 'KR' }
-  ];
+  // Fetch students on component mount
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        if (user?.schoolId) {
+          const response = await studentService.getStudentsBySchool(user.schoolId);
+          if (response.success) {
+            setStudents(response.students);
+          } else {
+            setError('Failed to fetch students');
+          }
+        } else {
+          setError('School ID not found');
+        }
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        setError('Failed to load students');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [user?.schoolId]);
 
   const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = student.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = selectedClass === 'all' || student.class === selectedClass;
+    const matchesClass = selectedClass === 'all' || student.classValue === selectedClass;
     return matchesSearch && matchesClass;
   });
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading students...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">⚠️</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Students</h3>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <SchoolAdminLayout title="Students" subtitle="Manage and view all students">
+    <div>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -62,7 +107,7 @@ const Students: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Students</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.filter(s => s.status === 'active').length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.filter(s => s.isActive).length}</p>
             </div>
           </div>
         </div>
@@ -76,7 +121,7 @@ const Students: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Classes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{new Set(students.map(s => s.class)).size}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{new Set(students.map(s => s.classValue)).size}</p>
             </div>
           </div>
         </div>
@@ -123,11 +168,10 @@ const Students: React.FC = () => {
                 onChange={(e) => setSelectedClass(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               >
-                <option value="all">All Classes</option>
-                <option value="9">Class 9</option>
-                <option value="10">Class 10</option>
-                <option value="11">Class 11</option>
-                <option value="12">Class 12</option>
+                              <option value="all">All Classes</option>
+              {Array.from(new Set(students.map(s => s.classValue))).map((classValue) => (
+                <option key={classValue} value={classValue}>{classValue}</option>
+              ))}
               </select>
             </div>
           </div>
@@ -162,29 +206,29 @@ const Students: React.FC = () => {
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredStudents.map((student, index) => (
-                <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={student.studentId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm">
-                        {student.avatar}
+                        {student.studentName.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{student.studentName}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{student.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">Class {student.class}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.division}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.classValue}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.divisionValue}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.rollNo}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      student.status === 'active' 
+                      student.isActive 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                     }`}>
-                      {student.status}
+                      {student.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -217,7 +261,7 @@ const Students: React.FC = () => {
           </div>
         )}
       </div>
-    </SchoolAdminLayout>
+    </div>
   );
 };
 

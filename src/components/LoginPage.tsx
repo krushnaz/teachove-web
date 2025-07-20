@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { testApiConnection } from '../utils/apiTest';
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    role: 'school-admin'
+    email: 'krushnazarekar10@gmail.com',
+    password: '12345678',
+    role: 'schools'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -23,23 +28,34 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      console.log('Attempting login with:', { email: formData.email, role: formData.role });
+      
+      await login(formData.email, formData.password, formData.role);
+      
+      console.log('Login successful');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message || 'Login failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      // Navigate based on role
-      if (formData.role === 'school-admin') {
-        navigate('/school-admin');
-      } else {
-        navigate('/teacher-admin');
-      }
-    }, 1500);
+    }
   };
 
   const roles = [
-    { value: 'school-admin', label: 'School Administrator', icon: '🏫' },
-    { value: 'teacher-admin', label: 'Teacher Admin', icon: '👨‍🏫' }
+    { value: 'schools', label: 'School', icon: '🏫' },
+    { value: 'teachers', label: 'Teacher', icon: '👨‍🏫' }
   ];
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-primary-50 via-white to-primary-100'} flex items-center justify-center p-4`}>
@@ -55,6 +71,13 @@ const LoginPage: React.FC = () => {
 
         {/* Login Form */}
         <div className={`rounded-2xl shadow-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8`}>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
@@ -183,14 +206,30 @@ const LoginPage: React.FC = () => {
           >
             ← Back to Home
           </Link>
-          <button
-            onClick={toggleDarkMode}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={async () => {
+                try {
+                  await testApiConnection();
+                } catch (error) {
+                  console.error('Test failed:', error);
+                }
+              }}
+              className={`px-3 py-1 text-xs rounded transition-colors ${
+                isDarkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              Test API
+            </button>
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

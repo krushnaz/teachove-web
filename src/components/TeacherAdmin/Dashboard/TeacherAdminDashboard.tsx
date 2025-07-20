@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const TeacherAdminDashboard: React.FC = () => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const stats = [
     { title: 'My Students', value: '45', change: '+3', icon: '👨‍🎓', color: 'bg-primary-500' },
@@ -69,6 +81,13 @@ const TeacherAdminDashboard: React.FC = () => {
               className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
             >
               {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            <button
+              onClick={handleLogout}
+              className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600'}`}
+              title="Logout"
+            >
+              🚪
             </button>
             <Link to="/" className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600'}`}>
               🏠
@@ -135,9 +154,11 @@ const TeacherAdminDashboard: React.FC = () => {
                     className={`flex items-center space-x-2 p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                   >
                     <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      T
+                      {user?.email?.charAt(0).toUpperCase() || 'T'}
                     </div>
-                    <span className={`hidden md:block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Teacher</span>
+                    <span className={`hidden md:block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                      {user?.email || 'Teacher'}
+                    </span>
                   </button>
                   
                   {showProfile && (
@@ -145,8 +166,10 @@ const TeacherAdminDashboard: React.FC = () => {
                       isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                     }`}>
                       <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Teacher</p>
-                        <p className="text-xs text-gray-500">teacher@school.com</p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                          {user?.email || 'Teacher'}
+                        </p>
+                        <p className="text-xs text-gray-500">{user?.email || 'teacher@school.com'}</p>
                       </div>
                       <div className="p-2">
                         <button className={`w-full text-left px-2 py-1 text-sm rounded transition-colors ${
@@ -154,9 +177,12 @@ const TeacherAdminDashboard: React.FC = () => {
                         }`}>
                           Profile Settings
                         </button>
-                        <button className={`w-full text-left px-2 py-1 text-sm rounded transition-colors ${
-                          isDarkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-                        }`}>
+                        <button 
+                          onClick={handleLogout}
+                          className={`w-full text-left px-2 py-1 text-sm rounded transition-colors ${
+                            isDarkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
                           Logout
                         </button>
                       </div>

@@ -71,6 +71,43 @@ textarea:focus {
   @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors;
 }
 
+/* Primary color classes */
+.bg-primary-50 {
+  background-color: #eff6ff;
+}
+
+.bg-primary-500 {
+  background-color: #3b82f6;
+}
+
+.bg-primary-600 {
+  background-color: #2563eb;
+}
+
+.bg-primary-700 {
+  background-color: #1d4ed8;
+}
+
+.hover\:bg-primary-600:hover {
+  background-color: #2563eb;
+}
+
+.hover\:bg-primary-700:hover {
+  background-color: #1d4ed8;
+}
+
+.text-primary-500 {
+  color: #3b82f6;
+}
+
+.text-primary-600 {
+  color: #2563eb;
+}
+
+.border-primary-600 {
+  border-color: #2563eb;
+}
+
 /* Card hover effects */
 .card-hover {
   @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;

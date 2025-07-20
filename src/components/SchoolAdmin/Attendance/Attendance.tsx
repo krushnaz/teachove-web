@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import SchoolAdminLayout from '../Layout';
 
 interface StaffMember {
   id: number;
@@ -339,7 +338,7 @@ const Attendance: React.FC = () => {
   };
 
   return (
-    <SchoolAdminLayout title="Attendance" subtitle="Manage staff attendance and generate reports">
+    <div>
       {/* Tabs */}
       <div className="mb-6">
         <div className="border-b border-gray-200 dark:border-gray-700">
@@ -382,7 +381,7 @@ const Attendance: React.FC = () => {
       {activeTab === 'teachers' && renderAttendanceList(teachersList, 'teachers')}
       {activeTab === 'non-teaching' && renderAttendanceList(nonTeachingList, 'non-teaching')}
       {activeTab === 'reports' && renderReports()}
-    </SchoolAdminLayout>
+    </div>
   );
 };
 

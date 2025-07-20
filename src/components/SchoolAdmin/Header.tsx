@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
-import { Link } from 'react-router-dom'; // Added missing import
+import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 interface SchoolAdminHeaderProps {
   sidebarOpen: boolean;
@@ -16,6 +17,7 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
   subtitle = "Welcome back, School Administrator"
 }) => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { user, logout } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
 
   return (
@@ -78,8 +80,10 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
                   isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                 }`}>
                   <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>School Administrator</p>
-                    <p className="text-xs text-gray-500">admin@school.com</p>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      {user?.role === 'schools' ? 'School Administrator' : 'Teacher Admin'}
+                    </p>
+                    <p className="text-xs text-gray-500">{user?.email || 'admin@school.com'}</p>
                   </div>
                   <div className="p-2">
                     <button className={`w-full text-left px-2 py-1 text-sm rounded transition-colors ${
@@ -87,9 +91,12 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
                     }`}>
                       Profile Settings
                     </button>
-                    <button className={`w-full text-left px-2 py-1 text-sm rounded transition-colors ${
-                      isDarkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-                    }`}>
+                    <button 
+                      onClick={logout}
+                      className={`w-full text-left px-2 py-1 text-sm rounded transition-colors ${
+                        isDarkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
                       Logout
                     </button>
                   </div>
