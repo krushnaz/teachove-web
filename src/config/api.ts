@@ -13,6 +13,7 @@ export const API_CONFIG = {
       PROFILE: '/school/profile',
       UPDATE_PROFILE: '/school/profile',
       DASHBOARD: '/school/dashboard',
+      DETAILS: '/schools/:schoolId/details',
     },
     STUDENTS: {
       LIST: '/students',
@@ -26,9 +27,17 @@ export const API_CONFIG = {
       LIST: '/teachers',
       CREATE: '/teachers',
       UPDATE: '/teachers/:id',
+      UPDATE_BY_ID: '/teachers/update/:id',
       DELETE: '/teachers/:id',
+      DELETE_BY_ID: '/teachers/delete/:id',
       DETAILS: '/teachers/:id',
       BY_SCHOOL: '/teachers/school/:schoolId',
+      ADD: '/teachers/add',
+    },
+    TEACHER_ATTENDANCE: {
+      MARK: '/teacher-attendance/',
+      GET_STATUS: '/teacher-attendance/teacher/:schoolId/:date/:teacherId',
+      DOWNLOAD_REPORT: '/teacher-attendance/download-teacher-report',
     },
     ATTENDANCE: {
       LIST: '/attendance',
@@ -41,6 +50,10 @@ export const API_CONFIG = {
       UPDATE: '/exams/:id',
       DELETE: '/exams/:id',
       TIMETABLE: '/exams/timetable',
+      EXAM_TIMETABLES: '/exam-timetables/:schoolId/',
+      CREATE_EXAM_TIMETABLE: '/exam-timetables',
+      DELETE_EXAM_TIMETABLE: '/exam-timetables/:schoolId/:timetableId',
+      ADD_SUBJECT: '/exam-timetables/:schoolId/subject',
     },
     FEES: {
       LIST: '/fees',

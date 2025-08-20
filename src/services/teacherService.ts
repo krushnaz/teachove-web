@@ -55,12 +55,56 @@ class TeacherService {
     }
   }
 
+  // Update a teacher by teacherId (custom endpoint)
+  async updateTeacherById(teacherId: string, teacherData: any): Promise<any> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.UPDATE_BY_ID.replace(':id', teacherId);
+      const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(teacherData),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to update teacher:', error);
+      throw error;
+    }
+  }
+
   // Delete a teacher
   async deleteTeacher(teacherId: string): Promise<any> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.DELETE.replace(':id', teacherId);
       const response = await apiHelper.post(endpoint, {});
       return response;
+    } catch (error) {
+      console.error('Failed to delete teacher:', error);
+      throw error;
+    }
+  }
+
+  // Delete a teacher by teacherId (custom endpoint)
+  async deleteTeacherById(teacherId: string): Promise<any> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.DELETE_BY_ID.replace(':id', teacherId);
+      const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to delete teacher:', error);
       throw error;
@@ -75,6 +119,17 @@ class TeacherService {
       return response;
     } catch (error) {
       console.error('Failed to fetch teacher details:', error);
+      throw error;
+    }
+  }
+
+  // Add a new teacher (custom add endpoint)
+  async addTeacher(teacherData: any): Promise<any> {
+    try {
+      const response = await apiHelper.post(API_CONFIG.ENDPOINTS.TEACHERS.ADD, teacherData);
+      return response;
+    } catch (error) {
+      console.error('Failed to add teacher:', error);
       throw error;
     }
   }

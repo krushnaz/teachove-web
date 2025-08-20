@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 
 interface SchoolAdminSidebarProps {
@@ -9,6 +9,17 @@ interface SchoolAdminSidebarProps {
 
 const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const { isDarkMode } = useDarkMode();
+  const location = useLocation();
+
+  // Helper function to check if a menu item is active
+  const isActive = (itemPath: string) => {
+    if (itemPath === '/school-admin') {
+      // Dashboard is active only when exactly on /school-admin
+      return location.pathname === '/school-admin';
+    }
+    // For other items, check if current path starts with the item path
+    return location.pathname.startsWith(itemPath);
+  };
 
   const menuItems = [
     { 
@@ -144,7 +155,7 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
                   key={item.path}
                   to={item.path}
                   className={`flex items-center px-4 py-3 transition-colors ${
-                    window.location.pathname === item.path 
+                  isActive(item.path)
                       ? `${isDarkMode ? 'bg-primary-600 text-white' : 'bg-primary-50 text-primary-600'} border-r-2 border-primary-600` 
                       : `${isDarkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-primary-50 hover:text-primary-600'}`
                   }`}

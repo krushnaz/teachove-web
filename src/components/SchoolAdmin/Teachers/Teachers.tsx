@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { teacherService } from '../../../services/teacherService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Teacher } from '../../../models';
+import { AddTeacherDrawer } from './index';
+import { schoolService } from '../../../services';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Teachers: React.FC = () => {
   const { user } = useAuth();
@@ -11,6 +15,54 @@ const Teachers: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [schoolName, setSchoolName] = useState('');
+  const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
+
+  const handleAddTeacher = async (teacher: { name: string; email: string; password: string; schoolName: string }) => {
+    if (!user?.schoolId) return;
+    setTeachers(prev => [
+      {
+        ...teacher,
+        teacherId: Date.now().toString(),
+        role: 'Teacher',
+        schoolId: user.schoolId,
+      },
+      ...prev,
+    ]);
+    setDrawerOpen(false);
+  };
+
+  const handleEditClick = (teacher: Teacher) => {
+    setEditTeacher(teacher);
+    setDrawerOpen(true);
+  };
+
+  const handleDeleteClick = (teacher: Teacher) => {
+    setTeacherToDelete(teacher);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!teacherToDelete) return;
+    try {
+      await teacherService.deleteTeacherById(teacherToDelete.teacherId);
+      setTeachers(prev => prev.filter(t => t.teacherId !== teacherToDelete.teacherId));
+      toast.success('Teacher deleted successfully!');
+    } catch (err) {
+      toast.error('Failed to delete teacher.');
+    } finally {
+      setConfirmDialogOpen(false);
+      setTeacherToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDialogOpen(false);
+    setTeacherToDelete(null);
+  };
 
   // Fetch teachers on component mount
   useEffect(() => {
@@ -38,6 +90,20 @@ const Teachers: React.FC = () => {
     };
 
     fetchTeachers();
+  }, [user?.schoolId]);
+
+  useEffect(() => {
+    const fetchSchoolName = async () => {
+      if (user?.schoolId) {
+        try {
+          const data = await schoolService.getSchoolDetails(user.schoolId);
+          setSchoolName(data?.school?.schoolName || '');
+        } catch {
+          setSchoolName('');
+        }
+      }
+    };
+    fetchSchoolName();
   }, [user?.schoolId]);
 
   const filteredTeachers = teachers.filter(teacher => {
@@ -83,6 +149,7 @@ const Teachers: React.FC = () => {
 
   return (
     <div>
+      <ToastContainer position="top-right" autoClose={3000} />
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -177,15 +244,16 @@ const Teachers: React.FC = () => {
             </div>
           </div>
 
-          <Link
-            to="/school-admin/teachers/add"
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Add Teacher
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -222,12 +290,12 @@ const Teachers: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.role}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                      <button className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300" onClick={() => handleEditClick(teacher)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                      <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" onClick={() => handleDeleteClick(teacher)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -250,6 +318,37 @@ const Teachers: React.FC = () => {
           </div>
         )}
       </div>
+      <AddTeacherDrawer
+        open={drawerOpen}
+        onClose={() => { setDrawerOpen(false); setEditTeacher(null); }}
+        onAddTeacher={handleAddTeacher}
+        schoolName={schoolName}
+        schoolId={user?.schoolId || ''}
+        teacher={editTeacher || undefined}
+      />
+      {/* Confirmation Dialog */}
+      {confirmDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Delete</h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">Are you sure you want to delete <span className="font-bold">{teacherToDelete?.name}</span>?</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

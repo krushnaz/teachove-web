@@ -11,3 +11,4 @@ export * from './teacher';
 
 // Common models
 export * from './common'; 
+export * from './examTimetable'; 
