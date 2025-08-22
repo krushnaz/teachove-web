@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { examTimetableService } from '../../../services/examTimetableService';
+import { classroomService, Classroom } from '../../../services/classroomService';
 import { ExamTimetable, Subject, CreateSubjectRequest } from '../../../models/examTimetable';
 
 // Dialog Component
@@ -106,6 +107,242 @@ const Dialog: React.FC<DialogProps> = ({
   );
 };
 
+// Shimmer Loading Component
+const ShimmerCard: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className={`p-6 rounded-xl border ${
+      isDarkMode 
+        ? 'bg-gray-800 border-gray-700' 
+        : 'bg-white border-gray-200'
+    } shadow-lg`}>
+      {/* Timetable Header Shimmer */}
+      <div className="mb-6">
+        <div className="flex items-start justify-between mb-3">
+          <div className="h-6 bg-gray-300 rounded w-32 animate-pulse"></div>
+          <div className="h-6 bg-gray-300 rounded-full w-16 animate-pulse"></div>
+        </div>
+        
+        <div className={`p-4 rounded-lg ${
+          isDarkMode 
+            ? 'bg-gray-700 border border-gray-600' 
+            : 'bg-gray-50 border border-gray-200'
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`text-center p-2 rounded ${
+              isDarkMode ? 'bg-gray-600' : 'bg-gray-100'
+            }`}>
+              <div className="h-4 bg-gray-300 rounded w-16 mx-auto mb-1 animate-pulse"></div>
+              <div className="h-3 bg-gray-300 rounded w-20 mx-auto animate-pulse"></div>
+            </div>
+            <div className={`text-center p-2 rounded ${
+              isDarkMode ? 'bg-gray-600' : 'bg-gray-100'
+            }`}>
+              <div className="h-4 bg-gray-300 rounded w-16 mx-auto mb-1 animate-pulse"></div>
+              <div className="h-3 bg-gray-300 rounded w-20 mx-auto animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Subjects Shimmer */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+        </div>
+        
+        <div className="space-y-2">
+          {/* Subject 1 */}
+          <div className={`p-3 rounded-lg border ${
+            isDarkMode 
+              ? 'bg-gray-700 border-gray-600' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="h-4 bg-gray-300 rounded w-24 mb-2 animate-pulse"></div>
+                <div className="h-3 bg-gray-300 rounded w-32 mb-1 animate-pulse"></div>
+                <div className="h-3 bg-gray-300 rounded w-28 animate-pulse"></div>
+              </div>
+              <div className="ml-2 w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Subject 2 */}
+          <div className={`p-3 rounded-lg border ${
+            isDarkMode 
+              ? 'bg-gray-700 border-gray-600' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="h-4 bg-gray-300 rounded w-20 mb-2 animate-pulse"></div>
+                <div className="h-3 bg-gray-300 rounded w-28 mb-1 animate-pulse"></div>
+                <div className="h-3 bg-gray-300 rounded w-24 animate-pulse"></div>
+              </div>
+              <div className="ml-2 w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons Shimmer */}
+      <div className="flex space-x-2">
+        <div className="flex-1 h-9 bg-gray-300 rounded-lg animate-pulse"></div>
+        <div className="w-9 h-9 bg-gray-300 rounded-lg animate-pulse"></div>
+      </div>
+    </div>
+  );
+};
+
+// Shimmer Header
+const ShimmerHeader: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="flex justify-between items-center mb-6">
+      <div>
+        <div className="h-8 bg-gray-300 rounded w-48 mb-2 animate-pulse"></div>
+        <div className="h-4 bg-gray-300 rounded w-64 animate-pulse"></div>
+      </div>
+      <div className="h-10 bg-gray-300 rounded-lg w-32 animate-pulse"></div>
+    </div>
+  );
+};
+
+// Shimmer Form Field
+const ShimmerFormField: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="space-y-2">
+      <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+      <div className={`h-10 bg-gray-300 rounded-lg w-full animate-pulse`}></div>
+    </div>
+  );
+};
+
+// Shimmer Select Field
+const ShimmerSelectField: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="space-y-2">
+      <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+      <div className={`h-10 bg-gray-300 rounded-lg w-full animate-pulse`}></div>
+    </div>
+  );
+};
+
+// Shimmer Sidebar
+const ShimmerSidebar: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="fixed inset-0 bg-black bg-opacity-50" />
+      <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="h-6 bg-gray-300 rounded w-40 animate-pulse"></div>
+            <div className="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
+          </div>
+
+          <div className="space-y-4">
+            <ShimmerFormField />
+            <ShimmerSelectField />
+            <ShimmerFormField />
+            <ShimmerFormField />
+            <div className="h-12 bg-gray-300 rounded-lg w-full animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Shimmer Subject Sidebar
+const ShimmerSubjectSidebar: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="fixed inset-0 bg-black bg-opacity-50" />
+      <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="h-6 bg-gray-300 rounded w-48 animate-pulse"></div>
+            <div className="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
+          </div>
+
+          <div className="space-y-4">
+            <ShimmerFormField />
+            <ShimmerFormField />
+            <ShimmerFormField />
+            <div className="grid grid-cols-2 gap-4">
+              <ShimmerFormField />
+              <ShimmerFormField />
+            </div>
+            <ShimmerFormField />
+            <div className="h-12 bg-gray-300 rounded-lg w-full animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Shimmer Dialog
+const ShimmerDialog: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50" />
+      <div className={`relative w-96 max-w-full mx-4 rounded-lg shadow-xl ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center mb-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-gray-300 rounded-full animate-pulse"></div>
+            <div className="ml-3">
+              <div className="h-5 bg-gray-300 rounded w-32 animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Message */}
+          <div className="mb-6">
+            <div className="h-4 bg-gray-300 rounded w-full animate-pulse"></div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end space-x-3">
+            <div className="h-9 bg-gray-300 rounded-lg w-20 animate-pulse"></div>
+            <div className="h-9 bg-gray-300 rounded-lg w-16 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Shimmer Error State
+const ShimmerErrorState: React.FC = () => {
+  const { isDarkMode } = useDarkMode();
+  
+  return (
+    <div className="text-center py-12">
+      <div className="h-6 bg-gray-300 rounded w-64 mx-auto mb-4 animate-pulse"></div>
+      <div className="h-10 bg-gray-300 rounded-lg w-24 mx-auto animate-pulse"></div>
+    </div>
+  );
+};
+
 const ExamTimetableComponent: React.FC = () => {
   const { isDarkMode } = useDarkMode();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -141,6 +378,7 @@ const ExamTimetableComponent: React.FC = () => {
   const [formData, setFormData] = useState({
     examName: '',
     className: '',
+    classId: '',
     startDate: '',
     endDate: ''
   });
@@ -158,19 +396,15 @@ const ExamTimetableComponent: React.FC = () => {
     subjectName: ''
   });
 
-  const classOptions = [
-    '1st Std', '2nd Std', '3rd Std', '4th Std', '5th Std',
-    '6th Std', '7th Std', '8th Std', '9th Std', '10th Std',
-    'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
-    'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
-    'Class 11', 'Class 12'
-  ];
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [classroomsLoading, setClassroomsLoading] = useState(true);
 
   // Mock school ID - in real app, this would come from auth context
   const schoolId = 'FzpajJYpsyP6l3UY59uD';
 
   useEffect(() => {
     fetchExamTimetables();
+    fetchClassrooms();
   }, []);
 
   const fetchExamTimetables = async () => {
@@ -184,6 +418,18 @@ const ExamTimetableComponent: React.FC = () => {
       console.error('Error fetching timetables:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchClassrooms = async () => {
+    try {
+      setClassroomsLoading(true);
+      const data = await classroomService.getClassesBySchoolId(schoolId);
+      setClassrooms(data);
+    } catch (err) {
+      console.error('Error fetching classrooms:', err);
+    } finally {
+      setClassroomsLoading(false);
     }
   };
 
@@ -204,7 +450,7 @@ const ExamTimetableComponent: React.FC = () => {
   };
 
   const handleAddTimetable = async () => {
-    if (!formData.examName || !formData.className || !formData.startDate || !formData.endDate) {
+    if (!formData.examName || !formData.className || !formData.classId || !formData.startDate || !formData.endDate) {
       showDialog('Validation Error', 'Please fill all fields', 'error');
       return;
     }
@@ -221,13 +467,14 @@ const ExamTimetableComponent: React.FC = () => {
       const newTimetable = await examTimetableService.createExamTimetable({
         examName: formData.examName,
         className: formData.className,
+        classId: formData.classId,
         startDate: formatDateForAPI(formData.startDate),
         endDate: formatDateForAPI(formData.endDate),
         schoolId: schoolId
       });
 
       setTimetables([...timetables, newTimetable]);
-      setFormData({ examName: '', className: '', startDate: '', endDate: '' });
+      setFormData({ examName: '', className: '', classId: '', startDate: '', endDate: '' });
       setIsSidebarOpen(false);
       
       // Show success dialog
@@ -307,10 +554,10 @@ const ExamTimetableComponent: React.FC = () => {
         try {
           setDeletingSubjects(prev => new Set(prev).add(subjectId));
           
-          // In a real app, you would call an API to delete the subject
-          // For now, we'll just remove it locally
-          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+          // Call the API to delete the subject
+          await examTimetableService.deleteSubject(schoolId, subjectId);
           
+          // Remove the subject from the local state
           setTimetables(timetables.map(timetable => 
             timetable.timetableId === timetableId 
               ? { ...timetable, subjects: timetable.subjects.filter(subject => subject.examTimeTableSubjectId !== subjectId) }
@@ -386,9 +633,15 @@ const ExamTimetableComponent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Loading exam timetables...
+      <div className="space-y-6">
+        <ShimmerHeader />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <ShimmerCard />
+          <ShimmerCard />
+          <ShimmerCard />
+          <ShimmerCard />
+          <ShimmerCard />
+          <ShimmerCard />
         </div>
       </div>
     );
@@ -617,7 +870,7 @@ const ExamTimetableComponent: React.FC = () => {
         ))}
       </div>
 
-      {timetables.length === 0 && (
+      {timetables.length === 0 && !loading && (
         <div className={`text-center py-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           <div className="mb-4">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -631,187 +884,190 @@ const ExamTimetableComponent: React.FC = () => {
 
       {/* Add Timetable Sidebar */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
-          <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add New Timetable</h2>
-                <button
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Exam Name</label>
-                  <input
-                    type="text"
-                    value={formData.examName}
-                    onChange={(e) => setFormData({ ...formData, examName: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    placeholder="Enter exam name"
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Class Name</label>
-                  <select
-                    value={formData.className}
-                    onChange={(e) => setFormData({ ...formData, className: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+        addingTimetable ? (
+          <ShimmerSidebar />
+        ) : (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
+            <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add New Timetable</h2>
+                  <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
                   >
-                    <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>Select Class</option>
-                    {classOptions.map((className) => (
-                      <option key={className} value={className} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
-                        {className}
-                      </option>
-                    ))}
-                  </select>
+                    ✕
+                  </button>
                 </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Date</label>
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                  />
-                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Exam Name</label>
+                    <input
+                      type="text"
+                      value={formData.examName}
+                      onChange={(e) => setFormData({ ...formData, examName: e.target.value })}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      placeholder="Enter exam name"
+                    />
+                  </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>End Date</label>
-                  <input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                  />
-                </div>
+                                    <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Class Name</label>
+                    {classroomsLoading ? (
+                      <div className="w-full h-10 bg-gray-300 rounded-lg animate-pulse"></div>
+                    ) : (
+                      <select
+                        value={formData.className}
+                        onChange={(e) => {
+                          const selectedClass = classrooms.find(c => c.className === e.target.value);
+                          setFormData({ 
+                            ...formData, 
+                            className: e.target.value,
+                            classId: selectedClass?.classId || ''
+                          });
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      >
+                        <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>Select Class</option>
+                        {classrooms.map((classroom) => (
+                          <option key={classroom.classId} value={classroom.className} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
+                            {classroom.className}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
 
-                <button
-                  onClick={handleAddTimetable}
-                  disabled={addingTimetable}
-                  className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                    addingTimetable
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : isDarkMode 
-                        ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                        : 'bg-primary-500 text-white hover:bg-primary-600'
-                  }`}
-                >
-                  {addingTimetable ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Adding...
-                    </span>
-                  ) : (
-                    'Add Timetable'
-                  )}
-                </button>
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Date</label>
+                    <input
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>End Date</label>
+                    <input
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleAddTimetable}
+                    disabled={addingTimetable}
+                    className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                      addingTimetable
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : isDarkMode 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                          : 'bg-primary-500 text-white hover:bg-primary-600'
+                    }`}
+                  >
+                    {addingTimetable ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Adding...
+                      </span>
+                    ) : (
+                      'Add Timetable'
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
       {/* Add Subject Sidebar */}
       {isSubjectSidebarOpen && selectedTimetable && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => {
-            setIsSubjectSidebarOpen(false);
-            setSelectedTimetable(null);
-          }} />
-          <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add Subject to {selectedTimetable.examName}</h2>
-                <button
-                  onClick={() => {
-                    setIsSubjectSidebarOpen(false);
-                    setSelectedTimetable(null);
-                  }}
-                  className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Subject Name</label>
-                  <input
-                    type="text"
-                    value={subjectForm.subjectName}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, subjectName: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    placeholder="Enter subject name"
-                  />
+        addingSubject ? (
+          <ShimmerSubjectSidebar />
+        ) : (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => {
+              setIsSubjectSidebarOpen(false);
+              setSelectedTimetable(null);
+            }} />
+            <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add Subject to {selectedTimetable.examName}</h2>
+                  <button
+                    onClick={() => {
+                      setIsSubjectSidebarOpen(false);
+                      setSelectedTimetable(null);
+                    }}
+                    className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Supervisor Name</label>
-                  <input
-                    type="text"
-                    value={subjectForm.supervisorName}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, supervisorName: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    placeholder="Enter supervisor name"
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Exam Date</label>
-                  <input
-                    type="date"
-                    value={subjectForm.examDate}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, examDate: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Time</label>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Subject Name</label>
                     <input
-                      type="time"
-                      value={subjectForm.startTime}
-                      onChange={(e) => setSubjectForm({ ...subjectForm, startTime: e.target.value })}
+                      type="text"
+                      value={subjectForm.subjectName}
+                      onChange={(e) => setSubjectForm({ ...subjectForm, subjectName: e.target.value })}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      placeholder="Enter subject name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Supervisor Name</label>
+                    <input
+                      type="text"
+                      value={subjectForm.supervisorName}
+                      onChange={(e) => setSubjectForm({ ...subjectForm, supervisorName: e.target.value })}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      placeholder="Enter supervisor name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Exam Date</label>
+                    <input
+                      type="date"
+                      value={subjectForm.examDate}
+                      onChange={(e) => setSubjectForm({ ...subjectForm, examDate: e.target.value })}
                       className={`w-full px-3 py-2 rounded-lg border ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
@@ -819,64 +1075,80 @@ const ExamTimetableComponent: React.FC = () => {
                       } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Time</label>
+                      <input
+                        type="time"
+                        value={subjectForm.startTime}
+                        onChange={(e) => setSubjectForm({ ...subjectForm, startTime: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>End Time</label>
+                      <input
+                        type="time"
+                        value={subjectForm.endTime}
+                        onChange={(e) => setSubjectForm({ ...subjectForm, endTime: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg border ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>End Time</label>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total Marks</label>
                     <input
-                      type="time"
-                      value={subjectForm.endTime}
-                      onChange={(e) => setSubjectForm({ ...subjectForm, endTime: e.target.value })}
+                      type="number"
+                      value={subjectForm.totalMarks}
+                      onChange={(e) => setSubjectForm({ ...subjectForm, totalMarks: parseInt(e.target.value) || 0 })}
                       className={`w-full px-3 py-2 rounded-lg border ${
                         isDarkMode 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                       } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
+                      placeholder="Enter total marks"
+                      min="1"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total Marks</label>
-                  <input
-                    type="number"
-                    value={subjectForm.totalMarks}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, totalMarks: parseInt(e.target.value) || 0 })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    placeholder="Enter total marks"
-                    min="1"
-                  />
+                  <button
+                    onClick={handleAddSubject}
+                    disabled={addingSubject}
+                    className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                      addingSubject
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : isDarkMode 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                          : 'bg-primary-500 text-white hover:bg-primary-600'
+                    }`}
+                  >
+                    {addingSubject ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Adding...
+                      </span>
+                    ) : (
+                      'Add Subject'
+                    )}
+                  </button>
                 </div>
-
-                <button
-                  onClick={handleAddSubject}
-                  disabled={addingSubject}
-                  className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                    addingSubject
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : isDarkMode 
-                        ? 'bg-primary-600 text-white hover:bg-primary-700' 
-                        : 'bg-primary-500 text-white hover:bg-primary-600'
-                  }`}
-                >
-                  {addingSubject ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Adding...
-                    </span>
-                  ) : (
-                    'Add Subject'
-                  )}
-                </button>
               </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
       {/* Dialog Component */}
@@ -890,6 +1162,11 @@ const ExamTimetableComponent: React.FC = () => {
         confirmText={dialog.confirmText}
         cancelText={dialog.cancelText}
       />
+
+      {/* Shimmer Dialog for loading states */}
+      {(addingTimetable || addingSubject || deletingTimetables.size > 0 || deletingSubjects.size > 0) && (
+        <ShimmerDialog />
+      )}
     </div>
   );
 };

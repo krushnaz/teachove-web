@@ -39,6 +39,9 @@ export const API_CONFIG = {
       GET_STATUS: '/teacher-attendance/teacher/:schoolId/:date/:teacherId',
       DOWNLOAD_REPORT: '/teacher-attendance/download-teacher-report',
     },
+    CLASSROOM: {
+      GET_CLASSES: '/classrooms/:schoolId/classes',
+    },
     ATTENDANCE: {
       LIST: '/attendance',
       MARK: '/attendance/mark',
@@ -54,6 +57,7 @@ export const API_CONFIG = {
       CREATE_EXAM_TIMETABLE: '/exam-timetables',
       DELETE_EXAM_TIMETABLE: '/exam-timetables/:schoolId/:timetableId',
       ADD_SUBJECT: '/exam-timetables/:schoolId/subject',
+      DELETE_SUBJECT: '/exam-timetables/:schoolId/examTimeTableSubject/:subjectId',
     },
     FEES: {
       LIST: '/fees',

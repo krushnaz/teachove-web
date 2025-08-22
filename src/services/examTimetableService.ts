@@ -110,13 +110,13 @@ export const examTimetableService = {
       const response = await apiClient.post(endpoint, {
         examTimeTableId: subjectData.examTimeTableId,
         subjectId: subjectData.subjectId || Date.now().toString(), // Generate if not provided
-        subjectName: subjectData.subjectName,
+        supervisorId: subjectData.supervisorId || Date.now().toString(), // Generate if not provided
+        supervisorName: subjectData.supervisorName,
         examDate: subjectData.examDate,
         startTime: subjectData.startTime,
         endTime: subjectData.endTime,
-        supervisorId: subjectData.supervisorId || Date.now().toString(), // Generate if not provided
-        supervisorName: subjectData.supervisorName,
-        totalMarks: subjectData.totalMarks
+        totalMarks: subjectData.totalMarks,
+        subjectName: subjectData.subjectName
       });
       
       // Handle the response structure
@@ -128,6 +128,30 @@ export const examTimetableService = {
     } catch (error) {
       console.error('Error adding subject:', error);
       throw new Error('Failed to add subject');
+    }
+  },
+
+  /**
+   * Delete a subject from an exam timetable
+   */
+  async deleteSubject(schoolId: string, subjectId: string): Promise<void> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.DELETE_SUBJECT
+        .replace(':schoolId', schoolId)
+        .replace(':subjectId', subjectId);
+      
+      const response = await apiClient.delete(endpoint);
+      
+      // Handle the response structure
+      if (response.data.message && response.data.examTimeTableSubjectId) {
+        // Successfully deleted
+        return;
+      }
+      
+      throw new Error('Invalid response format from server');
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      throw new Error('Failed to delete subject');
     }
   }
 }; 
