@@ -6,7 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './components/Home/LandingPage';
 import LoginPage from './components/LoginPage';
-import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance } from './components/SchoolAdmin';
+import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminStudentFees } from './components/SchoolAdmin';
 import { ExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
 import { TeacherAdminDashboard } from './components/TeacherAdmin';
@@ -42,6 +42,7 @@ function App() {
                     <Route path="teachers" element={<SchoolAdminTeachers />} />
                     <Route path="attendance" element={<SchoolAdminAttendance />} />
                     <Route path="exams" element={<ExamTimetable />} />
+                    <Route path="fees" element={<SchoolAdminStudentFees />} />
                   </Routes>
                 </SchoolAdminLayout>
               </ProtectedRoute>

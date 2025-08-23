@@ -5,3 +5,4 @@ export { default as SchoolAdminHeader } from './Header';
 export { default as SchoolAdminStudents } from './Students';
 export { default as SchoolAdminTeachers } from './Teachers';
 export { default as SchoolAdminAttendance } from './Attendance'; 
+export { default as SchoolAdminStudentFees } from './StudentFees'; 

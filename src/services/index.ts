@@ -4,3 +4,4 @@ export * from './teacherService';
 export * from './schoolService';
 export * from './teacherAttendanceService';
 export * from './examTimetableService'; 
+export * from './studentFeesService'; 

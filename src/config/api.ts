@@ -59,6 +59,10 @@ export const API_CONFIG = {
       ADD_SUBJECT: '/exam-timetables/:schoolId/subject',
       DELETE_SUBJECT: '/exam-timetables/:schoolId/examTimeTableSubject/:subjectId',
     },
+    STUDENT_PAYMENTS: {
+      SUMMARY_BY_SCHOOL: '/student-payments/school/:schoolId/summary',
+      DOWNLOAD_CLASS_REPORT: '/student-payments/class/payment-report-class-wise',
+    },
     FEES: {
       LIST: '/fees',
       CREATE: '/fees',
