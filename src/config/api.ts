@@ -62,6 +62,17 @@ export const API_CONFIG = {
     STUDENT_PAYMENTS: {
       SUMMARY_BY_SCHOOL: '/student-payments/school/:schoolId/summary',
       DOWNLOAD_CLASS_REPORT: '/student-payments/class/payment-report-class-wise',
+      DOWNLOAD_STUDENT_REPORT: '/student-payments/student/payment-report',
+      ADD_PAYMENT: '/student-payments/:schoolId/payments',
+      GET_STUDENT_PAYMENTS: '/student-payments/:schoolId/:studentId/:classId',
+      DELETE_PAYMENTS: '/student-payments/school/:schoolId/payments',
+      UPDATE_PAYMENT: '/student-payments/:schoolId/payments/:paymentId',
+    },
+    ANNOUNCEMENTS: {
+      GET_BY_SCHOOL: '/announcements/:schoolId/announcements',
+      CREATE_ANNOUNCEMENT: '/announcements/:schoolId/announcements',
+      UPDATE_ANNOUNCEMENT: '/announcements/:schoolId/announcements/:announcementId',
+      DELETE_ANNOUNCEMENT: '/announcements/:schoolId/announcements/:announcementId',
     },
     FEES: {
       LIST: '/fees',

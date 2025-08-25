@@ -5,3 +5,4 @@ export * from './schoolService';
 export * from './teacherAttendanceService';
 export * from './examTimetableService'; 
 export * from './studentFeesService'; 
+export * from './announcementService'; 
