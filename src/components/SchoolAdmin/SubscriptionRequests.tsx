@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDarkMode } from '../../contexts/DarkModeContext';
+import { subscriptionService, SubscriptionRequest as ApiSubscriptionRequest, CreateSubscriptionRequest, SubscriptionCostResponse } from '../../services/subscriptionService';
+
+// Declare Razorpay types
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface SubscriptionRequest {
   subscriptionId?: string;
@@ -19,8 +27,47 @@ interface SubscriptionRequest {
   remainingAmount?: number;
 }
 
+// Helper function to convert API response to component interface
+const convertApiToComponentData = (apiData: ApiSubscriptionRequest): SubscriptionRequest => {
+  console.log('Converting API data:', apiData);
+  console.log('Amount field:', apiData.amount);
+  console.log('Amount type:', typeof apiData.amount);
+  console.log('All fields:', Object.keys(apiData));
+  
+  let paymentStatus: 'paid' | 'pending' | 'failed';
+  if (apiData.payment_status === 'successful') {
+    paymentStatus = 'paid';
+  } else if (apiData.payment_status === 'pending') {
+    paymentStatus = 'pending';
+  } else {
+    paymentStatus = 'failed';
+  }
+  
+  const converted: SubscriptionRequest = {
+    subscriptionId: apiData.subscription_id,
+    numOfUsers: apiData.num_of_users,
+    approveStatus: apiData.approve_status,
+    paymentStatus,
+    requestCreatedAt: apiData.request_created_at 
+      ? new Date(apiData.request_created_at._seconds * 1000).toISOString()
+      : new Date().toISOString(),
+    paymentCreatedAt: apiData.payment_created_at 
+      ? new Date(apiData.payment_created_at._seconds * 1000).toISOString()
+      : undefined,
+    subscriptionCost: apiData.subscription_cost_per_user,
+    schoolId: apiData.school_id,
+    paymentMethod: apiData.payment_method,
+    razorpayPaymentId: apiData.razorpay_payment_id,
+    amount: apiData.amount || (apiData.subscription_cost_per_user * apiData.num_of_users) || 0, // Fallback to calculated amount
+    currency: apiData.currency,
+    subscriptionType: apiData.subscription_type === 'Both' ? 'TeachoVE + StudoVE' : 'TeachoVE only',
+    remainingAmount: apiData.remaining_amount
+  };
+  console.log('Converted data:', converted);
+  return converted;
+};
+
 interface SubscriptionForm {
-  title: string;
   subscriptionType: 'TeachoVE only' | 'TeachoVE + StudoVE';
   numOfUsers: number;
 }
@@ -35,71 +82,102 @@ const SubscriptionRequests: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<SubscriptionRequest | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
+  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [formData, setFormData] = useState<SubscriptionForm>({
-    title: '',
     subscriptionType: 'TeachoVE only',
     numOfUsers: 1
   });
+  const [subscriptionCosts, setSubscriptionCosts] = useState<SubscriptionCostResponse | null>(null);
+  const [costsLoading, setCostsLoading] = useState(true);
 
-  // Mock data for demonstration - replace with actual API calls
+  // Load Razorpay script
   useEffect(() => {
-    const mockRequests: SubscriptionRequest[] = [
-      {
-        subscriptionId: 'sub_001',
-        numOfUsers: 50,
-        approveStatus: 'approved',
-        paymentStatus: 'paid',
-        requestCreatedAt: '2025-08-20T10:00:00Z',
-        paymentCreatedAt: '2025-08-21T14:30:00Z',
-        subscriptionCost: 25.0,
-        schoolId: 'school_001',
-        paymentMethod: 'Razorpay',
-        razorpayPaymentId: 'pay_123456789',
-        amount: 1250.0,
-        currency: 'INR',
-        subscriptionType: 'TeachoVE + StudoVE',
-        remainingAmount: 0
-      },
-      {
-        subscriptionId: 'sub_002',
-        numOfUsers: 25,
-        approveStatus: 'pending',
-        paymentStatus: 'pending',
-        requestCreatedAt: '2025-08-22T09:00:00Z',
-        subscriptionCost: 25.0,
-        schoolId: 'school_001',
-        paymentMethod: 'Pending',
-        subscriptionType: 'TeachoVE only'
-      },
-      {
-        subscriptionId: 'sub_003',
-        numOfUsers: 100,
-        approveStatus: 'denied',
-        paymentStatus: 'failed',
-        requestCreatedAt: '2025-08-18T16:00:00Z',
-        subscriptionCost: 25.0,
-        schoolId: 'school_001',
-        paymentMethod: 'Failed',
-        subscriptionType: 'TeachoVE + StudoVE'
-      }
-    ];
-    
-    setRequests(mockRequests);
-    setLoading(false);
+    const loadRazorpayScript = () => {
+      if (window.Razorpay) return; // Already loaded
+      
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => console.log('Razorpay script loaded');
+      script.onerror = () => console.error('Failed to load Razorpay script');
+      document.body.appendChild(script);
+    };
+
+    loadRazorpayScript();
   }, []);
 
-  const subscriptionPlans = {
-    'TeachoVE only': {
-      description: 'Access to TeachoVE School Management System only',
-      cost: 0,
-      features: ['School Management', 'Student Records', 'Teacher Management', 'Attendance Tracking', 'Exam Management', 'Fee Management']
-    },
-    'TeachoVE + StudoVE': {
-      description: 'Access to both TeachoVE (free) and StudoVE Student/Parent App',
-      cost: 25,
-      features: ['All TeachoVE Features', 'Student Mobile App', 'Parent Mobile App', 'Real-time Notifications', 'Online Fee Payment', 'Progress Tracking']
-    }
-  };
+  // Fetch subscription costs
+  useEffect(() => {
+    const fetchSubscriptionCosts = async () => {
+      try {
+        setCostsLoading(true);
+        const costs = await subscriptionService.getSubscriptionCosts();
+        setSubscriptionCosts(costs);
+      } catch (error) {
+        console.error('Error fetching subscription costs', error);
+        showToast('Failed to fetch subscription costs', 'error');
+      } finally {
+        setCostsLoading(false);
+      }
+    };
+
+    fetchSubscriptionCosts();
+  }, []);
+
+  // Fetch subscription requests from API
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      if (!user?.schoolId) return;
+      
+      try {
+        setLoading(true);
+        const apiSubscriptions = await subscriptionService.getSubscriptionsBySchool(user.schoolId);
+        console.log('Raw API response:', apiSubscriptions);
+        
+        const convertedSubscriptions = apiSubscriptions.map(convertApiToComponentData);
+        console.log('Converted subscriptions:', convertedSubscriptions);
+        
+        setRequests(convertedSubscriptions);
+      } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        // You can add error handling here (e.g., show error toast)
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubscriptions();
+  }, [user?.schoolId]);
+
+  const subscriptionPlans = useMemo(() => {
+    if (!subscriptionCosts) return {
+      'TeachoVE only': {
+        description: 'Access to TeachoVE School Management System only',
+        cost: 0,
+        features: ['School Management', 'Student Records', 'Teacher Management', 'Attendance Tracking', 'Exam Management', 'Fee Management']
+      },
+      'TeachoVE + StudoVE': {
+        description: 'Access to both TeachoVE (free) and StudoVE Student/Parent App',
+        cost: 99,
+        features: ['All TeachoVE Features', 'Student Mobile App', 'Parent Mobile App', 'Real-time Notifications', 'Online Fee Payment', 'Progress Tracking']
+      }
+    };
+
+    return {
+      'TeachoVE only': {
+        description: 'Access to TeachoVE School Management System only',
+        cost: subscriptionCosts.teachove.amount,
+        features: ['School Management', 'Student Records', 'Teacher Management', 'Attendance Tracking', 'Exam Management', 'Fee Management']
+      },
+      'TeachoVE + StudoVE': {
+        description: 'Access to both TeachoVE (free) and StudoVE Student/Parent App',
+        cost: subscriptionCosts.both.amount,
+        features: ['All TeachoVE Features', 'Student Mobile App', 'Parent Mobile App', 'Real-time Notifications', 'Online Fee Payment', 'Progress Tracking']
+      }
+    };
+  }, [subscriptionCosts]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {
@@ -113,9 +191,17 @@ const SubscriptionRequests: React.FC = () => {
   const handleNewRequest = () => {
     setIsNewRequestSidebarOpen(true);
     setFormData({
-      title: '',
       subscriptionType: 'TeachoVE only',
       numOfUsers: 1
+    });
+  };
+
+  const handleSubscriptionTypeChange = (type: 'TeachoVE only' | 'TeachoVE + StudoVE') => {
+    setFormData({
+      ...formData,
+      subscriptionType: type,
+      // For TeachoVE only, always set numOfUsers to 1
+      numOfUsers: type === 'TeachoVE only' ? 1 : formData.numOfUsers
     });
   };
 
@@ -125,43 +211,360 @@ const SubscriptionRequests: React.FC = () => {
   };
 
   const handleSendRequest = async () => {
-    if (!formData.title || !formData.numOfUsers) {
-      // Show error toast
+    if (!formData.numOfUsers || !user?.schoolId) {
+      showToast('Please fill all required fields', 'error');
       return;
     }
 
     try {
-      // Mock API call - replace with actual API
+      setIsSubmitting(true);
+      showToast('Creating subscription request...', 'info');
+
+      // Calculate costs based on subscription type
+      const costPerUser = subscriptionPlans[formData.subscriptionType].cost;
+      const totalCost = costPerUser * formData.numOfUsers;
+
+      // Prepare API request data
+      const apiData: CreateSubscriptionRequest = {
+        num_of_users: formData.numOfUsers,
+        approve_status: 'pending',
+        payment_status: 'pending',
+        subscription_cost_per_user: costPerUser,
+        school_id: user.schoolId,
+        payment_method: 'razorpay',
+        amount: totalCost,
+        currency: 'INR',
+        subscription_type: formData.subscriptionType === 'TeachoVE + StudoVE' ? 'Both' : 'TeachoVE',
+        remaining_amount: 0.0
+      };
+
+      // Call the API
+      const response = await subscriptionService.createSubscription(apiData);
+
+      // Create new request object for local state
       const newRequest: SubscriptionRequest = {
-        subscriptionId: `sub_${Date.now()}`,
+        subscriptionId: response.subscriptionId,
         numOfUsers: formData.numOfUsers,
         approveStatus: 'pending',
         paymentStatus: 'pending',
         requestCreatedAt: new Date().toISOString(),
-        subscriptionCost: subscriptionPlans[formData.subscriptionType].cost,
-        schoolId: user?.schoolId || '',
-        paymentMethod: 'Pending',
-        subscriptionType: formData.subscriptionType
+        subscriptionCost: costPerUser,
+        schoolId: user.schoolId,
+        paymentMethod: 'razorpay',
+        amount: totalCost,
+        currency: 'INR',
+        subscriptionType: formData.subscriptionType,
+        remainingAmount: 0
       };
 
+      // Update local state
       setRequests(prev => [newRequest, ...prev]);
       setIsNewRequestSidebarOpen(false);
       setFormData({
-        title: '',
         subscriptionType: 'TeachoVE only',
         numOfUsers: 1
       });
 
-      // Show success toast
+      showToast('Subscription request created successfully!', 'success');
     } catch (error) {
       console.error('Error creating subscription request:', error);
-      // Show error toast
+      showToast('Failed to create subscription request. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDownloadInvoice = (request: SubscriptionRequest) => {
-    // Mock invoice download - replace with actual implementation
-    console.log('Downloading invoice for:', request.subscriptionId);
+  const handleDownloadInvoice = async (request: SubscriptionRequest) => {
+    if (!request.subscriptionId || !user?.schoolId) {
+      showToast('Missing information for download', 'error');
+      return;
+    }
+
+    if (downloadingInvoice === request.subscriptionId) {
+      return; // Prevent multiple clicks
+    }
+
+    try {
+      setDownloadingInvoice(request.subscriptionId);
+      showToast('Downloading invoice...', 'info');
+      await subscriptionService.downloadInvoice(user.schoolId, request.subscriptionId);
+      showToast('Invoice downloaded successfully!', 'success');
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      showToast('Failed to download invoice. Please try again.', 'error');
+    } finally {
+      setDownloadingInvoice(null);
+    }
+  };
+
+  const handlePayNow = async (request: SubscriptionRequest) => {
+
+    if (!request.subscriptionId || !user?.schoolId) {
+      showToast('Missing information for payment', 'error');
+      return;
+    }
+
+    if (processingPayment === request.subscriptionId) {
+      return; // Prevent multiple clicks
+    }
+
+    if (!window.Razorpay) {
+      showToast('Payment gateway is loading. Please wait a moment and try again.', 'error');
+      return;
+    }
+
+    try {
+      setProcessingPayment(request.subscriptionId);
+      showToast('Creating payment order...', 'info');
+
+      // Validate payment data
+      console.log('Request amount:', request.amount, 'Type:', typeof request.amount);
+      console.log('Full request object:', request);
+      
+      // Handle amount validation - check if it's a valid number
+      const amount = Number(request.amount);
+      if (isNaN(amount) || amount <= 0) {
+        showToast(`Invalid amount for payment: ${request.amount}`, 'error');
+        setProcessingPayment(null);
+        return;
+      }
+
+      if (!request.subscriptionId) {
+        showToast('Missing subscription information', 'error');
+        setProcessingPayment(null);
+        return;
+      }
+
+      // Create Razorpay order first with your backend
+      const orderData = {
+        amount: amount,
+        subscriptionId: request.subscriptionId!,
+        userId: user.schoolId,
+        schoolId: user.schoolId
+      };
+
+      console.log('Creating order with data:', orderData);
+      const orderResponse = await subscriptionService.createRazorpayOrder(orderData);
+      console.log('Order response:', orderResponse);
+
+      if (!orderResponse.id) {
+        throw new Error('Failed to create payment order');
+      }
+
+      // Now show Razorpay with the order ID from backend
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY',
+        amount: amount * 100, // Convert rupees to paise for Razorpay
+        currency: 'INR',
+        name: 'TeachoVE',
+        description: `${request.subscriptionType || 'Subscription'} Payment`,
+        order_id: orderResponse.id, // Use the order ID from your backend
+        prefill: {
+          name: 'School Admin',
+          email: user.email,
+        },
+        theme: {
+          color: '#3B82F6'
+        },
+        handler: async (response: any) => {
+          console.log('=== RAZORPAY HANDLER TRIGGERED ===');
+          console.log('Response type:', typeof response);
+          console.log('Response is null/undefined:', response === null || response === undefined);
+          
+          try {
+            showToast('Payment completed! Verifying with server...', 'info');
+            
+            if (!response) {
+              throw new Error('Razorpay response is null or undefined');
+            }
+            
+            console.log('Full Razorpay response object:', response);
+            console.log('Response keys:', Object.keys(response));
+            console.log('Response values:', Object.values(response));
+            console.log('Response stringified:', JSON.stringify(response, null, 2));
+            
+            // Check for different possible field names
+            const paymentId = response.razorpay_payment_id || response.payment_id || response.paymentId;
+            const orderId = response.razorpay_order_id || response.order_id || response.orderId || orderResponse.id;
+            const signature = response.razorpay_signature || response.signature || 'N/A';
+            
+            console.log('Extracted values:', { paymentId, orderId, signature });
+            
+            // Only require payment ID since that's what Razorpay provides
+            if (!paymentId) {
+              throw new Error(`Missing payment ID from Razorpay. Got: paymentId=${paymentId}`);
+            }
+            
+            const verificationData = {
+              razorpay_payment_id: paymentId,
+              razorpay_order_id: orderId,
+              razorpay_signature: signature,
+              subscriptionId: request.subscriptionId!,
+              totalPaidAmount: amount,
+              remainingAmount: 0
+            };
+            
+            console.log('Data being sent for verification:', verificationData);
+            
+            await subscriptionService.verifyRazorpayPayment(verificationData);
+
+            // Update local state to reflect payment completion
+            setRequests(prev => prev.map(req => 
+              req.subscriptionId === request.subscriptionId 
+                ? { ...req, paymentStatus: 'paid' as const }
+                : req
+            ));
+
+            showToast('Payment verified successfully! Your subscription is now active.', 'success');
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            showToast('Payment completed but verification failed. Please contact support.', 'error');
+          } finally {
+            setProcessingPayment(null);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessingPayment(null);
+            showToast('Payment cancelled', 'info');
+          }
+        }
+      };
+
+      // Initialize Razorpay payment with order ID
+      console.log('Opening Razorpay with options:', options);
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      console.log('Razorpay.open() called');
+
+    } catch (error) {
+      console.error('Error opening payment gateway:', error);
+      showToast('Failed to open payment gateway. Please try again.', 'error');
+      setProcessingPayment(null);
+    }
+  };
+
+  // Alternative method: Create order first, then show payment (if you prefer this approach)
+  const handlePayNowWithOrder = async (request: SubscriptionRequest) => {
+    if (!request.subscriptionId || !user?.schoolId) {
+      showToast('Missing information for payment', 'error');
+      return;
+    }
+
+    if (processingPayment === request.subscriptionId) {
+      return;
+    }
+
+    // Validate amount
+    const amount = Number(request.amount);
+    if (isNaN(amount) || amount <= 0) {
+      showToast(`Invalid amount for payment: ${request.amount}`, 'error');
+      return;
+    }
+
+    try {
+      setProcessingPayment(request.subscriptionId);
+      showToast('Creating payment order...', 'info');
+
+      // First create order with your backend
+      const orderData = {
+        amount: amount,
+        subscriptionId: String(request.subscriptionId),
+        userId: String(user.schoolId),
+        schoolId: String(user.schoolId)
+      };
+
+      const orderResponse = await subscriptionService.createRazorpayOrder(orderData);
+
+      if (!orderResponse.orderId) {
+        throw new Error('Failed to create payment order');
+      }
+
+      // Then show Razorpay with the order ID
+      const options = {
+        key: orderResponse.key || process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY',
+        amount: amount * 100, // Convert rupees to paise for Razorpay
+        currency: 'INR',
+        name: 'TeachoVE',
+        description: `${request.subscriptionType || 'Subscription'} Payment`,
+        order_id: orderResponse.orderId, // Use the order ID from backend
+        prefill: {
+          name: 'School Admin',
+          email: user.email,
+        },
+        theme: { color: '#3B82F6' },
+        handler: async (response: any) => {
+          console.log('=== RAZORPAY HANDLER TRIGGERED ===');
+          console.log('Response type:', typeof response);
+          console.log('Response is null/undefined:', response === null || response === undefined);
+          
+          try {
+            showToast('Payment completed! Verifying with server...', 'info');
+            
+            if (!response) {
+              throw new Error('Razorpay response is null or undefined');
+            }
+            
+            console.log('Full Razorpay response object:', response);
+            console.log('Response keys:', Object.keys(response));
+            console.log('Response values:', Object.values(response));
+            console.log('Response stringified:', JSON.stringify(response, null, 2));
+            
+            // Check for different possible field names
+            const paymentId = response.razorpay_payment_id || response.payment_id || response.paymentId;
+            const orderId = response.razorpay_order_id || response.order_id || response.orderId || 'N/A';
+            const signature = response.razorpay_signature || response.signature || 'N/A';
+            
+            console.log('Extracted values:', { paymentId, orderId, signature });
+            
+            // Only require payment ID since that's what Razorpay provides
+            if (!paymentId) {
+              throw new Error(`Missing payment ID from Razorpay. Got: paymentId=${paymentId}`);
+            }
+            
+            const verificationData = {
+              razorpay_payment_id: paymentId,
+              razorpay_order_id: orderId,
+              razorpay_signature: signature,
+              subscriptionId: request.subscriptionId!,
+              totalPaidAmount: amount,
+              remainingAmount: 0
+            };
+            
+            console.log('Data being sent for verification:', verificationData);
+            
+            await subscriptionService.verifyRazorpayPayment(verificationData);
+
+            setRequests(prev => prev.map(req => 
+              req.subscriptionId === request.subscriptionId 
+                ? { ...req, paymentStatus: 'paid' as const }
+                : req
+            ));
+
+            showToast('Payment verified successfully! Your subscription is now active.', 'success');
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            showToast('Payment completed but verification failed. Please contact support.', 'error');
+          } finally {
+            setProcessingPayment(null);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessingPayment(null);
+            showToast('Payment cancelled', 'info');
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+    } catch (error) {
+      console.error('Error creating payment order:', error);
+      showToast('Failed to create payment order. Please try again.', 'error');
+      setProcessingPayment(null);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -197,12 +600,137 @@ const SubscriptionRequests: React.FC = () => {
     return plan ? plan.cost * users : 0;
   };
 
+  // Toast notification system
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+    
+    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white shadow-lg transform transition-all duration-300 translate-x-full ${bgColor}`;
+    toast.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <span class="text-lg">${icon}</span>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+    
+    // Remove after 4 seconds
+    setTimeout(() => {
+      toast.classList.add('translate-x-full');
+      setTimeout(() => document.body.removeChild(toast), 300);
+    }, 4000);
+  };
+
+  // Shimmer loading components
+  const ShimmerCard = () => (
+    <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+          <div className="h-8 bg-gray-300 rounded w-16 animate-pulse"></div>
+        </div>
+        <div className="p-3 bg-gray-300 rounded-full w-12 h-12 animate-pulse"></div>
+      </div>
+    </div>
+  );
+
+  const ShimmerTableRow = () => (
+    <tr className="animate-pulse">
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-32 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-12 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-16 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-16 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded w-16 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          <div className="h-8 bg-gray-300 rounded w-8 animate-pulse"></div>
+          <div className="h-8 bg-gray-300 rounded w-8 animate-pulse"></div>
+        </div>
+      </td>
+    </tr>
+  );
+
   if (loading) {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="p-6">
-          <div className="text-center">
-            <p className="text-lg">Loading subscription requests...</p>
+          {/* Header Shimmer */}
+          <div className="mb-8">
+            <div className="h-8 bg-gray-300 rounded w-64 mb-2 animate-pulse"></div>
+            <div className="h-5 bg-gray-300 rounded w-96 animate-pulse"></div>
+          </div>
+
+          {/* Button Shimmer */}
+          <div className="mb-8">
+            <div className="h-12 bg-gray-300 rounded-lg w-40 animate-pulse"></div>
+          </div>
+
+          {/* Stats Cards Shimmer */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+            {[...Array(6)].map((_, index) => (
+              <ShimmerCard key={index} />
+            ))}
+          </div>
+
+          {/* Filters Shimmer */}
+          <div className={`p-6 rounded-xl shadow-lg mb-8 ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="h-10 bg-gray-300 rounded-lg w-full animate-pulse"></div>
+              </div>
+              <div className="sm:w-48">
+                <div className="h-10 bg-gray-300 rounded-lg w-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Table Shimmer */}
+          <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+            <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className="h-6 bg-gray-300 rounded w-48 animate-pulse"></div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <tr>
+                    {[...Array(8)].map((_, index) => (
+                      <th key={index} className="px-6 py-3">
+                        <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                  {[...Array(5)].map((_, index) => (
+                    <ShimmerTableRow key={index} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -234,7 +762,7 @@ const SubscriptionRequests: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
@@ -293,13 +821,31 @@ const SubscriptionRequests: React.FC = () => {
                 <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   Total Users
                 </p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold text-indigo-600">
                   {requests.reduce((sum, r) => sum + r.numOfUsers, 0)}
+                </p>
+              </div>
+              <div className="p-3 bg-indigo-100 rounded-full">
+                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Total Amount
+                </p>
+                <p className="text-2xl font-bold text-purple-600">
+                  ₹{requests.reduce((sum, r) => sum + (r.amount || 0), 0).toLocaleString()}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-full">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
             </div>
@@ -378,7 +924,10 @@ const SubscriptionRequests: React.FC = () => {
                       Type
                     </th>
                     <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                      Users
+                      Users Count
+                    </th>
+                    <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                     Paid Amount
                     </th>
                     <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                       Status
@@ -413,6 +962,15 @@ const SubscriptionRequests: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          {request.amount ? (
+                            <span className="text-green-600">₹{request.amount}</span>
+                          ) : (
+                            <span className="text-gray-500">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.approveStatus)}`}>
                           {request.approveStatus}
                         </span>
@@ -444,19 +1002,57 @@ const SubscriptionRequests: React.FC = () => {
                             </svg>
                           </button>
                           
+                          {request.paymentStatus === 'pending' && (
+                            <button
+                              onClick={() => handlePayNow(request)}
+                              disabled={processingPayment === request.subscriptionId}
+                              className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium ${
+                                isDarkMode 
+                                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl' 
+                                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg'
+                              } transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+                              title="Pay Now"
+                            >
+                              {processingPayment === request.subscriptionId ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <span>Processing...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                  </svg>
+                                  <span>Pay Now</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                          
                           {request.paymentStatus === 'paid' && (
                             <button
                               onClick={() => handleDownloadInvoice(request)}
-                              className={`p-2 rounded-lg transition-colors ${
+                              disabled={downloadingInvoice === request.subscriptionId}
+                              className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium ${
                                 isDarkMode 
-                                  ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                                  : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                              }`}
+                                  ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl' 
+                                  : 'bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg'
+                              } transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
                               title="Download Invoice"
                             >
+                              {downloadingInvoice === request.subscriptionId ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <span>Downloading...</span>
+                                </>
+                              ) : (
+                                <>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                               </svg>
+                                  <span>Invoice</span>
+                                </>
+                              )}
                             </button>
                           )}
                         </div>
@@ -502,28 +1098,11 @@ const SubscriptionRequests: React.FC = () => {
                   <form className="space-y-6">
                     <div>
                       <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.title}
-                        onChange={(e) => setFormData({...formData, title: e.target.value})}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                        placeholder="Enter request title"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Subscription Type *
                       </label>
                       <select
                         value={formData.subscriptionType}
-                        onChange={(e) => setFormData({...formData, subscriptionType: e.target.value as 'TeachoVE only' | 'TeachoVE + StudoVE'})}
+                        onChange={(e) => handleSubscriptionTypeChange(e.target.value as 'TeachoVE only' | 'TeachoVE + StudoVE')}
                         className={`w-full px-4 py-2 rounded-lg border ${
                           isDarkMode 
                             ? 'bg-gray-800 border-gray-600 text-white' 
@@ -562,17 +1141,21 @@ const SubscriptionRequests: React.FC = () => {
                     <div>
                       <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Number of Users *
+                        {formData.subscriptionType === 'TeachoVE only' && (
+                          <span className="ml-2 text-sm text-gray-500">(Fixed at 1 for TeachoVE only)</span>
+                        )}
                       </label>
                       <input
                         type="number"
                         min="1"
                         value={formData.numOfUsers}
                         onChange={(e) => setFormData({...formData, numOfUsers: parseInt(e.target.value) || 1})}
+                        disabled={formData.subscriptionType === 'TeachoVE only'}
                         className={`w-full px-4 py-2 rounded-lg border ${
                           isDarkMode 
                             ? 'bg-gray-800 border-gray-600 text-white' 
                             : 'bg-white border-gray-300 text-gray-900'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
                       />
                     </div>
 
@@ -580,35 +1163,48 @@ const SubscriptionRequests: React.FC = () => {
                     <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
                       <h4 className={`font-medium mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                         Cost Breakdown
+                        {costsLoading && (
+                          <span className="ml-2 text-sm text-gray-500">(Loading costs...)</span>
+                        )}
                       </h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            Cost per user:
-                          </span>
-                          <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            ₹{subscriptionPlans[formData.subscriptionType].cost}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            Number of users:
-                          </span>
-                          <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {formData.numOfUsers}
-                          </span>
-                        </div>
-                        <div className="border-t pt-2">
-                          <div className="flex justify-between">
-                            <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Total Cost:
-                            </span>
-                            <span className={`text-lg font-bold text-blue-600`}>
-                              ₹{calculateTotalCost(formData.subscriptionType, formData.numOfUsers)}
-                            </span>
+                      {costsLoading ? (
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-300 rounded w-full animate-pulse"></div>
+                          <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
+                          <div className="border-t pt-2">
+                            <div className="h-6 bg-gray-300 rounded w-1/2 animate-pulse"></div>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                              Cost per user:
+                            </span>
+                            <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              ₹{subscriptionPlans[formData.subscriptionType].cost}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                              Number of users:
+                            </span>
+                            <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {formData.numOfUsers}
+                            </span>
+                          </div>
+                          <div className="border-t pt-2">
+                            <div className="flex justify-between">
+                              <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                Total Cost:
+                              </span>
+                              <span className={`text-lg font-bold text-blue-600`}>
+                                ₹{calculateTotalCost(formData.subscriptionType, formData.numOfUsers)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </form>
                 </div>
@@ -627,9 +1223,17 @@ const SubscriptionRequests: React.FC = () => {
                     </button>
                     <button
                       onClick={handleSendRequest}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      Send Request
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Creating...
+                        </>
+                      ) : (
+                        'Send Request'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -780,14 +1384,50 @@ const SubscriptionRequests: React.FC = () => {
 
               <div className={`px-6 py-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                 <div className="flex justify-between">
+                  {selectedRequest.paymentStatus === 'pending' && (
+                    <button
+                      onClick={() => handlePayNow(selectedRequest)}
+                      disabled={processingPayment === selectedRequest.subscriptionId}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                      {processingPayment === selectedRequest.subscriptionId ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                          <span>Pay Now</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  
                   {selectedRequest.paymentStatus === 'paid' && (
                     <button
                       onClick={() => handleDownloadInvoice(selectedRequest)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      disabled={downloadingInvoice === selectedRequest.subscriptionId}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                      Download Invoice
+                      {downloadingInvoice === selectedRequest.subscriptionId ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span>Downloading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>Download Invoice</span>
+                        </>
+                      )}
                     </button>
                   )}
+                  
                   <button
                     onClick={() => setIsViewDetailsOpen(false)}
                     className="ml-auto px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"

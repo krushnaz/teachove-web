@@ -20,24 +20,95 @@ const Teachers: React.FC = () => {
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
+  const [teacherCount, setTeacherCount] = useState(0);
 
-  const handleAddTeacher = async (teacher: { name: string; email: string; password: string; schoolName: string }) => {
+  const handleAddTeacher = async (teacher: { 
+    teacherName: string; 
+    email: string; 
+    password: string; 
+    phoneNo: string;
+    profilePic?: string;
+    subjects: string[];
+    classesAssigned: string[];
+    schoolName: string 
+  }) => {
     if (!user?.schoolId) return;
-    setTeachers(prev => [
-      {
-        ...teacher,
-        teacherId: Date.now().toString(),
-        role: 'Teacher',
+    
+    try {
+      const teacherData = {
         schoolId: user.schoolId,
-      },
-      ...prev,
-    ]);
-    setDrawerOpen(false);
+        teacherName: teacher.teacherName,
+        email: teacher.email,
+        phoneNo: teacher.phoneNo,
+        password: teacher.password,
+        profilePic: teacher.profilePic || '',
+        subjects: teacher.subjects || [],
+        classesAssigned: teacher.classesAssigned || []
+      };
+
+      const response = await teacherService.addTeacher(teacherData);
+      
+      // Add the new teacher to the local state
+      setTeachers(prev => [
+        {
+          teacherId: response.teacherId,
+          name: teacher.teacherName, // Map teacherName to name
+          email: teacher.email,
+          password: teacher.password,
+          phoneNo: teacher.phoneNo,
+          profilePic: teacher.profilePic || '',
+          subjects: teacher.subjects || [],
+          classesAssigned: teacher.classesAssigned || [],
+          schoolName: teacher.schoolName,
+          role: 'Teacher',
+          schoolId: user.schoolId,
+        },
+        ...prev,
+      ]);
+      
+      setDrawerOpen(false);
+      toast.success('Teacher added successfully!');
+    } catch (error) {
+      console.error('Failed to add teacher:', error);
+      toast.error('Failed to add teacher. Please try again.');
+    }
   };
 
   const handleEditClick = (teacher: Teacher) => {
     setEditTeacher(teacher);
     setDrawerOpen(true);
+  };
+
+  const handleEditTeacher = async (teacherId: string, teacherData: {
+    teacherName: string;
+    email: string;
+    phoneNo: string;
+    subjects: string[];
+    classesAssigned: string[];
+  }) => {
+    try {
+      await teacherService.editTeacher(teacherId, {
+        teacherName: teacherData.teacherName,
+        email: teacherData.email,
+        phoneNo: teacherData.phoneNo,
+        subjects: teacherData.subjects,
+        classesAssigned: teacherData.classesAssigned,
+      });
+      
+      // Update the teacher in local state
+      setTeachers(prev => prev.map(t => 
+        t.teacherId === teacherId 
+          ? { ...t, name: teacherData.teacherName, email: teacherData.email, phoneNo: teacherData.phoneNo, subjects: teacherData.subjects, classesAssigned: teacherData.classesAssigned }
+          : t
+      ));
+      
+      setDrawerOpen(false);
+      setEditTeacher(null);
+      toast.success('Teacher updated successfully!');
+    } catch (error) {
+      console.error('Failed to update teacher:', error);
+      toast.error('Failed to update teacher. Please try again.');
+    }
   };
 
   const handleDeleteClick = (teacher: Teacher) => {
@@ -74,7 +145,15 @@ const Teachers: React.FC = () => {
         if (user?.schoolId) {
           const response = await teacherService.getTeachersBySchool(user.schoolId);
           if (response.teachers) {
-            setTeachers(response.teachers);
+            // Map the API response to match the component's expected structure
+            const mappedTeachers = response.teachers.map(teacher => ({
+              ...teacher,
+              name: teacher.teacherName || teacher.name, // Use teacherName from API or fallback to name
+              role: 'Teacher',
+              schoolName: schoolName || 'N/A'
+            }));
+            setTeachers(mappedTeachers);
+            setTeacherCount(response.count || 0);
           } else {
             setError('Failed to fetch teachers');
           }
@@ -108,8 +187,10 @@ const Teachers: React.FC = () => {
 
   const filteredTeachers = teachers.filter(teacher => {
     const matchesSearch = teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         teacher.email.toLowerCase().includes(searchTerm.toLowerCase());
-    // Since the API doesn't provide subject info, we'll filter by name and email only
+                         teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (teacher.phoneNo && teacher.phoneNo.includes(searchTerm)) ||
+                         (teacher.subjects && teacher.subjects.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase()))) ||
+                         (teacher.classesAssigned && teacher.classesAssigned.some(className => className.toLowerCase().includes(searchTerm.toLowerCase())));
     return matchesSearch;
   });
 
@@ -156,12 +237,12 @@ const Teachers: React.FC = () => {
           <div className="flex items-center">
             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a6 6 0 11-12 0 6 6 0 0112 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Teachers</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teacherCount}</p>
             </div>
           </div>
         </div>
@@ -222,7 +303,7 @@ const Teachers: React.FC = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search teachers..."
+                  placeholder="Search by name, email, phone, subjects, or classes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
@@ -266,6 +347,9 @@ const Teachers: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SR No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teacher</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subjects</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Classes</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">School</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
@@ -286,6 +370,33 @@ const Teachers: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.phoneNo || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {teacher.subjects && teacher.subjects.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {teacher.subjects.map((subject, idx) => (
+                          <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {subject}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {teacher.classesAssigned && teacher.classesAssigned.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {teacher.classesAssigned.map((className, idx) => (
+                          <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            {className}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{teacher.schoolName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.role}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -322,6 +433,7 @@ const Teachers: React.FC = () => {
         open={drawerOpen}
         onClose={() => { setDrawerOpen(false); setEditTeacher(null); }}
         onAddTeacher={handleAddTeacher}
+        onEditTeacher={handleEditTeacher}
         schoolName={schoolName}
         schoolId={user?.schoolId || ''}
         teacher={editTeacher || undefined}

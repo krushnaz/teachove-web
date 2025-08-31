@@ -60,6 +60,15 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
       )
     },
     { 
+      path: '/school-admin/classroom', 
+      label: 'Classroom', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      )
+    },
+    { 
       path: '/school-admin/exams', 
       label: 'Exams', 
       icon: (
@@ -165,16 +174,16 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
           {/* Navigation - Scrollable if needed */}
           <nav className="flex-1 mt-6 px-3 overflow-y-auto">
             {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
+                              <Link
+                  key={item.path}
+                  to={item.path}
                 className={`group flex items-center px-4 py-3 mb-2 rounded-xl transition-all duration-200 ${
                   isActive(item.path)
                     ? `${isDarkMode ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'}` 
                     : `${isDarkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white hover:scale-105' : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 hover:scale-105'}`
-                }`}
-                onClick={() => setSidebarOpen(false)}
-              >
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
                 <span className={`mr-3 transition-transform duration-200 ${isActive(item.path) ? 'scale-110' : 'group-hover:scale-110'}`}>
                   {item.icon}
                 </span>
@@ -184,7 +193,7 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
                 {isActive(item.path) && (
                   <div className={`ml-auto w-2 h-2 rounded-full ${isDarkMode ? 'bg-white' : 'bg-white'}`}></div>
                 )}
-              </Link>
+                </Link>
             ))}
           </nav>
           

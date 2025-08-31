@@ -132,8 +132,8 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
                       <div>
                         <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                           School Administrator
-                        </p>
-                        <p className="text-xs text-gray-500">{user?.email || 'admin@school.com'}</p>
+                    </p>
+                    <p className="text-xs text-gray-500">{user?.email || 'admin@school.com'}</p>
                       </div>
                     </div>
                   </div>

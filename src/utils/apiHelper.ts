@@ -14,11 +14,21 @@ export const apiHelper = {
         body: JSON.stringify(data),
       });
 
+      // Get the response body regardless of status code
+      const responseData = await response.json();
+
+      // If the response has a success field and it's false, return the response data
+      // This allows us to handle API error messages properly
+      if (responseData.hasOwnProperty('success') && !responseData.success) {
+        return responseData;
+      }
+
+      // For other non-2xx status codes, throw an error
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      return responseData;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;

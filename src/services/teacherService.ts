@@ -93,7 +93,7 @@ class TeacherService {
   // Delete a teacher by teacherId (custom endpoint)
   async deleteTeacherById(teacherId: string): Promise<any> {
     try {
-      const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.DELETE_BY_ID.replace(':id', teacherId);
+      const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.DELETE_TEACHER.replace(':teacherId', teacherId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
       const response = await fetch(url, {
         method: 'DELETE',
@@ -111,6 +111,35 @@ class TeacherService {
     }
   }
 
+  // Edit a teacher
+  async editTeacher(teacherId: string, teacherData: {
+    teacherName?: string;
+    email?: string;
+    phoneNo?: string;
+    subjects?: string[];
+    classesAssigned?: string[];
+  }): Promise<any> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.EDIT.replace(':teacherId', teacherId);
+      const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(teacherData),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to edit teacher:', error);
+      throw error;
+    }
+  }
+
   // Get teacher details
   async getTeacherDetails(teacherId: string): Promise<any> {
     try {
@@ -123,8 +152,17 @@ class TeacherService {
     }
   }
 
-  // Add a new teacher (custom add endpoint)
-  async addTeacher(teacherData: any): Promise<any> {
+  // Add a new teacher
+  async addTeacher(teacherData: {
+    schoolId: string;
+    teacherName: string;
+    email: string;
+    phoneNo: string;
+    password: string;
+    profilePic?: string;
+    subjects: string[];
+    classesAssigned: string[];
+  }): Promise<any> {
     try {
       const response = await apiHelper.post(API_CONFIG.ENDPOINTS.TEACHERS.ADD, teacherData);
       return response;

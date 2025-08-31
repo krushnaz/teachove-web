@@ -14,6 +14,8 @@ export const API_CONFIG = {
       UPDATE_PROFILE: '/school/profile',
       DASHBOARD: '/school/dashboard',
       DETAILS: '/schools/:schoolId/details',
+      GET_PROFILE: '/schools/:schoolId/',
+      UPDATE_PROFILE_BY_ID: '/schools/:schoolId/profile',
     },
     STUDENTS: {
       LIST: '/students',
@@ -32,7 +34,9 @@ export const API_CONFIG = {
       DELETE_BY_ID: '/teachers/delete/:id',
       DETAILS: '/teachers/:id',
       BY_SCHOOL: '/teachers/school/:schoolId',
-      ADD: '/teachers/add',
+      ADD: '/teachers',
+      EDIT: '/teachers/:teacherId',
+      DELETE_TEACHER: '/teachers/:teacherId',
     },
     TEACHER_ATTENDANCE: {
       MARK: '/teacher-attendance/',
@@ -40,7 +44,10 @@ export const API_CONFIG = {
       DOWNLOAD_REPORT: '/teacher-attendance/download-teacher-report',
     },
     CLASSROOM: {
-      GET_CLASSES: '/classrooms/:schoolId/classes',
+      GET_CLASSES: '/classrooms/:schoolId/academicYears/:yearId/classes',
+      CREATE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes',
+      UPDATE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes/:classId',
+      DELETE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes/:classId',
     },
     ATTENDANCE: {
       LIST: '/attendance',
@@ -73,6 +80,18 @@ export const API_CONFIG = {
       CREATE_ANNOUNCEMENT: '/announcements/:schoolId/announcements',
       UPDATE_ANNOUNCEMENT: '/announcements/:schoolId/announcements/:announcementId',
       DELETE_ANNOUNCEMENT: '/announcements/:schoolId/announcements/:announcementId',
+    },
+    SUBSCRIPTIONS: {
+      GET_BY_SCHOOL: '/subscriptions/school/:schoolId',
+      CREATE: '/subscriptions/',
+      GET_COST: '/subscriptions/subscription-cost',
+      DOWNLOAD_INVOICE: '/subscriptions/download-invoice',
+    },
+    PAYMENT_GATEWAY: {
+      RAZORPAY: {
+        CREATE_ORDER: '/payment-gateway/razorpay/create-order',
+        VERIFY_PAYMENT: '/payment-gateway/razorpay/verify-payment',
+      },
     },
     FEES: {
       LIST: '/fees',

@@ -71,27 +71,39 @@ class AuthService {
   }
 
   // Login method
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
+  async login(phoneNo: string, password: string, role: string): Promise<LoginResponse> {
     try {
+      const credentials = {
+        phoneNo,
+        password,
+        role
+      };
+
       const response = await this.makeRequest<LoginResponse>(
-        API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+        '/auth/login',
         {
           method: 'POST',
           data: credentials,
         }
       );
 
-      if (response.success) {
-        // Store user data
-        this.setUser(response.user);
-        
-        // Store schoolId as a simple identifier for authentication
-        // Since there's no JWT token, we'll use the schoolId as our auth identifier
-        this.setToken(response.user.schoolId);
-        
-        console.log('Login successful:', response.user);
-        console.log('Stored schoolId:', response.user.schoolId);
+      // Check if the response indicates failure
+      if (!response.success) {
+        // Create an error object with the API response message
+        const error: any = new Error(response.message || 'Login failed');
+        error.response = response;
+        throw error;
       }
+
+      // Store user data only on successful login
+      this.setUser(response.user);
+      
+      // Store schoolId as a simple identifier for authentication
+      // Since there's no JWT token, we'll use the schoolId as our auth identifier
+      this.setToken(response.user.schoolId);
+      
+      console.log('Login successful:', response.user);
+      console.log('Stored schoolId:', response.user.schoolId);
 
       return response;
     } catch (error) {

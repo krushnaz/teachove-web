@@ -5,9 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: 'krushnazarekar10@gmail.com',
+    phoneNo: '9876543210',
     password: '12345678',
-    role: 'schools'
+    role: 'school'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,13 +30,14 @@ const LoginPage: React.FC = () => {
     setError('');
     
     try {
-      console.log('Attempting login with:', { email: formData.email, role: formData.role });
+      console.log('Attempting login with:', { phoneNo: formData.phoneNo, role: formData.role });
       
-      await login(formData.email, formData.password, formData.role);
+      const response = await login(formData.phoneNo, formData.password, formData.role);
       
       console.log('Login successful');
     } catch (error: any) {
       console.error('Login error:', error);
+      // Show the error message from the API response
       setError(error.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -44,8 +45,8 @@ const LoginPage: React.FC = () => {
   };
 
   const roles = [
-    { value: 'schools', label: 'School', icon: '🏫' },
-    { value: 'teachers', label: 'Teacher', icon: '👨‍🏫' }
+    { value: 'school', label: 'School', icon: '🏫' },
+    { value: 'teacher', label: 'Teacher', icon: '👨‍🏫' }
   ];
 
   // Redirect if already authenticated
@@ -56,7 +57,7 @@ const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
-    return (
+  return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'} flex`}>
       {/* Left Side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
@@ -74,77 +75,77 @@ const LoginPage: React.FC = () => {
               </svg>
               <span>Back to Home</span>
             </Link>
-          </div>
+        </div>
 
-          {/* Login Form */}
+        {/* Login Form */}
           <div className={`rounded-3xl shadow-2xl border ${isDarkMode ? 'bg-gray-800/95 border-gray-700' : 'bg-white border-gray-100'} p-8 lg:p-10`}>
-            {/* Error Message */}
-            {error && (
+          {/* Error Message */}
+          {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center space-x-2">
                 <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>{error}</span>
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  Email Address
-                </label>
-                <div className="relative">
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Phone Number Field */}
+            <div>
+                <label htmlFor="phoneNo" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                Phone Number
+              </label>
+              <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
+                <input
+                  type="tel"
+                  id="phoneNo"
+                  name="phoneNo"
+                  value={formData.phoneNo}
+                  onChange={handleInputChange}
+                  required
                     className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                    }`}
-                    placeholder="Enter your email"
-                  />
-                </div>
+                  }`}
+                  placeholder="Enter your phone number"
+                />
               </div>
+            </div>
 
-              {/* Password Field */}
-              <div>
+            {/* Password Field */}
+            <div>
                 <label htmlFor="password" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  Password
-                </label>
-                <div className="relative">
+                Password
+              </label>
+              <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
                     className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                    }`}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                  }`}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
                     className={`absolute inset-y-0 right-0 pr-4 flex items-center transition-colors duration-200 ${
                       isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                     }`}
-                  >
+                >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -155,90 +156,90 @@ const LoginPage: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                       </svg>
                     )}
-                  </button>
-                </div>
+                </button>
               </div>
+            </div>
 
-              {/* Role Selection */}
-              <div>
+            {/* Role Selection */}
+            <div>
                 <label htmlFor="role" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  Select Role
-                </label>
+                Select Role
+              </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
                     className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 appearance-none ${
                       isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
-                    }`}
-                  >
-                    {roles.map((role) => (
-                      <option key={role.value} value={role.value}>
+                }`}
+              >
+                {roles.map((role) => (
+                  <option key={role.value} value={role.value}>
                         {role.label}
-                      </option>
-                    ))}
-                  </select>
+                  </option>
+                ))}
+              </select>
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </div>
-              </div>
+            </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
                     className="h-5 w-5 text-primary-600 focus:ring-4 focus:ring-primary-500/20 border-gray-300 rounded-lg transition-colors"
-                  />
+                />
                   <span className={`ml-3 text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Remember me</span>
-                </label>
-                <Link
-                  to="/forgot-password"
+              </label>
+              <Link
+                to="/forgot-password"
                   className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              {/* Login Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-primary-600 hover:to-primary-700 focus:ring-4 focus:ring-primary-500/20 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                    Signing in...
-                  </div>
-                ) : (
-                  'Sign In'
-                )}
-              </button>
-            </form>
+                Forgot password?
+              </Link>
+            </div>
 
-            {/* Sign Up Link */}
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-primary-600 hover:to-primary-700 focus:ring-4 focus:ring-primary-500/20 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                  Signing in...
+                </div>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+
+          {/* Sign Up Link */}
             <div className="mt-8 text-center">
-              <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Don't have an account?{' '}
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Don't have an account?{' '}
                 <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-200 hover:underline">
-                  Sign up
-                </Link>
-              </p>
+                Sign up
+              </Link>
+            </p>
             </div>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Right Side - Branding & Illustration */}
       <div className={`hidden lg:flex flex-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} items-center justify-center p-8 lg:p-12`}>

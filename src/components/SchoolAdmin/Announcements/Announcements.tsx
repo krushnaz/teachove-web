@@ -24,8 +24,8 @@ interface Teacher {
 interface Classroom {
   classId: string;
   className: string;
-  division: string;
-  schoolId: string;
+  section: string;
+  schoolId?: string;
 }
 
 const Announcements: React.FC = () => {
@@ -338,7 +338,7 @@ const Announcements: React.FC = () => {
       return teacher ? teacher.name : recipientId;
     } else if (audience.toLowerCase() === 'classes') {
       const classroom = classrooms.find(c => c.classId === recipientId);
-      return classroom ? `${classroom.className} ${classroom.division}` : recipientId;
+              return classroom ? `${classroom.className} ${classroom.section}` : recipientId;
     }
     return recipientId;
   };
@@ -920,7 +920,7 @@ const Announcements: React.FC = () => {
                                     }`}
                                   >
                                     <div className="text-xs font-medium">{classroom.className}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Division {classroom.division}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Section {classroom.section}</div>
                                   </button>
                                 ))}
                               </div>

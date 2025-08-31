@@ -3,16 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services';
 
 interface User {
-  email: string;
   role: string;
   schoolId: string;
+  schoolName: string;
+  phoneNo: string;
+  email: string;
+  currentAcademicYear: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, role: string) => Promise<void>;
+  login: (phoneNo: string, password: string, role: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => void;
 }
@@ -61,9 +64,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Only redirect if user is on the root path or login page
       if (currentPath === '/' || currentPath === '/login') {
         console.log('User authenticated, redirecting to dashboard...', { currentPath, userRole: user.role });
-        if (user.role === 'schools') {
+        if (user.role === 'school') {
           navigate('/school-admin');
-        } else if (user.role === 'teachers') {
+        } else if (user.role === 'teacher') {
           navigate('/teacher-admin');
         }
       } else {
@@ -72,20 +75,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user, isLoading, navigate]);
 
-  const login = async (email: string, password: string, role: string) => {
+  const login = async (phoneNo: string, password: string, role: string) => {
     try {
       setIsLoading(true);
-      const response = await authService.login({ email, password, role });
+      const response = await authService.login(phoneNo, password, role);
       
       if (response.success) {
         setUser(response.user);
         console.log('Login successful, user set:', response.user);
       } else {
+        // Throw error with the API response message
         throw new Error(response.message || 'Login failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      throw error;
+      // If it's an API error with response data, preserve the response message
+      if (error.response && error.response.message) {
+        throw error;
+      } else {
+        // For other errors, throw with the error message
+        throw new Error(error.message || 'Login failed');
+      }
     } finally {
       setIsLoading(false);
     }

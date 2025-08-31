@@ -6,7 +6,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './components/Home/LandingPage';
 import LoginPage from './components/LoginPage';
-import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminStudentFees, SchoolAdminAnnouncements, SchoolAdminSubscriptionRequests } from './components/SchoolAdmin';
+import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminClassroom, SchoolAdminStudentFees, SchoolAdminAnnouncements, SchoolAdminSubscriptionRequests } from './components/SchoolAdmin';
+import SchoolProfile from './components/SchoolAdmin/SchoolProfile/SchoolProfile';
 import { ExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
 import { TeacherAdminDashboard } from './components/TeacherAdmin';
@@ -34,17 +35,19 @@ function App() {
             
             {/* School Admin Dashboard Routes */}
             <Route path="/school-admin/*" element={
-              <ProtectedRoute requiredRole="schools">
+              <ProtectedRoute requiredRole="school">
                 <SchoolAdminLayout>
                   <Routes>
                     <Route index element={<SchoolAdminDashboard />} />
                     <Route path="students" element={<SchoolAdminStudents />} />
                     <Route path="teachers" element={<SchoolAdminTeachers />} />
                     <Route path="attendance" element={<SchoolAdminAttendance />} />
+                    <Route path="classroom" element={<SchoolAdminClassroom />} />
                     <Route path="exams" element={<ExamTimetable />} />
                     <Route path="fees" element={<SchoolAdminStudentFees />} />
                     <Route path="announcements" element={<SchoolAdminAnnouncements />} />
                     <Route path="subscription-request" element={<SchoolAdminSubscriptionRequests />} />
+                    <Route path="profile" element={<SchoolProfile schoolId="nvGVyZZCGqcIZU8rqJg9" />} />
                   </Routes>
                 </SchoolAdminLayout>
               </ProtectedRoute>
@@ -52,7 +55,7 @@ function App() {
             
             {/* Teacher Admin Dashboard Routes */}
             <Route path="/teacher-admin/*" element={
-              <ProtectedRoute requiredRole="teachers">
+              <ProtectedRoute requiredRole="teacher">
                 <TeacherAdminDashboard />
               </ProtectedRoute>
             } />

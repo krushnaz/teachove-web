@@ -21,21 +21,21 @@ const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       {/* Sticky Header */}
       <div className="sticky top-0 z-40">
-        <SchoolAdminHeader 
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          title={title}
-          subtitle={subtitle}
-        />
+      <SchoolAdminHeader 
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        title={title}
+        subtitle={subtitle}
+      />
       </div>
 
       <div className="flex">
         {/* Sticky Sidebar */}
         <div className="sticky top-0 h-screen">
-          <SchoolAdminSidebar 
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-          />
+        <SchoolAdminSidebar 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
         </div>
 
         {/* Scrollable Main Content */}

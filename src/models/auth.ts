@@ -1,7 +1,7 @@
 // Auth-related models and interfaces
 
 export interface LoginRequest {
-  email: string;
+  phoneNo: string;
   password: string;
   role: string;
 }
@@ -10,15 +10,21 @@ export interface LoginResponse {
   success: boolean;
   message: string;
   user: {
-    email: string;
     role: string;
     schoolId: string;
+    schoolName: string;
+    phoneNo: string;
+    email: string;
+    currentAcademicYear: string;
   };
   timestamp: string;
 }
 
 export interface User {
-  email: string;
   role: string;
   schoolId: string;
+  schoolName: string;
+  phoneNo: string;
+  email: string;
+  currentAcademicYear: string;
 } 

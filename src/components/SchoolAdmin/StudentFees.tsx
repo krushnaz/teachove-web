@@ -8,7 +8,7 @@ interface StudentFeeRow {
   studentId: string;
   studentName: string;
   className: string;
-  division: string;
+  section: string;
   rollNo: string;
   status: 'paid' | 'unpaid' | 'partially paid';
   totalFees: number;
@@ -85,7 +85,7 @@ const StudentFees: React.FC = () => {
             studentId: s.studentId,
             studentName: s.studentName || 'Unknown',
             className: s.className || 'Unknown',
-            division: s.division || '',
+            section: s.division || '',
             rollNo: s.rollNo || '-',
             status,
             totalFees: s.totalFees || 0,
@@ -170,7 +170,7 @@ const StudentFees: React.FC = () => {
     try {
       setIsLoadingPayments(true);
       // Find the class ID for the student
-      const studentClass = classrooms.find(c => c.className === row.className && c.division === row.division);
+      const studentClass = classrooms.find(c => c.className === row.className && c.section === row.section);
       if (studentClass) {
         const payments = await studentFeesService.getStudentPayments(schoolId, row.studentId, studentClass.classId);
         setStudentPayments(payments);
@@ -198,7 +198,7 @@ const StudentFees: React.FC = () => {
     try {
       setIsLoadingPayments(true);
       // Find the class ID for the student
-      const studentClass = classrooms.find(c => c.className === row.className && c.division === row.division);
+      const studentClass = classrooms.find(c => c.className === row.className && c.section === row.section);
       if (studentClass) {
         const payments = await studentFeesService.getStudentPayments(schoolId, row.studentId, studentClass.classId);
         setStudentPayments(payments);
@@ -225,7 +225,7 @@ const StudentFees: React.FC = () => {
     try {
       setIsLoadingPayments(true);
       // Find the class ID for the student
-      const studentClass = classrooms.find(c => c.className === row.className && c.division === row.division);
+      const studentClass = classrooms.find(c => c.className === row.className && c.section === row.section);
       if (studentClass) {
         const payments = await studentFeesService.getStudentPayments(schoolId, row.studentId, studentClass.classId);
         setStudentPayments(payments);
@@ -249,7 +249,7 @@ const StudentFees: React.FC = () => {
     try {
       if (paymentMode === 'add') {
         // Get the class ID for the selected student
-        const studentClass = classrooms.find(c => c.className === selectedRow.className && c.division === selectedRow.division);
+        const studentClass = classrooms.find(c => c.className === selectedRow.className && c.section === selectedRow.section);
         if (!studentClass) {
           throw new Error('Class not found for student');
         }
@@ -296,7 +296,7 @@ const StudentFees: React.FC = () => {
         }
 
         // Get the class ID for the selected student
-        const studentClass = classrooms.find(c => c.className === selectedRow.className && c.division === selectedRow.division);
+        const studentClass = classrooms.find(c => c.className === selectedRow.className && c.section === selectedRow.section);
         if (!studentClass) {
           throw new Error('Class not found for student');
         }
@@ -463,7 +463,7 @@ const StudentFees: React.FC = () => {
                         studentId: s.studentId,
                         studentName: s.studentName || 'Unknown',
                         className: s.className || 'Unknown',
-                        division: s.division || '',
+                        section: s.division || '',
                         rollNo: s.rollNo || '-',
                         status,
                         totalFees: s.totalFees || 0,
@@ -548,7 +548,7 @@ const StudentFees: React.FC = () => {
           >
             <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>All Classes</option>
             {classrooms.map(c => (
-              <option key={c.classId} value={c.className} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>{c.className} {c.division}</option>
+              <option key={c.classId} value={c.className} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>{c.className} {c.section}</option>
             ))}
           </select>
         </div>
@@ -594,7 +594,7 @@ const StudentFees: React.FC = () => {
                   return (
                     <tr key={r.studentId}>
                       <td className="px-6 py-4 whitespace-nowrap">{r.studentName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{r.className} • {r.division}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{r.className} • {r.section}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{r.rollNo}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -723,7 +723,7 @@ const StudentFees: React.FC = () => {
                     <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>All Classes</option>
                     {classrooms.map(c => (
                       <option key={c.classId} value={c.classId} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
-                        {c.className} {c.division}
+                        {c.className} {c.section}
                       </option>
                     ))}
                   </select>
@@ -1127,7 +1127,7 @@ const StudentFees: React.FC = () => {
                     </div>
                     <div className="ml-3">
                       <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Class</p>
-                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedRow.className} • {selectedRow.division}</p>
+                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedRow.className} • {selectedRow.section}</p>
                     </div>
                   </div>
                 </div>
