@@ -4,6 +4,7 @@ import { apiClient } from '../config/axios';
 export interface Subject {
   subjectName: string;
   teacherId: string;
+  teacherName?: string;
 }
 
 export interface Classroom {

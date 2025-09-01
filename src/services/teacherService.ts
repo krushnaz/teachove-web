@@ -98,6 +98,7 @@ class TeacherService {
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       });
@@ -116,6 +117,7 @@ class TeacherService {
     teacherName?: string;
     email?: string;
     phoneNo?: string;
+    profilePic?: string;
     subjects?: string[];
     classesAssigned?: string[];
   }): Promise<any> {
@@ -135,24 +137,12 @@ class TeacherService {
       }
       return await response.json();
     } catch (error) {
-      console.error('Failed to edit teacher:', error);
+      console.error('Failed to update teacher:', error);
       throw error;
     }
   }
 
-  // Get teacher details
-  async getTeacherDetails(teacherId: string): Promise<any> {
-    try {
-      const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.DETAILS.replace(':id', teacherId);
-      const response = await apiHelper.get(endpoint);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch teacher details:', error);
-      throw error;
-    }
-  }
-
-  // Add a new teacher
+  // Add a teacher
   async addTeacher(teacherData: {
     schoolId: string;
     teacherName: string;
@@ -173,8 +163,4 @@ class TeacherService {
   }
 }
 
-// Create and export a singleton instance
 export const teacherService = new TeacherService();
-
-// Export the class for testing purposes
-export default TeacherService; 

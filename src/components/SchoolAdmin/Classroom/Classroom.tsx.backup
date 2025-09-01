@@ -83,6 +83,9 @@ const Classroom: React.FC = () => {
           }))
         }));
         
+        console.log('API Response:', apiClassrooms);
+        console.log('Transformed Classrooms:', transformedClassrooms);
+        
         setClassrooms(transformedClassrooms);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -929,6 +932,10 @@ const Classroom: React.FC = () => {
                                 <span className={`text-lg font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
                                   {subject.teacher}
                                 </span>
+                                {/* Debug info */}
+                                <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                                  (ID: {subject.id})
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -954,7 +961,26 @@ const Classroom: React.FC = () => {
                 )}
               </div>
 
-
+              {/* Debug Information */}
+              <div className="mb-8">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className={`w-1 h-10 ${isDarkMode ? 'bg-gradient-to-b from-yellow-400 to-orange-400' : 'bg-gradient-to-b from-yellow-500 to-orange-500'}`}></div>
+                  <h4 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    🐛 Debug Information
+                  </h4>
+                </div>
+                
+                <div className={`p-6 rounded-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                      <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Raw Subjects Data:</span>
+                      <span className={`text-xs font-mono ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {JSON.stringify(viewingClassroom.subjects, null, 2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Additional Information */}
               <div className="mb-8">
