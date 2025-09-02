@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { studentService } from '../../../services/studentService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Student } from '../../../models';
+import AddStudentDrawer from './AddStudentDrawer';
+import { toast } from 'react-toastify';
 
 // Remove the old interface since we're importing Student from api config
 
@@ -13,6 +15,11 @@ const Students: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch students on component mount
   useEffect(() => {
@@ -42,10 +49,148 @@ const Students: React.FC = () => {
     fetchStudents();
   }, [user?.schoolId]);
 
+  // Handler for adding a new student
+  const handleAddStudent = async (studentData: {
+    name: string;
+    email: string;
+    password: string;
+    phoneNo: string;
+    admissionYear: string;
+    classId: string;
+  }, profilePicFile?: File) => {
+    if (!user?.schoolId) return;
+
+    try {
+      const response = await studentService.addStudent({
+        schoolId: user.schoolId,
+        classId: studentData.classId,
+        name: studentData.name,
+        email: studentData.email,
+        phoneNo: studentData.phoneNo,
+        password: studentData.password,
+        admissionYear: studentData.admissionYear,
+      }, profilePicFile);
+
+      // Add the new student to the local state
+      const newStudent: Student = {
+        studentId: response.studentId || `temp-${Date.now()}`,
+        schoolId: user.schoolId,
+        classId: studentData.classId,
+        name: studentData.name,
+        email: studentData.email,
+        phoneNo: studentData.phoneNo,
+        admissionYear: studentData.admissionYear,
+        profilePic: response.profilePic || '',
+        isActive: true,
+      };
+
+      setStudents(prev => [newStudent, ...prev]);
+      setDrawerOpen(false);
+      toast.success('Student added successfully!');
+    } catch (error) {
+      console.error('Failed to add student:', error);
+      toast.error('Failed to add student. Please try again.');
+    }
+  };
+
+  // Handler for editing a student
+  const handleEditStudent = async (studentId: string, studentData: {
+    name: string;
+    email: string;
+    phoneNo: string;
+    admissionYear: string;
+    classId: string;
+  }, profilePicFile?: File) => {
+    if (!user?.schoolId) {
+      toast.error('User session expired. Please login again.');
+      return;
+    }
+
+    try {
+      const response = await studentService.editStudent(studentId, {
+        schoolId: user.schoolId,
+        classId: studentData.classId,
+        name: studentData.name,
+        email: studentData.email,
+        phoneNo: studentData.phoneNo,
+        admissionYear: studentData.admissionYear,
+      }, profilePicFile);
+
+      // Update the student in local state
+      setStudents(prev => prev.map(s =>
+        s.studentId === studentId
+          ? {
+              ...s,
+              name: studentData.name,
+              email: studentData.email,
+              phoneNo: studentData.phoneNo,
+              admissionYear: studentData.admissionYear,
+              classId: studentData.classId,
+              profilePic: response.profilePic || s.profilePic
+            }
+          : s
+      ));
+
+      setDrawerOpen(false);
+      setEditingStudent(null);
+      toast.success('Student updated successfully!');
+    } catch (error) {
+      console.error('Failed to update student:', error);
+      toast.error('Failed to update student. Please try again.');
+    }
+  };
+
+  // Handler for opening add student drawer
+  const handleAddStudentClick = () => {
+    setEditingStudent(null);
+    setDrawerOpen(true);
+  };
+
+  // Handler for opening edit student drawer
+  const handleEditStudentClick = (student: Student) => {
+    setEditingStudent(student);
+    setDrawerOpen(true);
+  };
+
+  // Handler for delete confirmation
+  const handleDeleteClick = (student: Student) => {
+    setStudentToDelete(student);
+    setConfirmDialogOpen(true);
+  };
+
+  // Handler for confirming delete
+  const handleConfirmDelete = async () => {
+    if (!studentToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      await studentService.deleteStudent(studentToDelete.studentId);
+      setStudents(prev => prev.filter(s => s.studentId !== studentToDelete.studentId));
+      toast.success('Student deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete student:', error);
+      toast.error('Failed to delete student. Please try again.');
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDialogOpen(false);
+      setStudentToDelete(null);
+    }
+  };
+
+  // Handler for canceling delete
+  const handleCancelDelete = () => {
+    setConfirmDialogOpen(false);
+    setStudentToDelete(null);
+    setDeleteLoading(false);
+  };
+
   const filteredStudents = students.filter(student => {
-    const matchesSearch = student.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = selectedClass === 'all' || student.classValue === selectedClass;
+    const studentClass = student.className && student.section
+      ? `${student.className}-${student.section}`
+      : student.classId;
+    const matchesClass = selectedClass === 'all' || studentClass === selectedClass;
     return matchesSearch && matchesClass;
   });
 
@@ -107,7 +252,7 @@ const Students: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Students</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.filter(s => s.isActive).length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.filter(s => s.isActive !== false).length}</p>
             </div>
           </div>
         </div>
@@ -121,7 +266,11 @@ const Students: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Classes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{new Set(students.map(s => s.classValue)).size}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{new Set(students.map(s => {
+                return s.className && s.section
+                  ? `${s.className}-${s.section}`
+                  : s.classId;
+              })).size}</p>
             </div>
           </div>
         </div>
@@ -169,22 +318,26 @@ const Students: React.FC = () => {
                 className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               >
                               <option value="all">All Classes</option>
-              {Array.from(new Set(students.map(s => s.classValue))).map((classValue) => (
-                <option key={classValue} value={classValue}>{classValue}</option>
+              {Array.from(new Set(students.map(s => {
+                return s.className && s.section
+                  ? `${s.className}-${s.section}`
+                  : s.classId;
+              }))).map((classInfo) => (
+                <option key={classInfo} value={classInfo}>{classInfo}</option>
               ))}
               </select>
             </div>
           </div>
 
-          <Link
-            to="/school-admin/students/add"
+          <button
+            onClick={handleAddStudentClick}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Add Student
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -198,8 +351,8 @@ const Students: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Student</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Class</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Division</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Roll No</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Admission Year</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
               </tr>
@@ -210,35 +363,55 @@ const Students: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm">
-                        {student.studentName.charAt(0).toUpperCase()}
-                      </div>
+                      {student.profilePic ? (
+                        <img
+                          src={student.profilePic}
+                          alt={student.name}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm">
+                          {student.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{student.studentName}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{student.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.classValue}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.divisionValue}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.rollNo}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {student.className && student.section
+                      ? `${student.className}-${student.section}`
+                      : student.classId}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.phoneNo}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.admissionYear}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      student.isActive 
+                      student.isActive !== false
                         ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                         : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                     }`}>
-                      {student.isActive ? 'Active' : 'Inactive'}
+                      {student.isActive !== false ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                      <button
+                        onClick={() => handleEditStudentClick(student)}
+                        className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
+                        title="Edit Student"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                      <button
+                        onClick={() => handleDeleteClick(student)}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        title="Delete Student"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -261,6 +434,61 @@ const Students: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Add Student Drawer */}
+      <AddStudentDrawer
+        open={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          setEditingStudent(null);
+        }}
+        onAddStudent={handleAddStudent}
+        onEditStudent={handleEditStudent}
+        student={editingStudent || undefined}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Delete</h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">
+              Are you sure you want to delete <span className="font-bold">{studentToDelete?.name}</span>?
+              This action cannot be undone.
+            </p>
+            {deleteLoading && (
+              <div className="flex items-center justify-center mb-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600 mr-2"></div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Deleting student...</span>
+              </div>
+            )}
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDelete}
+                disabled={deleteLoading}
+                className={`px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none ${
+                  deleteLoading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteLoading}
+                className={`px-4 py-2 rounded-md bg-red-600 text-white font-semibold shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                  deleteLoading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-red-700'
+                }`}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

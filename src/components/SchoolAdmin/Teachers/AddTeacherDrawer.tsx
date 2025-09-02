@@ -11,14 +11,12 @@ interface AddTeacherDrawerProps {
     email: string; 
     password: string; 
     phoneNo: string;
-    profilePic?: string;
-  }) => void;
+  }, profilePicFile?: File) => void;
   onEditTeacher?: (teacherId: string, teacherData: {
     teacherName: string;
     email: string;
     phoneNo: string;
-    profilePic?: string;
-  }) => void;
+  }, profilePicFile?: File) => void;
   schoolName: string;
   schoolId: string;
   teacher?: {
@@ -40,7 +38,6 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
     email: '',
     password: '',
     phoneNo: '',
-    profilePic: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -54,7 +51,6 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
           email: teacher.email,
           password: teacher.password || '',
           phoneNo: teacher.phoneNo || '',
-          profilePic: teacher.profilePic || '',
         });
         if (teacher.profilePic) {
           setPreviewUrl(teacher.profilePic);
@@ -65,7 +61,6 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
           email: '',
           password: '',
           phoneNo: '',
-          profilePic: '',
         });
         setSelectedFile(null);
         setPreviewUrl('');
@@ -97,14 +92,16 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      setForm({ ...form, profilePic: url });
     }
   };
 
   const removeImage = () => {
     setSelectedFile(null);
     setPreviewUrl('');
-    setForm({ ...form, profilePic: '' });
+    // If editing and had original image, restore it
+    if (isEdit && teacher?.profilePic) {
+      setPreviewUrl(teacher.profilePic);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,10 +113,9 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
           teacherName: form.teacherName,
           email: form.email,
           phoneNo: form.phoneNo,
-          profilePic: form.profilePic,
-        });
+        }, selectedFile || undefined);
       } else {
-        await onAddTeacher(form);
+        await onAddTeacher(form, selectedFile || undefined);
       }
     } catch (err) {
       toast.error(isEdit ? 'Failed to update teacher.' : 'Failed to add teacher.');
@@ -192,18 +188,20 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
                 placeholder="Enter phone number"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter password"
-              />
-            </div>
+            {!isEdit && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Enter password"
+                />
+              </div>
+            )}
             
             {/* Profile Picture Upload */}
             <div>

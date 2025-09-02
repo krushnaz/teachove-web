@@ -20,10 +20,10 @@ export const API_CONFIG = {
     STUDENTS: {
       LIST: '/students',
       CREATE: '/students',
-      UPDATE: '/students/:id',
-      DELETE: '/students/:id',
-      DETAILS: '/students/:id',
-      BY_SCHOOL: '/students/:schoolId',
+      UPDATE: '/students/:studentId',
+      DELETE: '/students/:studentId',
+      DETAILS: '/students/:studentId',
+      BY_SCHOOL: '/students/school/:schoolId',
     },
     TEACHERS: {
       LIST: '/teachers',
@@ -40,8 +40,11 @@ export const API_CONFIG = {
     },
     TEACHER_ATTENDANCE: {
       MARK: '/teacher-attendance/',
-      GET_STATUS: '/teacher-attendance/teacher/:schoolId/:date/:teacherId',
+      GET_BY_DATE: '/teacher-attendance/:schoolId/date/:date',
+      GET_MARKED_DATES: '/teacher-attendance/:schoolId/dates',
       DOWNLOAD_REPORT: '/teacher-attendance/download-teacher-report',
+      GET_STATUS: '/teacher-attendance/teacher/:schoolId/:date/:teacherId',
+      BULK_MARK: '/teacher-attendance/',
     },
     CLASSROOM: {
       GET_CLASSES: '/classrooms/:schoolId/academicYears/:yearId/classes',

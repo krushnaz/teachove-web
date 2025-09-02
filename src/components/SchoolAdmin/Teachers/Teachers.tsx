@@ -26,8 +26,7 @@ const Teachers: React.FC = () => {
     email: string; 
     password: string; 
     phoneNo: string;
-    profilePic?: string;
-  }) => {
+  }, profilePicFile?: File) => {
     if (!user?.schoolId) return;
     
     try {
@@ -37,22 +36,21 @@ const Teachers: React.FC = () => {
         email: teacher.email,
         phoneNo: teacher.phoneNo,
         password: teacher.password,
-        profilePic: teacher.profilePic || '',
         subjects: [],
         classesAssigned: []
       };
 
-      const response = await teacherService.addTeacher(teacherData);
+      const response = await teacherService.addTeacher(teacherData, profilePicFile);
       
       // Add the new teacher to the local state
       setTeachers(prev => [
         {
           teacherId: response.teacherId,
-          name: teacher.teacherName, // Map teacherName to name
+          name: teacher.teacherName,
           email: teacher.email,
           password: teacher.password,
           phoneNo: teacher.phoneNo,
-          profilePic: teacher.profilePic || '',
+          profilePic: response.profilePic || '',
           subjects: [],
           classesAssigned: [],
           schoolName: schoolName,
@@ -79,20 +77,24 @@ const Teachers: React.FC = () => {
     teacherName: string;
     email: string;
     phoneNo: string;
-    profilePic?: string;
-  }) => {
+  }, profilePicFile?: File) => {
     try {
-      await teacherService.editTeacher(teacherId, {
+      const response = await teacherService.editTeacher(teacherId, {
         teacherName: teacherData.teacherName,
         email: teacherData.email,
         phoneNo: teacherData.phoneNo,
-        profilePic: teacherData.profilePic,
-      });
+      }, profilePicFile);
       
       // Update the teacher in local state
       setTeachers(prev => prev.map(t => 
         t.teacherId === teacherId 
-          ? { ...t, name: teacherData.teacherName, email: teacherData.email, phoneNo: teacherData.phoneNo, profilePic: teacherData.profilePic }
+          ? { 
+              ...t, 
+              name: teacherData.teacherName, 
+              email: teacherData.email, 
+              phoneNo: teacherData.phoneNo,
+              profilePic: response.profilePic || t.profilePic
+            }
           : t
       ));
       

@@ -2,16 +2,26 @@
 
 export interface Student {
   studentId: string;
-  studentName: string;
-  rollNo: string;
-  email: string;
-  classId: string;
-  classValue: string;
-  divisionValue: string;
-  password: string;
   schoolId: string;
-  teacherId: string;
-  isActive: boolean;
+  classId: string;
+  className?: string;  // Class name (e.g., "1st", "2nd", "10th")
+  section?: string;    // Section (e.g., "A", "B", "C")
+  name: string;
+  email: string;
+  phoneNo: string;
+  password?: string; // Optional in response
+  profilePic?: string;
+  admissionYear: string;
+  isActive?: boolean;
+  rollNo?: string;
+  createdAt?: {
+    _seconds: number;
+    _nanoseconds: number;
+  } | string; // Can be Firebase timestamp or string
+  updatedAt?: {
+    _seconds: number;
+    _nanoseconds: number;
+  } | string; // Can be Firebase timestamp or string
 }
 
 export interface StudentsResponse {

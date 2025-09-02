@@ -112,26 +112,37 @@ class TeacherService {
     }
   }
 
-  // Edit a teacher
+  // Edit a teacher with file upload support
   async editTeacher(teacherId: string, teacherData: {
     teacherName?: string;
     email?: string;
     phoneNo?: string;
-    profilePic?: string;
     subjects?: string[];
     classesAssigned?: string[];
-  }): Promise<any> {
+  }, profilePicFile?: File): Promise<any> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.TEACHERS.EDIT.replace(':teacherId', teacherId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      
+      const formData = new FormData();
+      
+      // Add text fields
+      if (teacherData.teacherName) formData.append('teacherName', teacherData.teacherName);
+      if (teacherData.email) formData.append('email', teacherData.email);
+      if (teacherData.phoneNo) formData.append('phoneNo', teacherData.phoneNo);
+      if (teacherData.subjects) formData.append('subjects', JSON.stringify(teacherData.subjects));
+      if (teacherData.classesAssigned) formData.append('classesAssigned', JSON.stringify(teacherData.classesAssigned));
+      
+      // Add profile picture file if provided
+      if (profilePicFile) {
+        formData.append('profilePic', profilePicFile);
+      }
+
       const response = await fetch(url, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(teacherData),
+        body: formData,
       });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -142,20 +153,46 @@ class TeacherService {
     }
   }
 
-  // Add a teacher
+  // Add a teacher with file upload support
   async addTeacher(teacherData: {
     schoolId: string;
     teacherName: string;
     email: string;
     phoneNo: string;
     password: string;
-    profilePic?: string;
-    subjects: string[];
-    classesAssigned: string[];
-  }): Promise<any> {
+    subjects?: string[];
+    classesAssigned?: string[];
+  }, profilePicFile?: File): Promise<any> {
     try {
-      const response = await apiHelper.post(API_CONFIG.ENDPOINTS.TEACHERS.ADD, teacherData);
-      return response;
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TEACHERS.ADD}`;
+      
+      const formData = new FormData();
+      
+      // Add required fields
+      formData.append('schoolId', teacherData.schoolId);
+      formData.append('teacherName', teacherData.teacherName);
+      formData.append('email', teacherData.email);
+      formData.append('phoneNo', teacherData.phoneNo);
+      formData.append('password', teacherData.password);
+      
+      // Add optional fields
+      if (teacherData.subjects) formData.append('subjects', JSON.stringify(teacherData.subjects));
+      if (teacherData.classesAssigned) formData.append('classesAssigned', JSON.stringify(teacherData.classesAssigned));
+      
+      // Add profile picture file if provided
+      if (profilePicFile) {
+        formData.append('profilePic', profilePicFile);
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Failed to add teacher:', error);
       throw error;

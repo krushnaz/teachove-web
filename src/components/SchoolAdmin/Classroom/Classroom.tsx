@@ -38,7 +38,11 @@ const Classroom: React.FC = () => {
   const [editingClassroom, setEditingClassroom] = useState<ClassroomData | null>(null);
   const [viewingClassroom, setViewingClassroom] = useState<ClassroomData | null>(null);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachersLoading, setTeachersLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [classroomToDelete, setClassroomToDelete] = useState<ClassroomData | null>(null);
+  const [noClassroomsFound, setNoClassroomsFound] = useState(false);
 
   const [formData, setFormData] = useState({
     className: '',
@@ -50,23 +54,15 @@ const Classroom: React.FC = () => {
   const [academicYear] = useState('2025-2026');
 
 
-  // Fetch classrooms and teachers from API
+  // Fetch classrooms from API
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchClassrooms = async () => {
       if (!user?.schoolId) return;
-      
+
       try {
         setLoading(true);
-        
-        // Fetch classrooms and teachers in parallel
-        const [apiClassrooms, teachersResponse] = await Promise.all([
-          classroomService.getClassesBySchoolId(user.schoolId, academicYear),
-          teacherService.getTeachersBySchool(user.schoolId)
-        ]);
-        
-        // Set teachers
-        setTeachers(teachersResponse.teachers || []);
-        
+        const apiClassrooms = await classroomService.getClassesBySchoolId(user.schoolId, academicYear);
+
         // Transform API data to match component structure
         const transformedClassrooms: ClassroomData[] = apiClassrooms.map(cls => ({
           id: cls.classId,
@@ -82,18 +78,47 @@ const Classroom: React.FC = () => {
             teacher: sub.teacherName || sub.teacherId
           }))
         }));
-        
+
         setClassrooms(transformedClassrooms);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to fetch data');
+        setNoClassroomsFound(false);
+      } catch (error: any) {
+        console.error('Error fetching classrooms:', error);
+
+        // Handle 404 status - No classrooms found
+        if (error?.status === 404 || error?.response?.status === 404) {
+          setClassrooms([]); // Set empty array for no classrooms
+          setNoClassroomsFound(true);
+          // Don't show error toast for 404, it's expected when no classrooms exist
+        } else {
+          toast.error('Failed to fetch classrooms');
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchClassrooms();
   }, [user?.schoolId, academicYear]);
+
+  // Fetch teachers from API
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      if (!user?.schoolId) return;
+      
+      try {
+        setTeachersLoading(true);
+        const teachersResponse = await teacherService.getTeachersBySchool(user.schoolId);
+        setTeachers(teachersResponse.teachers || []);
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+        toast.error('Failed to fetch teachers');
+      } finally {
+        setTeachersLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, [user?.schoolId]);
 
   const handleAddClassroom = () => {
     setShowAddModal(true);
@@ -124,19 +149,29 @@ const Classroom: React.FC = () => {
     });
   };
 
-  const handleDeleteClassroom = async (id: string) => {
-    if (!user?.schoolId) return;
-    
-    if (window.confirm('Are you sure you want to delete this classroom?')) {
-      try {
-        await classroomService.deleteClass(user.schoolId, academicYear, id);
-        setClassrooms(classrooms.filter(c => c.id !== id));
-        toast.success('Classroom deleted successfully');
-      } catch (error) {
-        console.error('Error deleting classroom:', error);
-        toast.error('Failed to delete classroom');
-      }
+  const handleDeleteClick = (classroom: ClassroomData) => {
+    setClassroomToDelete(classroom);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!classroomToDelete || !user?.schoolId) return;
+    try {
+      await classroomService.deleteClass(user.schoolId, academicYear, classroomToDelete.id);
+      setClassrooms(classrooms.filter(c => c.id !== classroomToDelete.id));
+      toast.success('Classroom deleted successfully');
+    } catch (error) {
+      console.error('Error deleting classroom:', error);
+      toast.error('Failed to delete classroom');
+    } finally {
+      setConfirmDialogOpen(false);
+      setClassroomToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDialogOpen(false);
+    setClassroomToDelete(null);
   };
 
   const handleViewClassroom = (classroom: ClassroomData) => {
@@ -389,8 +424,33 @@ const Classroom: React.FC = () => {
 
       {/* Classrooms Table */}
       <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border`}>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        {noClassroomsFound ? (
+          /* No Classrooms Found State */
+          <div className="text-center py-16">
+            <div className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+              <svg className={`w-12 h-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              No Classrooms Found
+            </h3>
+            <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Get started by creating your first classroom
+            </p>
+            <button
+              onClick={handleAddClassroom}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Create First Classroom
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className={`${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
               <tr>
                 <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
@@ -514,7 +574,7 @@ const Classroom: React.FC = () => {
                         Edit Class
                       </button>
                       <button
-                        onClick={() => handleDeleteClassroom(classroom.id)}
+                        onClick={() => handleDeleteClick(classroom)}
                         className={`px-3 py-2 text-xs font-medium border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 flex items-center gap-2`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,50 +587,48 @@ const Classroom: React.FC = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        )}
       </div>
 
-            {/* Beautiful Add/Edit Classroom Modal */}
+            {/* Clean Add/Edit Classroom Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`w-full max-w-2xl max-h-[90vh] transform transition-all duration-300 scale-100 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-3xl shadow-2xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} overflow-hidden flex flex-col`}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-2xl transform transition-all duration-300 scale-100 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-2xl shadow-2xl overflow-hidden`}>
             
-            {/* Header with gradient background */}
-            <div className={`relative overflow-hidden ${isDarkMode ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-gradient-to-r from-blue-600 to-purple-600'} p-6 flex-shrink-0`}>
-              <div className="absolute inset-0 bg-black/20"></div>
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-3 rounded-2xl ${isDarkMode ? 'bg-white/20' : 'bg-white/30'} backdrop-blur-sm`}>
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">
-                      {editingClassroom ? 'Edit Classroom' : 'Create New Classroom'}
-                    </h3>
-                    <p className="text-blue-100 text-sm mt-1">
-                      {editingClassroom ? 'Update classroom information' : 'Add a new classroom to your school'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-white/20' : 'hover:bg-white/30'} transition-all duration-200 text-white`}
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            {/* Clean Header */}
+            <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 rounded-lg ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} flex items-center justify-center`}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                </button>
+                </div>
+                <div>
+                  <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {editingClassroom ? 'Edit Classroom' : 'Add Classroom'}
+                  </h3>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {editingClassroom ? 'Update classroom information' : 'Create a new classroom'}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'} transition-colors duration-200`}
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            {/* Form Content - Scrollable */}
-            <div className="p-8 overflow-y-auto flex-1">
-              <form className="space-y-6">
+            {/* Form Content */}
+            <div className="p-6 space-y-6">
+              <form className="space-y-4">
                 {/* Class Name and Section Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className={`block text-sm font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                       Class Name
@@ -586,11 +644,9 @@ const Classroom: React.FC = () => {
                         value={formData.className}
                         onChange={(e) => handleFormChange('className', e.target.value)}
                         disabled={submitting}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                        } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 ${
+                          submitting ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="e.g., 10th"
                       />
                     </div>
@@ -611,11 +667,9 @@ const Classroom: React.FC = () => {
                         value={formData.section}
                         onChange={(e) => handleFormChange('section', e.target.value)}
                         disabled={submitting}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                        } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 ${
+                          submitting ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="e.g., A"
                       />
                     </div>
@@ -623,7 +677,7 @@ const Classroom: React.FC = () => {
                 </div>
 
                 {/* Teacher ID and Fees Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className={`block text-sm font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                       Class Teacher
@@ -637,14 +691,14 @@ const Classroom: React.FC = () => {
                       <select
                         value={formData.classTeacherId}
                         onChange={(e) => handleFormChange('classTeacherId', e.target.value)}
-                        disabled={submitting}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                        } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={submitting || teachersLoading}
+                        className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 ${
+                          (submitting || teachersLoading) ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       >
-                        <option value="">Select a teacher</option>
+                        <option value="">
+                          {teachersLoading ? 'Loading teachers...' : 'Select a teacher'}
+                        </option>
                         {teachers.map((teacher) => (
                           <option key={teacher.teacherId} value={teacher.teacherName || teacher.name}>
                             {teacher.teacherName || teacher.name}
@@ -669,11 +723,9 @@ const Classroom: React.FC = () => {
                         value={formData.classFees}
                         onChange={(e) => handleFormChange('classFees', parseInt(e.target.value) || 0)}
                         disabled={submitting}
-                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
-                        } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 ${
+                          submitting ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         placeholder="25000"
                       />
                     </div>
@@ -722,8 +774,8 @@ const Classroom: React.FC = () => {
                               disabled={submitting}
                               placeholder="e.g., Mathematics"
                               className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${
-                                isDarkMode 
-                                  ? 'bg-gray-700 border-gray-500 text-white placeholder-gray-400' 
+                                isDarkMode
+                                  ? 'bg-gray-700 border-gray-500 text-white placeholder-gray-400'
                                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                               } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             />
@@ -735,14 +787,16 @@ const Classroom: React.FC = () => {
                             <select
                               value={subject.teacherId}
                               onChange={(e) => handleSubjectChange(index, 'teacherId', e.target.value)}
-                              disabled={submitting}
+                              disabled={submitting || teachersLoading}
                               className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${
-                                isDarkMode 
-                                  ? 'bg-gray-700 border-gray-500 text-white placeholder-gray-400' 
+                                isDarkMode
+                                  ? 'bg-gray-700 border-gray-500 text-white placeholder-gray-400'
                                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                              } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              } ${(submitting || teachersLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                              <option value="">Select a teacher</option>
+                              <option value="">
+                                {teachersLoading ? 'Loading teachers...' : 'Select a teacher'}
+                              </option>
                               {teachers.map((teacher) => (
                                 <option key={teacher.teacherId} value={teacher.teacherName || teacher.name}>
                                   {teacher.teacherName || teacher.name}
@@ -774,35 +828,22 @@ const Classroom: React.FC = () => {
               </form>
               
               {/* Action Buttons */}
-              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div className="flex justify-end space-x-3 pt-4">
                 <button
+                  type="button"
                   onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
                   disabled={submitting}
-                  className={`px-6 py-3 rounded-xl border-2 font-semibold transition-all duration-200 ${
-                    isDarkMode 
-                      ? 'border-gray-600 text-gray-300 hover:bg-gray-800 hover:border-gray-500' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                  } ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   Cancel
                 </button>
                 <button
+                  type="submit"
                   onClick={handleSubmitForm}
+                  className="px-4 py-2 rounded-md bg-primary-600 text-white font-semibold shadow hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
                   disabled={submitting}
-                  className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-                    submitting 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'hover:from-blue-700 hover:to-purple-700'
-                  }`}
                 >
-                  {submitting ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>{editingClassroom ? 'Updating...' : 'Creating...'}</span>
-                    </div>
-                  ) : (
-                    editingClassroom ? 'Update Classroom' : 'Create Classroom'
-                  )}
+                  {submitting ? (editingClassroom ? 'Updating...' : 'Adding...') : (editingClassroom ? 'Update Classroom' : 'Add Classroom')}
                 </button>
               </div>
             </div>
@@ -810,216 +851,176 @@ const Classroom: React.FC = () => {
         </div>
       )}
 
-      {/* Simple & Impressive View Classroom Details Modal */}
+      {/* Clean & Compact View Classroom Details Modal */}
       {viewingClassroom && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`w-full max-w-5xl max-h-[90vh] transform transition-all duration-300 scale-100 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-3xl shadow-2xl overflow-hidden flex flex-col`}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-2xl transform transition-all duration-300 scale-100 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-2xl shadow-2xl overflow-hidden`}>
             
-            {/* Header with gradient background */}
-            <div className={`relative overflow-hidden ${isDarkMode ? 'bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-900' : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'} p-8 flex-shrink-0`}>
-              <div className="absolute inset-0 bg-black/10"></div>
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center space-x-6">
-                  <div className={`p-4 rounded-3xl ${isDarkMode ? 'bg-white/20' : 'bg-white/30'} backdrop-blur-sm`}>
-                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            {/* Compact Header */}
+            <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 rounded-lg ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} flex items-center justify-center`}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {viewingClassroom.name}
+                  </h3>
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Classroom Details
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingClassroom(null)}
+                className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'} transition-colors duration-200`}
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Compact Content */}
+            <div className="p-6 space-y-6">
+              
+              {/* Key Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                  <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} mb-1`}>
+                    {viewingClassroom.grade}
+                  </div>
+                  <div className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} uppercase tracking-wide`}>
+                    Grade Level
+                  </div>
+                </div>
+                
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                  <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'} mb-1`}>
+                    {viewingClassroom.students}/{viewingClassroom.capacity}
+                  </div>
+                  <div className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} uppercase tracking-wide`}>
+                    Students
+                  </div>
+                </div>
+              </div>
+
+              {/* Teacher Info */}
+              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 rounded-full ${isDarkMode ? 'bg-purple-600' : 'bg-purple-500'} flex items-center justify-center`}>
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-4xl font-bold text-white mb-2">
-                      {viewingClassroom.name}
-                    </h3>
-                    <p className="text-blue-100 text-xl">
-                      Complete Classroom Overview
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setViewingClassroom(null)}
-                  className={`p-3 rounded-full ${isDarkMode ? 'hover:bg-white/20' : 'hover:bg-white/30'} transition-all duration-200 text-white`}
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Content - Scrollable */}
-            <div className="p-10 overflow-y-auto flex-1">
-              
-              {/* Key Information Row */}
-              <div className="mb-12">
-                <div className="flex flex-wrap items-center gap-8 text-center">
-                  <div className="flex-1 min-w-[200px]">
-                    <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      {viewingClassroom.grade}
-                    </div>
-                    <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      GRADE LEVEL
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-[200px]">
-                    <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                    <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Class Teacher</div>
+                    <div className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {viewingClassroom.teacher}
-                    </div>
-                    <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      CLASS TEACHER
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-[200px]">
-                    <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                      {viewingClassroom.students}/{viewingClassroom.capacity}
-                    </div>
-                    <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      STUDENTS
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-[200px]">
-                    <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                      {viewingClassroom.status}
-                    </div>
-                    <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      STATUS
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Subjects Section */}
-              <div className="mb-12">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className={`w-1 h-12 ${isDarkMode ? 'bg-gradient-to-b from-blue-400 to-purple-400' : 'bg-gradient-to-b from-blue-500 to-purple-500'}`}></div>
-                  <div>
-                    <h4 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      📚 Subjects & Teachers
-                    </h4>
-                    <p className={`text-xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {viewingClassroom.subjects.length} subject{viewingClassroom.subjects.length !== 1 ? 's' : ''} assigned to this classroom
-                    </p>
-                  </div>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Subjects ({viewingClassroom.subjects.length})
+                  </h4>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    viewingClassroom.status === 'active' 
+                      ? (isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800')
+                      : (isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800')
+                  }`}>
+                    {viewingClassroom.status}
+                  </span>
                 </div>
 
                 {viewingClassroom.subjects.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {viewingClassroom.subjects.map((subject, index) => (
-                      <div key={index} className={`p-6 rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
-                        isDarkMode 
-                          ? 'bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600' 
-                          : 'bg-gradient-to-r from-gray-50 to-white hover:from-white hover:to-gray-50'
-                      } border-l-4 ${isDarkMode ? 'border-blue-400' : 'border-blue-500'}`}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-6">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
-                              isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {index + 1}
-                            </div>
-                            <div>
-                              <h5 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                {subject.name}
-                              </h5>
-                              <div className="flex items-center space-x-2">
-                                <svg className={`w-5 h-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span className={`text-lg font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
-                                  {subject.teacher}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                            isDarkMode 
-                              ? 'bg-blue-900 text-blue-200' 
-                              : 'bg-blue-100 text-blue-800'
+                      <div key={index} className={`p-3 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} flex items-center justify-between`}>
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'
                           }`}>
-                            Subject {index + 1}
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {subject.name}
+                            </div>
+                            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {subject.teacher}
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className={`text-center py-16 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <svg className="w-20 h-20 mx-auto mb-6 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c1.746 0 3.332.477 4.5 1.253" />
                     </svg>
-                    <p className="text-2xl font-medium mb-2">No subjects assigned yet</p>
-                    <p className="text-lg">Subjects will appear here once they are added to this classroom</p>
+                    <p className="text-sm">No subjects assigned yet</p>
                   </div>
                 )}
               </div>
-
-
-
-              {/* Additional Information */}
-              <div className="mb-8">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className={`w-1 h-10 ${isDarkMode ? 'bg-gradient-to-b from-green-400 to-emerald-400' : 'bg-gradient-to-b from-green-500 to-emerald-500'}`}></div>
-                  <h4 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    📋 Additional Details
-                  </h4>
-                </div>
-                
-                <div className={`p-8 rounded-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Classroom ID</span>
-                        <span className={`text-lg font-mono ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{viewingClassroom.id}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Academic Year</span>
-                        <span className={`text-lg ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{academicYear}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Created</span>
-                        <span className={`text-lg ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Recently</span>
-                      </div>
-                      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Last Updated</span>
-                        <span className={`text-lg ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Recently</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="p-8 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-              <div className="flex justify-end space-x-6">
-                <button
-                  onClick={() => setViewingClassroom(null)}
-                  className={`px-8 py-4 rounded-2xl border-2 font-semibold text-lg transition-all duration-200 ${
-                    isDarkMode 
-                      ? 'border-gray-600 text-gray-300 hover:bg-gray-800 hover:border-gray-500' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                  }`}
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setViewingClassroom(null);
-                    handleEditClassroom(viewingClassroom);
-                  }}
-                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  Edit Classroom
-                </button>
-              </div>
+            {/* Compact Action Buttons */}
+            <div className={`px-6 py-4 border-t ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'} flex justify-end space-x-3`}>
+              <button
+                onClick={() => setViewingClassroom(null)}
+                className={`px-4 py-2 rounded-lg border font-medium text-sm transition-colors duration-200 ${
+                  isDarkMode 
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setViewingClassroom(null);
+                  handleEditClassroom(viewingClassroom);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors duration-200"
+              >
+                Edit Classroom
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Confirmation Dialog */}
+      {confirmDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Delete</h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">Are you sure you want to delete <span className="font-bold">{classroomToDelete?.name}</span>?</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
