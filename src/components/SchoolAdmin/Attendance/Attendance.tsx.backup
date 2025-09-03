@@ -89,8 +89,6 @@ const Attendance: React.FC = () => {
   const [markedDates, setMarkedDates] = useState<string[]>([]);
   const [markedDatesLoading, setMarkedDatesLoading] = useState(true);
 
-  const [attendanceSummary, setAttendanceSummary] = useState<any>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const nonTeachingStaff: StaffMember[] = [
     { id: 1, name: 'Mr. Suresh Kumar', designation: 'Administrative Officer', avatar: 'SK', status: 'present' },
     { id: 2, name: 'Mrs. Geeta Sharma', designation: 'Accountant', avatar: 'GS', status: 'present' },
@@ -121,6 +119,28 @@ const Attendance: React.FC = () => {
             // Ensure we have a display name
             displayName: t.teacherName || t.name || 'Unknown Teacher'
           };
+
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
         });
 
         console.log('Mapped teachers:', mappedTeachers);
@@ -131,8 +151,28 @@ const Attendance: React.FC = () => {
       } finally {
         setLoading(false);
       }
+    };
+
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
     }
 
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
     fetchTeachers();
   }, [user?.schoolId]);
@@ -154,6 +194,26 @@ const Attendance: React.FC = () => {
       }
     };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
     fetchMarkedDates();
   }, [user?.schoolId]);
@@ -202,32 +262,29 @@ const Attendance: React.FC = () => {
       }
     };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
 
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
+    fetchStatuses();
   }, [user?.schoolId, teachersList, selectedDate]);
-
-  useEffect(() => {
-    const fetchAttendanceSummary = async () => {
-      if (!user?.schoolId || activeTab !== 'reports') return;
-      setSummaryLoading(true);
-      try {
-        const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
-          user.schoolId,
-          fromDate || undefined,
-          toDate || undefined
-        );
-        console.log('Fetched attendance summary:', summary);
-        setAttendanceSummary(summary);
-      } catch (error) {
-        console.error('Error fetching attendance summary:', error);
-        setAttendanceSummary(null);
-      } finally {
-        setSummaryLoading(false);
-      }
-    };
-
-    fetchAttendanceSummary();
-  }, [user?.schoolId, activeTab, fromDate, toDate]);
 
   const handleStatusToggle = async (teacherId: string, currentStatus: string, type: 'teachers' | 'non-teaching') => {
     if (type === 'teachers') {
@@ -255,6 +312,26 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const getStatusButtonProps = (status: string) => {
@@ -265,6 +342,26 @@ const Attendance: React.FC = () => {
           text: 'Present'
         };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
       case 'absent':
         return {
@@ -272,6 +369,26 @@ const Attendance: React.FC = () => {
           text: 'Absent'
         };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
       default:
         return {
@@ -279,10 +396,50 @@ const Attendance: React.FC = () => {
           text: 'Not Marked'
         };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const handleBulkMarkAttendance = async () => {
@@ -304,6 +461,26 @@ const Attendance: React.FC = () => {
         records: attendanceRecords
       };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
       const response = await teacherAttendanceService.markBulkAttendance(user.schoolId, bulkData);
@@ -364,6 +541,26 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const handleDownloadReport = async () => {
@@ -399,6 +596,26 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const getAttendanceData = (list: any[], type: 'teachers' | 'non-teaching'): AttendanceData => {
@@ -430,6 +647,26 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const getStatusColor = (status: string) => {
@@ -443,6 +680,26 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const getStatusText = (status: string) => {
@@ -456,6 +713,26 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const renderCalendarStrip = () => {
@@ -569,6 +846,26 @@ const Attendance: React.FC = () => {
     );
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const renderAttendanceList = (list: any[], type: 'teachers' | 'non-teaching') => {
@@ -852,15 +1149,42 @@ const Attendance: React.FC = () => {
     );
   };
 
+  const handleFetchSummary = async () => {
+    if (!user?.schoolId || !fromDate || !toDate) {
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const summary = await teacherAttendanceService.getTeacherAttendanceSummary(
+        user.schoolId,
+        fromDate,
+        toDate
+      );
+      setAttendanceSummary(summary);
+    } catch (error) {
+      console.error('Failed to fetch attendance summary:', error);
+      toast.error('Failed to fetch attendance summary');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
 
   const renderReports = () => {
+    // Fetch summary when dates change
+    React.useEffect(() => {
+      if (fromDate && toDate && user?.schoolId) {
+        handleFetchSummary();
+      }
+    }, [fromDate, toDate, user?.schoolId]);
+
     const teachersData = getAttendanceData(teachersList, 'teachers');
     const nonTeachingData = getAttendanceData(nonTeachingList, 'non-teaching');
     const selectedData = selectedReportType === 'teachers' ? teachersData : nonTeachingData;
     
-    const presentPercentage = attendanceSummary ? parseFloat(attendanceSummary.presentPercentage.replace("%", "")) : 0;
-    const absentPercentage = attendanceSummary ? parseFloat(attendanceSummary.absentPercentage.replace("%", "")) : 0;
+    const presentPercentage = attendanceSummary ? parseFloat(attendanceSummary.presentPercentage.replace('%, '')) : 0;
+    const absentPercentage = attendanceSummary ? parseFloat(attendanceSummary.absentPercentage.replace('%, '')) : 0;
 
     return (
       <div>
@@ -963,30 +1287,9 @@ const Attendance: React.FC = () => {
 
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{attendanceSummary?.totalRecords || 0}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Total</div>
-                  </div>
-                </div>
-              </div>
-            )}
+                  <div className="text-center">
 
-            {/* Legend */}
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
-                <span className="text-sm text-gray-700 dark:text-gray-300">Present: {attendanceSummary?.presentCount || 0} ({attendanceSummary?.presentPercentage || '0%'})</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
-                <span className="text-sm text-gray-700 dark:text-gray-300">Absent: {attendanceSummary?.absentCount || 0} ({attendanceSummary?.absentPercentage || '0%'})</span>
-              </div>
 
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
   return (
     <div>
       <ToastContainer position="top-right" autoClose={3000} />

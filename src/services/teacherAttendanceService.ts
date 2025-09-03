@@ -112,7 +112,38 @@ export const teacherAttendanceService = {
     return responseData.markedDates || [];
   },
 
+  async getTeacherAttendanceSummary(schoolId: string, fromDate?: string, toDate?: string): Promise<any> {
+    const endpoint = API_CONFIG.ENDPOINTS.TEACHER_ATTENDANCE.SUMMARY
+      .replace(':schoolId', schoolId);
+    let url = `${API_CONFIG.BASE_URL}${endpoint}?schoolId=${schoolId}`;
+    
+    if (fromDate) url += `&fromDate=${fromDate}`;
+    if (toDate) url += `&toDate=${toDate}`;
+
+    console.log('GET attendance summary request to:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    console.log('GET attendance summary response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('GET attendance summary response error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    }
+
+    const responseData = await response.json();
+    console.log('GET attendance summary response data:', responseData);
+    return responseData;
+  },
+
   async downloadTeacherAttendanceReport(schoolId: string, fromDate: string, toDate: string): Promise<Blob> {
+
     const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TEACHER_ATTENDANCE.DOWNLOAD_REPORT}?schoolId=${schoolId}&fromDate=${fromDate}&toDate=${toDate}`;
     const response = await fetch(url, {
       method: 'GET',
