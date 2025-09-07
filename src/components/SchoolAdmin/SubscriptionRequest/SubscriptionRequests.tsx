@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useDarkMode } from '../../contexts/DarkModeContext';
-import { subscriptionService, SubscriptionRequest as ApiSubscriptionRequest, CreateSubscriptionRequest, SubscriptionCostResponse } from '../../services/subscriptionService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useDarkMode } from '../../../contexts/DarkModeContext';
+import { subscriptionService, SubscriptionRequest as ApiSubscriptionRequest, CreateSubscriptionRequest, SubscriptionCostResponse } from '../../../services/subscriptionService';
 
 // Declare Razorpay types
 declare global {
@@ -445,127 +445,127 @@ const SubscriptionRequests: React.FC = () => {
   };
 
   // Alternative method: Create order first, then show payment (if you prefer this approach)
-  const handlePayNowWithOrder = async (request: SubscriptionRequest) => {
-    if (!request.subscriptionId || !user?.schoolId) {
-      showToast('Missing information for payment', 'error');
-      return;
-    }
-
-    if (processingPayment === request.subscriptionId) {
-      return;
-    }
-
-    // Validate amount
-    const amount = Number(request.amount);
-    if (isNaN(amount) || amount <= 0) {
-      showToast(`Invalid amount for payment: ${request.amount}`, 'error');
-      return;
-    }
-
-    try {
-      setProcessingPayment(request.subscriptionId);
-      showToast('Creating payment order...', 'info');
-
-      // First create order with your backend
-      const orderData = {
-        amount: amount,
-        subscriptionId: String(request.subscriptionId),
-        userId: String(user.schoolId),
-        schoolId: String(user.schoolId)
-      };
-
-      const orderResponse = await subscriptionService.createRazorpayOrder(orderData);
-
-      if (!orderResponse.orderId) {
-        throw new Error('Failed to create payment order');
-      }
-
-      // Then show Razorpay with the order ID
-      const options = {
-        key: orderResponse.key || process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY',
-        amount: amount * 100, // Convert rupees to paise for Razorpay
-        currency: 'INR',
-        name: 'TeachoVE',
-        description: `${request.subscriptionType || 'Subscription'} Payment`,
-        order_id: orderResponse.orderId, // Use the order ID from backend
-        prefill: {
-          name: 'School Admin',
-          email: user.email,
-        },
-        theme: { color: '#3B82F6' },
-        handler: async (response: any) => {
-          console.log('=== RAZORPAY HANDLER TRIGGERED ===');
-          console.log('Response type:', typeof response);
-          console.log('Response is null/undefined:', response === null || response === undefined);
-          
-          try {
-            showToast('Payment completed! Verifying with server...', 'info');
-            
-            if (!response) {
-              throw new Error('Razorpay response is null or undefined');
-            }
-            
-            console.log('Full Razorpay response object:', response);
-            console.log('Response keys:', Object.keys(response));
-            console.log('Response values:', Object.values(response));
-            console.log('Response stringified:', JSON.stringify(response, null, 2));
-            
-            // Check for different possible field names
-            const paymentId = response.razorpay_payment_id || response.payment_id || response.paymentId;
-            const orderId = response.razorpay_order_id || response.order_id || response.orderId || 'N/A';
-            const signature = response.razorpay_signature || response.signature || 'N/A';
-            
-            console.log('Extracted values:', { paymentId, orderId, signature });
-            
-            // Only require payment ID since that's what Razorpay provides
-            if (!paymentId) {
-              throw new Error(`Missing payment ID from Razorpay. Got: paymentId=${paymentId}`);
-            }
-            
-            const verificationData = {
-              razorpay_payment_id: paymentId,
-              razorpay_order_id: orderId,
-              razorpay_signature: signature,
-              subscriptionId: request.subscriptionId!,
-              totalPaidAmount: amount,
-              remainingAmount: 0
-            };
-            
-            console.log('Data being sent for verification:', verificationData);
-            
-            await subscriptionService.verifyRazorpayPayment(verificationData);
-
-            setRequests(prev => prev.map(req => 
-              req.subscriptionId === request.subscriptionId 
-                ? { ...req, paymentStatus: 'paid' as const }
-                : req
-            ));
-
-            showToast('Payment verified successfully! Your subscription is now active.', 'success');
-          } catch (error) {
-            console.error('Payment verification failed:', error);
-            showToast('Payment completed but verification failed. Please contact support.', 'error');
-          } finally {
-            setProcessingPayment(null);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setProcessingPayment(null);
-            showToast('Payment cancelled', 'info');
-          }
-        }
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-
-    } catch (error) {
-      console.error('Error creating payment order:', error);
-      showToast('Failed to create payment order. Please try again.', 'error');
-      setProcessingPayment(null);
-    }
-  };
+// //   const handlePayNowWithOrder = async (request: SubscriptionRequest) => {
+//     if (!request.subscriptionId || !user?.schoolId) {
+//       showToast('Missing information for payment', 'error');
+//       return;
+//     }
+// 
+//     if (processingPayment === request.subscriptionId) {
+//       return;
+//     }
+// 
+//     // Validate amount
+//     const amount = Number(request.amount);
+//     if (isNaN(amount) || amount <= 0) {
+//       showToast(`Invalid amount for payment: ${request.amount}`, 'error');
+//       return;
+//     }
+// 
+//     try {
+//       setProcessingPayment(request.subscriptionId);
+//       showToast('Creating payment order...', 'info');
+// 
+//       // First create order with your backend
+//       const orderData = {
+//         amount: amount,
+//         subscriptionId: String(request.subscriptionId),
+//         userId: String(user.schoolId),
+//         schoolId: String(user.schoolId)
+//       };
+// 
+//       const orderResponse = await subscriptionService.createRazorpayOrder(orderData);
+// 
+//       if (!orderResponse.orderId) {
+//         throw new Error('Failed to create payment order');
+//       }
+// 
+//       // Then show Razorpay with the order ID
+//       const options = {
+//         key: orderResponse.key || process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY',
+//         amount: amount * 100, // Convert rupees to paise for Razorpay
+//         currency: 'INR',
+//         name: 'TeachoVE',
+//         description: `${request.subscriptionType || 'Subscription'} Payment`,
+//         order_id: orderResponse.orderId, // Use the order ID from backend
+//         prefill: {
+//           name: 'School Admin',
+//           email: user.email,
+//         },
+//         theme: { color: '#3B82F6' },
+//         handler: async (response: any) => {
+//           console.log('=== RAZORPAY HANDLER TRIGGERED ===');
+//           console.log('Response type:', typeof response);
+//           console.log('Response is null/undefined:', response === null || response === undefined);
+//           
+//           try {
+//             showToast('Payment completed! Verifying with server...', 'info');
+//             
+//             if (!response) {
+//               throw new Error('Razorpay response is null or undefined');
+//             }
+//             
+//             console.log('Full Razorpay response object:', response);
+//             console.log('Response keys:', Object.keys(response));
+//             console.log('Response values:', Object.values(response));
+//             console.log('Response stringified:', JSON.stringify(response, null, 2));
+//             
+//             // Check for different possible field names
+//             const paymentId = response.razorpay_payment_id || response.payment_id || response.paymentId;
+//             const orderId = response.razorpay_order_id || response.order_id || response.orderId || 'N/A';
+//             const signature = response.razorpay_signature || response.signature || 'N/A';
+//             
+//             console.log('Extracted values:', { paymentId, orderId, signature });
+//             
+//             // Only require payment ID since that's what Razorpay provides
+//             if (!paymentId) {
+//               throw new Error(`Missing payment ID from Razorpay. Got: paymentId=${paymentId}`);
+//             }
+//             
+//             const verificationData = {
+//               razorpay_payment_id: paymentId,
+//               razorpay_order_id: orderId,
+//               razorpay_signature: signature,
+//               subscriptionId: request.subscriptionId!,
+//               totalPaidAmount: amount,
+//               remainingAmount: 0
+//             };
+//             
+//             console.log('Data being sent for verification:', verificationData);
+//             
+//             await subscriptionService.verifyRazorpayPayment(verificationData);
+// 
+//             setRequests(prev => prev.map(req => 
+//               req.subscriptionId === request.subscriptionId 
+//                 ? { ...req, paymentStatus: 'paid' as const }
+//                 : req
+//             ));
+// 
+//             showToast('Payment verified successfully! Your subscription is now active.', 'success');
+//           } catch (error) {
+//             console.error('Payment verification failed:', error);
+//             showToast('Payment completed but verification failed. Please contact support.', 'error');
+//           } finally {
+//             setProcessingPayment(null);
+//           }
+//         },
+//         modal: {
+//           ondismiss: () => {
+//             setProcessingPayment(null);
+//             showToast('Payment cancelled', 'info');
+//           }
+//         }
+//       };
+// 
+//       const razorpay = new window.Razorpay(options);
+//       razorpay.open();
+// 
+//     } catch (error) {
+//       console.error('Error creating payment order:', error);
+//       showToast('Failed to create payment order. Please try again.', 'error');
+//       setProcessingPayment(null);
+//     }
+//   };
 
   const getStatusColor = (status: string) => {
     const colors = {

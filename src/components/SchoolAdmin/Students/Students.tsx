@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 import { studentService } from '../../../services/studentService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Student } from '../../../models';
@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 const Students: React.FC = () => {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
+   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
@@ -57,6 +57,7 @@ const Students: React.FC = () => {
     phoneNo: string;
     admissionYear: string;
     classId: string;
+    rollNo: string; // Add rollNo field
   }, profilePicFile?: File) => {
     if (!user?.schoolId) return;
 
@@ -69,6 +70,7 @@ const Students: React.FC = () => {
         phoneNo: studentData.phoneNo,
         password: studentData.password,
         admissionYear: studentData.admissionYear,
+        rollNo: studentData.rollNo, // Add rollNo to API call
       }, profilePicFile);
 
       // Add the new student to the local state
@@ -80,6 +82,7 @@ const Students: React.FC = () => {
         email: studentData.email,
         phoneNo: studentData.phoneNo,
         admissionYear: studentData.admissionYear,
+        rollNo: studentData.rollNo, // Add rollNo to local state
         profilePic: response.profilePic || '',
         isActive: true,
       };
@@ -100,6 +103,7 @@ const Students: React.FC = () => {
     phoneNo: string;
     admissionYear: string;
     classId: string;
+    rollNo: string; // Add rollNo field
   }, profilePicFile?: File) => {
     if (!user?.schoolId) {
       toast.error('User session expired. Please login again.');
@@ -114,6 +118,7 @@ const Students: React.FC = () => {
         email: studentData.email,
         phoneNo: studentData.phoneNo,
         admissionYear: studentData.admissionYear,
+        rollNo: studentData.rollNo, // Add rollNo to API call
       }, profilePicFile);
 
       // Update the student in local state
@@ -126,6 +131,7 @@ const Students: React.FC = () => {
               phoneNo: studentData.phoneNo,
               admissionYear: studentData.admissionYear,
               classId: studentData.classId,
+              rollNo: studentData.rollNo, // Add rollNo to local state update
               profilePic: response.profilePic || s.profilePic
             }
           : s
@@ -186,12 +192,33 @@ const Students: React.FC = () => {
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
+                         student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (student.rollNo && student.rollNo.toLowerCase().includes(searchTerm.toLowerCase())); // Add rollNo to search
     const studentClass = student.className && student.section
       ? `${student.className}-${student.section}`
       : student.classId;
     const matchesClass = selectedClass === 'all' || studentClass === selectedClass;
     return matchesSearch && matchesClass;
+  }).sort((a, b) => {
+    // Sort by roll number if both have roll numbers
+    if (a.rollNo && b.rollNo) {
+      // Convert to numbers if they are numeric, otherwise sort alphabetically
+      const aNum = parseInt(a.rollNo);
+      const bNum = parseInt(b.rollNo);
+      
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      } else {
+        return a.rollNo.localeCompare(b.rollNo);
+      }
+    }
+    
+    // If one has roll number and other doesn't, prioritize the one with roll number
+    if (a.rollNo && !b.rollNo) return -1;
+    if (!a.rollNo && b.rollNo) return 1;
+    
+    // If neither has roll number, sort by name
+    return a.name.localeCompare(b.name);
   });
 
   // Loading state
@@ -347,7 +374,7 @@ const Students: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SR No</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Roll No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Student</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Class</th>
@@ -360,7 +387,9 @@ const Students: React.FC = () => {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredStudents.map((student, index) => (
                 <tr key={student.studentId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{index + 1}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    {student.rollNo || '-'}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {student.profilePic ? (

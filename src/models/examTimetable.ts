@@ -1,50 +1,40 @@
 export interface Subject {
-  examTimeTableId: string;
-  supervisorName: string;
-  examDate: string;
-  startTime: string;
-  endTime: string;
-  supervisorId: string;
-  totalMarks: number;
   subjectId: string;
   subjectName: string;
-  examTimeTableSubjectId: string;
+  examDate: string; // DD-MM-YYYY
+  startTime: string; // e.g., 10:00 AM
+  endTime: string;   // e.g., 12:00 PM
 }
 
 export interface ExamTimetable {
-  examEndDate: string;
-  classId: string;
-  examStartDate: string;
   timetableId: string;
-  schoolId: string;
-  examName: string;
+  classId: string;
   className: string;
+  examName: string;
+  examStartDate: string; // DD-MM-YYYY
+  examEndDate: string;   // DD-MM-YYYY
   subjects: Subject[];
 }
 
-export interface CreateExamTimetableRequest {
-  examName: string;
-  className: string;
-  classId?: string;
-  startDate: string;
-  endDate: string;
-  schoolId: string;
+export interface CreateTimetableSubject {
+  subjectId?: string;
+  subjectName: string;
+  examDate: string; // DD-MM-YYYY
+  startTime: string; // e.g., 10:00 AM
+  endTime: string;   // e.g., 12:00 PM
 }
 
-export interface CreateSubjectRequest {
-  examTimeTableId: string;
-  supervisorName: string;
-  examDate: string;
-  startTime: string;
-  endTime: string;
-  supervisorId: string;
-  totalMarks: number;
-  subjectId: string;
-  subjectName: string;
+export interface CreateExamTimetableRequest {
+  classId: string;
+  className: string;
+  examName: string;
+  examStartDate: string; // DD-MM-YYYY
+  examEndDate: string;   // DD-MM-YYYY
+  subjects: CreateTimetableSubject[];
 }
 
 export interface ExamTimetableResponse {
-  success: boolean;
+  success?: boolean;
   data: ExamTimetable[];
   message?: string;
 } 

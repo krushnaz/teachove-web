@@ -95,6 +95,7 @@ class StudentService {
     phoneNo: string;
     password: string;
     admissionYear: string;
+    rollNo: string; // Add rollNo field
   }, profilePicFile?: File): Promise<any> {
     try {
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.CREATE}`;
@@ -109,6 +110,7 @@ class StudentService {
       formData.append('phoneNo', studentData.phoneNo);
       formData.append('password', studentData.password);
       formData.append('admissionYear', studentData.admissionYear);
+      formData.append('rollNo', studentData.rollNo); // Add rollNo to form data
       
       // Add profile picture file if provided
       if (profilePicFile) {
@@ -138,6 +140,7 @@ class StudentService {
     email?: string;
     phoneNo?: string;
     admissionYear?: string;
+    rollNo?: string; // Add rollNo field
   }, profilePicFile?: File): Promise<any> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.STUDENTS.UPDATE.replace(':studentId', studentId);
@@ -152,6 +155,7 @@ class StudentService {
       if (studentData.email) formData.append('email', studentData.email);
       if (studentData.phoneNo) formData.append('phoneNo', studentData.phoneNo);
       if (studentData.admissionYear) formData.append('admissionYear', studentData.admissionYear);
+      if (studentData.rollNo) formData.append('rollNo', studentData.rollNo); // Add rollNo to form data
       
       // Add profile picture file if provided
       if (profilePicFile) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { studentService } from '../../../services/studentService';
+// import { studentService } from '../../../services/studentService';
 import { classroomService, Classroom } from '../../../services/classroomService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -14,6 +14,7 @@ interface AddStudentDrawerProps {
     phoneNo: string;
     admissionYear: string;
     classId: string;
+    rollNo: string; // Add rollNo field
   }, profilePicFile?: File) => void;
   onEditStudent?: (studentId: string, studentData: {
     name: string;
@@ -21,6 +22,7 @@ interface AddStudentDrawerProps {
     phoneNo: string;
     admissionYear: string;
     classId: string;
+    rollNo: string; // Add rollNo field
   }, profilePicFile?: File) => void;
   student?: {
     studentId: string;
@@ -29,6 +31,7 @@ interface AddStudentDrawerProps {
     phoneNo: string;
     admissionYear: string;
     classId: string;
+    rollNo?: string; // Add rollNo field
     profilePic?: string;
   };
 }
@@ -52,6 +55,7 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
     phoneNo: '',
     admissionYear: new Date().getFullYear().toString() + '-' + (new Date().getFullYear() + 1).toString(),
     classId: '',
+    rollNo: '', // Add rollNo field
   });
   
   const [submitting, setSubmitting] = useState(false);
@@ -78,20 +82,20 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
     fetchClasses();
   }, [user?.schoolId, open]);
 
+  // Reset form when drawer opens/closes or student changes
   useEffect(() => {
     if (open) {
-      if (isEdit && student) {
+      if (student) {
         setForm({
           name: student.name,
           email: student.email,
-          password: '', // Password not returned from API for security
-          phoneNo: student.phoneNo || '',
+          password: '',
+          phoneNo: student.phoneNo,
           admissionYear: student.admissionYear,
           classId: student.classId,
+          rollNo: student.rollNo || '', // Add rollNo field
         });
-        if (student.profilePic) {
-          setPreviewUrl(student.profilePic);
-        }
+        setPreviewUrl(student.profilePic || '');
       } else {
         setForm({
           name: '',
@@ -100,12 +104,13 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
           phoneNo: '',
           admissionYear: new Date().getFullYear().toString() + '-' + (new Date().getFullYear() + 1).toString(),
           classId: '',
+          rollNo: '', // Add rollNo field
         });
-        setSelectedFile(null);
         setPreviewUrl('');
       }
+      setSelectedFile(null);
     }
-  }, [open, isEdit, student]);
+  }, [open, student]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -145,15 +150,27 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!form.name || !form.email || !form.phoneNo || !form.admissionYear || !form.classId || !form.rollNo) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!isEdit && !form.password) {
+      toast.error('Please enter a password');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      if (isEdit && student && onEditStudent) {
-        await onEditStudent(student.studentId, {
+      if (isEdit && onEditStudent) {
+        await onEditStudent(student!.studentId, {
           name: form.name,
           email: form.email,
           phoneNo: form.phoneNo,
           admissionYear: form.admissionYear,
           classId: form.classId,
+          rollNo: form.rollNo, // Add rollNo field
         }, selectedFile || undefined);
       } else {
         await onAddStudent({
@@ -163,10 +180,11 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
           phoneNo: form.phoneNo,
           admissionYear: form.admissionYear,
           classId: form.classId,
+          rollNo: form.rollNo, // Add rollNo field
         }, selectedFile || undefined);
       }
-    } catch (err) {
-      toast.error(isEdit ? 'Failed to update student.' : 'Failed to add student.');
+    } catch (error) {
+      console.error('Error submitting form:', error);
     } finally {
       setSubmitting(false);
     }
@@ -271,6 +289,22 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   />
                 </div>
               )}
+
+              {/* Roll Number */}
+              <div>
+                <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Roll Number *
+                </label>
+                <input
+                  type="text"
+                  id="rollNo"
+                  value={form.rollNo}
+                  onChange={(e) => setForm({ ...form, rollNo: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Enter roll number"
+                  required
+                />
+              </div>
 
               {/* Class Selection */}
               <div>

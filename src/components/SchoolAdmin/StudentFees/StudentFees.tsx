@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useDarkMode } from '../../contexts/DarkModeContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { classroomService, Classroom } from '../../services/classroomService';
-import { studentFeesService, StudentSummaryRow, Payment } from '../../services/studentFeesService';
+import { useDarkMode } from '../../../contexts/DarkModeContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { classroomService, Classroom } from '../../../services/classroomService';
+import { studentFeesService, StudentSummaryRow, Payment } from '../../../services/studentFeesService';
 
 interface StudentFeeRow {
   studentId: string;
@@ -13,6 +13,7 @@ interface StudentFeeRow {
   status: 'paid' | 'unpaid' | 'partially paid';
   totalFees: number;
   paidFees: number;
+  classId: string; // Add this field
 }
 
 const StudentFees: React.FC = () => {
@@ -57,6 +58,7 @@ const StudentFees: React.FC = () => {
 
   // Get schoolId from authenticated user
   const schoolId = user?.schoolId;
+  const yearId = (user as any)?.yearId || '2025-2026';
 
   useEffect(() => {
     if (!schoolId) return;
@@ -66,8 +68,8 @@ const StudentFees: React.FC = () => {
         setIsLoading(true);
         setLoadError(null);
         const [classes, summary] = await Promise.all([
-          classroomService.getClassesBySchoolId(schoolId),
-          studentFeesService.getSummaryBySchool(schoolId)
+          classroomService.getClassesBySchoolId(schoolId, yearId),
+          studentFeesService.getSummaryBySchool(schoolId, yearId)
         ]);
         setClassrooms(classes);
         // Cards
@@ -85,11 +87,12 @@ const StudentFees: React.FC = () => {
             studentId: s.studentId,
             studentName: s.studentName || 'Unknown',
             className: s.className || 'Unknown',
-            section: s.division || '',
+            section: s.section || s.division || '', // Use section first, fallback to division
             rollNo: s.rollNo || '-',
             status,
             totalFees: s.totalFees || 0,
-            paidFees: s.paidAmount || 0
+            paidFees: s.paidAmount || 0,
+            classId: s.classId // Add this field
           };
         });
         setRows(mapped);
@@ -102,7 +105,7 @@ const StudentFees: React.FC = () => {
       }
     };
     load();
-  }, [schoolId]);
+  }, [schoolId, yearId]);
 
   const [totals, setTotals] = useState({ total: 0, received: 0, remaining: 0 });
 
@@ -169,17 +172,14 @@ const StudentFees: React.FC = () => {
     
     try {
       setIsLoadingPayments(true);
-      // Find the class ID for the student
-      const studentClass = classrooms.find(c => c.className === row.className && c.section === row.section);
-      if (studentClass) {
-        const payments = await studentFeesService.getStudentPayments(schoolId, row.studentId, studentClass.classId);
-        setStudentPayments(payments);
-      }
+      // Get student payments directly using studentId
+      const payments = await studentFeesService.getStudentPayments(schoolId, yearId, row.studentId);
+      setStudentPayments(payments);
     } catch (error) {
       console.error('Error fetching student payments:', error);
       // Show error toast
       const errorToast = document.createElement('div');
-      errorToast.className = `${isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg border`;
+      errorToast.className = `${isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
       errorToast.textContent = 'Failed to load payment details. Please try again.';
       document.body.appendChild(errorToast);
       setTimeout(() => errorToast.remove(), 3000);
@@ -197,12 +197,9 @@ const StudentFees: React.FC = () => {
     
     try {
       setIsLoadingPayments(true);
-      // Find the class ID for the student
-      const studentClass = classrooms.find(c => c.className === row.className && c.section === row.section);
-      if (studentClass) {
-        const payments = await studentFeesService.getStudentPayments(schoolId, row.studentId, studentClass.classId);
-        setStudentPayments(payments);
-      }
+      // Get student payments directly using studentId
+      const payments = await studentFeesService.getStudentPayments(schoolId, yearId, row.studentId);
+      setStudentPayments(payments);
     } catch (error) {
       console.error('Error fetching student payments:', error);
       // Show error toast
@@ -224,17 +221,14 @@ const StudentFees: React.FC = () => {
     
     try {
       setIsLoadingPayments(true);
-      // Find the class ID for the student
-      const studentClass = classrooms.find(c => c.className === row.className && c.section === row.section);
-      if (studentClass) {
-        const payments = await studentFeesService.getStudentPayments(schoolId, row.studentId, studentClass.classId);
-        setStudentPayments(payments);
-      }
+      // Get student payments directly using studentId
+      const payments = await studentFeesService.getStudentPayments(schoolId, yearId, row.studentId);
+      setStudentPayments(payments);
     } catch (error) {
       console.error('Error fetching student payments:', error);
       // Show error toast
       const errorToast = document.createElement('div');
-      errorToast.className = `${isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg border`;
+      errorToast.className = `${isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
       errorToast.textContent = 'Failed to load payment details. Please try again.';
       document.body.appendChild(errorToast);
       setTimeout(() => errorToast.remove(), 3000);
@@ -248,26 +242,26 @@ const StudentFees: React.FC = () => {
     
     try {
       if (paymentMode === 'add') {
-        // Get the class ID for the selected student
-        const studentClass = classrooms.find(c => c.className === selectedRow.className && c.section === selectedRow.section);
-        if (!studentClass) {
-          throw new Error('Class not found for student');
+        // Use the classId directly from the selected row
+        if (!selectedRow.classId) {
+          throw new Error('Class ID not found for student');
         }
 
         // Prepare payment data
         const paymentData = {
           schoolId,
           studentId: selectedRow.studentId,
-          classId: studentClass.classId,
+          classId: selectedRow.classId, // Use the classId directly
           amount: paymentForm.amount,
           paymentMode: paymentForm.paymentMode,
           transactionId: paymentForm.transactionId,
           remarks: paymentForm.remark,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          installment: paymentForm.installment,
         };
 
         // Call API to add payment
-        const response = await studentFeesService.addPayment(paymentData);
+        // const response = await studentFeesService.addPayment(yearId, paymentData);
         
         // Update local state to reflect the new payment
         const updated = rows.map(r => r.studentId === selectedRow.studentId ? { ...r, paidFees: r.paidFees + paymentForm.amount } : r);
@@ -295,25 +289,25 @@ const StudentFees: React.FC = () => {
           throw new Error('No payment selected for editing');
         }
 
-        // Get the class ID for the selected student
-        const studentClass = classrooms.find(c => c.className === selectedRow.className && c.section === selectedRow.section);
-        if (!studentClass) {
-          throw new Error('Class not found for student');
+        // Use the classId directly from the selected row
+        if (!selectedRow.classId) {
+          throw new Error('Class ID not found for student');
         }
 
         // Prepare payment data for update
         const paymentData = {
           studentId: selectedRow.studentId,
-          classId: studentClass.classId,
+          classId: selectedRow.classId, // Use the classId directly
           amount: paymentForm.amount,
           paymentMode: paymentForm.paymentMode,
           transactionId: paymentForm.transactionId,
           remarks: paymentForm.remark,
-          date: selectedPaymentForEdit.date
+          date: selectedPaymentForEdit.date,
+          installment: paymentForm.installment,
         };
 
         // Call API to update payment
-        const response = await studentFeesService.updatePayment(schoolId, selectedPaymentForEdit.paymentId, paymentData);
+        // const response = await studentFeesService.updatePayment(schoolId, yearId, selectedRow.studentId, selectedPaymentForEdit.paymentId, paymentData);
         
         // Update local state to reflect the changes
         const amountDifference = paymentForm.amount - selectedPaymentForEdit.amount;
@@ -329,7 +323,7 @@ const StudentFees: React.FC = () => {
 
         // Show success toast
         const successToast = document.createElement('div');
-        successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg border`;
+        successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
         successToast.textContent = 'Payment updated successfully';
         document.body.appendChild(successToast);
         setTimeout(() => successToast.remove(), 3000);
@@ -342,7 +336,7 @@ const StudentFees: React.FC = () => {
       
       // Show error toast
       const errorToast = document.createElement('div');
-      errorToast.className = `${isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg border`;
+      errorToast.className = `${isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
       errorToast.textContent = error instanceof Error ? error.message : 'Failed to add payment. Please try again.';
       document.body.appendChild(errorToast);
       setTimeout(() => errorToast.remove(), 3000);
@@ -356,7 +350,7 @@ const StudentFees: React.FC = () => {
       setIsDeletingPayments(true);
       
       // Call API to delete payments
-      const response = await studentFeesService.deletePayments(schoolId, selectedPaymentIds);
+      const response = await studentFeesService.deletePayments(schoolId, yearId, selectedRow!.studentId, selectedPaymentIds);
       
       // Update local state to reflect the deleted payments
       const totalDeletedAmount = studentPayments
@@ -451,8 +445,8 @@ const StudentFees: React.FC = () => {
                   try {
                     setIsLoading(true);
                     const [classes, summary] = await Promise.all([
-                      classroomService.getClassesBySchoolId(schoolId),
-                      studentFeesService.getSummaryBySchool(schoolId)
+                      classroomService.getClassesBySchoolId(schoolId, yearId),
+                      studentFeesService.getSummaryBySchool(schoolId, yearId)
                     ]);
                     setClassrooms(classes);
                     const mapped: StudentFeeRow[] = (summary.students || []).map((s: StudentSummaryRow) => {
@@ -463,11 +457,12 @@ const StudentFees: React.FC = () => {
                         studentId: s.studentId,
                         studentName: s.studentName || 'Unknown',
                         className: s.className || 'Unknown',
-                        section: s.division || '',
+                        section: s.section || s.division || '', // Use section first, fallback to division
                         rollNo: s.rollNo || '-',
                         status,
                         totalFees: s.totalFees || 0,
-                        paidFees: s.paidAmount || 0
+                        paidFees: s.paidAmount || 0,
+                        classId: s.classId
                       };
                     });
                     setRows(mapped);
@@ -658,7 +653,7 @@ const StudentFees: React.FC = () => {
                                   document.body.appendChild(loadingToast);
                                   
                                   // Download the student-specific payment report
-                                  const blob = await studentFeesService.downloadStudentPaymentReport(schoolId, r.studentId);
+                                  const blob = await studentFeesService.downloadStudentPaymentReport(schoolId, yearId, r.studentId);
                                   
                                   // Create download link for PDF
                                   const url = window.URL.createObjectURL(blob);
@@ -745,7 +740,7 @@ const StudentFees: React.FC = () => {
                       setIsDownloading(true);
                       
                       // Call the API to download the report
-                      const blob = await studentFeesService.downloadClassPaymentReport(schoolId, reportClassId);
+                      const blob = await studentFeesService.downloadClassPaymentReport(schoolId, yearId, reportClassId);
                       
                       // Create download link
                       const url = window.URL.createObjectURL(blob);
@@ -1077,7 +1072,7 @@ const StudentFees: React.FC = () => {
       {isViewDialogOpen && selectedRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsViewDialogOpen(false)} />
-          <div className={`relative w-[700px] max-w-full mx-4 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`relative w-[900px] max-w-full mx-4 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="p-8">
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
@@ -1118,184 +1113,101 @@ const StudentFees: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`${isDarkMode ? 'p-4 rounded-xl border bg-gray-700 border-gray-600' : 'p-4 rounded-xl border bg-gray-50 border-gray-200'}`}>
                   <div className="flex items-center">
-                    <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600'}`}>
+                    <div className={`${isDarkMode ? 'p-2 rounded-lg bg-green-900/30 text-green-400' : 'p-2 rounded-lg bg-green-100 text-green-600'}`}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Class</p>
-                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedRow.className} • {selectedRow.section}</p>
+                      <p className={`${isDarkMode ? 'text-xs font-medium text-gray-400' : 'text-xs font-medium text-gray-500'}`}>Class</p>
+                      <p className={`${isDarkMode ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-gray-900'}`}>{selectedRow.className} • {selectedRow.section}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`${isDarkMode ? 'p-4 rounded-xl border bg-gray-700 border-gray-600' : 'p-4 rounded-xl border bg-gray-50 border-gray-200'}`}>
                   <div className="flex items-center">
-                    <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
+                    <div className={`${isDarkMode ? 'p-2 rounded-lg bg-purple-900/30 text-purple-400' : 'p-2 rounded-lg bg-purple-100 text-purple-600'}`}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Roll No</p>
-                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedRow.rollNo}</p>
+                      <p className={`${isDarkMode ? 'text-xs font-medium text-gray-400' : 'text-xs font-medium text-gray-500'}`}>Roll No</p>
+                      <p className={`${isDarkMode ? 'text-sm font-semibold text-white' : 'text-sm font-semibold text-gray-900'}`}>{selectedRow.rollNo}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Financial Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className={`p-6 rounded-xl border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} shadow-sm`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total Fees</p>
-                      <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹ {selectedRow.totalFees.toLocaleString()}</p>
-                    </div>
-                    <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`p-6 rounded-xl border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} shadow-sm`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Paid Amount</p>
-                      <p className={`text-2xl font-bold text-green-600`}>₹ {selectedRow.paidFees.toLocaleString()}</p>
-                    </div>
-                    <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600'}`}>
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`p-6 rounded-xl border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} shadow-sm`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Remaining</p>
-                      <p className={`text-2xl font-bold ${(selectedRow.totalFees - selectedRow.paidFees) >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
-                        ₹ {(selectedRow.totalFees - selectedRow.paidFees).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className={`p-3 rounded-lg ${(selectedRow.totalFees - selectedRow.paidFees) >= 0 ? (isDarkMode ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-600') : (isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600')}`}>
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
+              {/* Payment History Table */}
+              <div className="mt-6">
+                <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Payment History</h4>
+                <div className={`rounded-lg border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`}>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className={isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-50 text-gray-600'}>
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Installment</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Amount</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Mode</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Transaction ID</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Remark</th>
+                        </tr>
+                      </thead>
+                      <tbody className={isDarkMode ? 'bg-gray-800 divide-y divide-gray-700 text-gray-200' : 'bg-white divide-y divide-gray-200 text-gray-800'}>
+                        {isLoadingPayments ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-sm">Loading payment history...</td>
+                          </tr>
+                        ) : studentPayments.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-4 text-center text-sm">No payment history found for this student.</td>
+                          </tr>
+                        ) : (
+                          studentPayments.map((payment, index) => (
+                            <tr key={payment.paymentId}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(payment.date).toLocaleDateString()}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{payment.installment || "N/A"}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-500">₹ {payment.amount.toLocaleString()}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">{payment.paymentMode}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-500">{payment.transactionId}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{payment.remarks || 'N/A'}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Installments Section */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Payment Installments</h4>
-                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
-                    {studentPayments.length} installment{studentPayments.length !== 1 ? 's' : ''}
+              {/* Summary */}
+              <div className="mt-6">
+                <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Summary</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total Fees</p>
+                      <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹ {selectedRow.totalFees.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Paid Fees</p>
+                      <p className="text-lg font-bold text-green-500">₹ {selectedRow.paidFees.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Remaining Fees</p>
+                      <p className="text-lg font-bold text-red-500">₹ {(selectedRow.totalFees - selectedRow.paidFees).toLocaleString()}</p>
+                    </div>
                   </div>
                 </div>
-
-                {isLoadingPayments ? (
-                  <div className="space-y-3">
-                    {[...Array(3)].map((_, idx) => (
-                      <div key={idx} className={`p-4 rounded-xl border animate-pulse ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-                        <div className="flex justify-between items-center mb-2">
-                          <div className="h-5 bg-gray-300 rounded w-32"></div>
-                          <div className="h-5 bg-gray-300 rounded w-20"></div>
-                        </div>
-                        <div className="h-4 bg-gray-300 rounded w-48"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : studentPayments.length === 0 ? (
-                  <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium">No payment installments found</p>
-                    <p className="text-xs">This student hasn't made any payments yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {studentPayments.map((payment, index) => (
-                      <div key={payment.paymentId} className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${isDarkMode ? 'bg-gray-700 border-gray-600 hover:border-gray-500' : 'bg-white border-gray-200 hover:border-gray-300'}`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isDarkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>
-                              {index + 1}
-                            </div>
-                            <span className={`ml-3 text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Installment {index + 1}
-                            </span>
-                          </div>
-                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            payment.paymentMode === 'UPI' ? (isDarkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-600') :
-                            payment.paymentMode === 'Cash' ? (isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600') :
-                            payment.paymentMode === 'Card' ? (isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600') :
-                            (isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600')
-                          }`}>
-                            {payment.paymentMode}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>
-                              <span className="inline-flex items-center">
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                {new Date(payment.date).toLocaleDateString('en-US', { 
-                                  year: 'numeric', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
-                              </span>
-                              {payment.transactionId && (
-                                <span className="ml-3 inline-flex items-center">
-                                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                  </svg>
-                                  {payment.transactionId}
-                                </span>
-                              )}
-                            </div>
-                            {payment.remarks && (
-                              <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} italic`}>
-                                "{payment.remarks}"
-                              </div>
-                            )}
-                          </div>
-                          <div className={`text-right ml-4`}>
-                            <div className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              ₹ {payment.amount.toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  onClick={() => setIsViewDialogOpen(false)} 
-                  className={`px-6 py-3 rounded-xl font-medium transition-colors ${isDarkMode ? 'bg-primary-600 hover:bg-primary-700 text-white' : 'bg-primary-500 hover:bg-primary-600 text-white'}`}
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>
@@ -1305,4 +1217,4 @@ const StudentFees: React.FC = () => {
   );
 };
 
-export default StudentFees; 
+export default StudentFees;

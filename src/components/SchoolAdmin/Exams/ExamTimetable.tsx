@@ -3,9 +3,7 @@ import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { examTimetableService } from '../../../services/examTimetableService';
 import { classroomService, Classroom } from '../../../services/classroomService';
-import { teacherService } from '../../../services/teacherService';
-import { Teacher } from '../../../models/teacher';
-import { ExamTimetable, Subject, CreateSubjectRequest } from '../../../models/examTimetable';
+import { ExamTimetable, CreateExamTimetableRequest } from '../../../models/examTimetable';
 
 // Dialog Component
 interface DialogProps {
@@ -268,37 +266,6 @@ const ShimmerSidebar: React.FC = () => {
   );
 };
 
-// Shimmer Subject Sidebar
-const ShimmerSubjectSidebar: React.FC = () => {
-  const { isDarkMode } = useDarkMode();
-  
-  return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="fixed inset-0 bg-black bg-opacity-50" />
-      <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="h-6 bg-gray-300 rounded w-48 animate-pulse"></div>
-            <div className="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
-          </div>
-
-          <div className="space-y-4">
-            <ShimmerFormField />
-            <ShimmerSelectField />
-            <ShimmerFormField />
-            <div className="grid grid-cols-2 gap-4">
-              <ShimmerFormField />
-              <ShimmerFormField />
-            </div>
-            <ShimmerFormField />
-            <div className="h-12 bg-gray-300 rounded-lg w-full animate-pulse"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Shimmer Dialog
 const ShimmerDialog: React.FC = () => {
   const { isDarkMode } = useDarkMode();
@@ -334,31 +301,16 @@ const ShimmerDialog: React.FC = () => {
   );
 };
 
-// Shimmer Error State
-const ShimmerErrorState: React.FC = () => {
-  const { isDarkMode } = useDarkMode();
-  
-  return (
-    <div className="text-center py-12">
-      <div className="h-6 bg-gray-300 rounded w-64 mx-auto mb-4 animate-pulse"></div>
-      <div className="h-10 bg-gray-300 rounded-lg w-24 mx-auto animate-pulse"></div>
-    </div>
-  );
-};
-
 const ExamTimetableComponent: React.FC = () => {
   const { isDarkMode } = useDarkMode();
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSubjectSidebarOpen, setIsSubjectSidebarOpen] = useState(false);
-  const [selectedTimetable, setSelectedTimetable] = useState<ExamTimetable | null>(null);
   const [timetables, setTimetables] = useState<ExamTimetable[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Loading states for different operations
   const [addingTimetable, setAddingTimetable] = useState(false);
-  const [addingSubject, setAddingSubject] = useState(false);
   const [deletingTimetables, setDeletingTimetables] = useState<Set<string>>(new Set());
   const [deletingSubjects, setDeletingSubjects] = useState<Set<string>>(new Set());
   
@@ -387,32 +339,26 @@ const ExamTimetableComponent: React.FC = () => {
     endDate: ''
   });
 
-  // Form state for new subject
-  const [subjectForm, setSubjectForm] = useState<CreateSubjectRequest>({
-    examTimeTableId: '',
-    supervisorName: '',
-    supervisorId: '',
-    examDate: '',
-    startTime: '',
-    endTime: '',
-    totalMarks: 0,
-    subjectId: '',
-    subjectName: ''
-  });
+  // Embedded subjects for new timetable
+  const [newSubjects, setNewSubjects] = useState<Array<{
+    subjectId: string;
+    subjectName: string;
+    examDate: string; // YYYY-MM-DD from input
+    startTime: string; // HH:MM from input
+    endTime: string;   // HH:MM from input
+  }>>([]);
 
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [classroomsLoading, setClassroomsLoading] = useState(true);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [teachersLoading, setTeachersLoading] = useState(true);
 
   // Get schoolId from authenticated user
   const schoolId = user?.schoolId;
+  const academicYear = '2025-2026';
 
   useEffect(() => {
     if (!schoolId) return;
     fetchExamTimetables();
     fetchClassrooms();
-    fetchTeachers();
   }, [schoolId]);
 
   const fetchExamTimetables = async () => {
@@ -420,7 +366,7 @@ const ExamTimetableComponent: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await examTimetableService.getExamTimetables(schoolId);
+      const data = await examTimetableService.getExamTimetables(schoolId, academicYear);
       setTimetables(data);
     } catch (err) {
       setError('Failed to fetch exam timetables');
@@ -434,25 +380,12 @@ const ExamTimetableComponent: React.FC = () => {
     if (!schoolId) return;
     try {
       setClassroomsLoading(true);
-      const data = await classroomService.getClassesBySchoolId(schoolId);
+      const data = await classroomService.getClassesBySchoolId(schoolId, academicYear);
       setClassrooms(data);
     } catch (err) {
       console.error('Error fetching classrooms:', err);
     } finally {
       setClassroomsLoading(false);
-    }
-  };
-
-  const fetchTeachers = async () => {
-    if (!schoolId) return;
-    try {
-      setTeachersLoading(true);
-      const response = await teacherService.getTeachersBySchool(schoolId);
-      setTeachers(response.teachers);
-    } catch (err) {
-      console.error('Error fetching teachers:', err);
-    } finally {
-      setTeachersLoading(false);
     }
   };
 
@@ -472,36 +405,113 @@ const ExamTimetableComponent: React.FC = () => {
     setDialog(prev => ({ ...prev, isOpen: false }));
   };
 
+  const inputDateToApi = (inputDate: string) => {
+    if (!inputDate) return '';
+    const [yyyy, mm, dd] = inputDate.split('-');
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
+  const apiToInputDate = (apiDate: string) => {
+    if (!apiDate) return '';
+    const [dd, mm, yyyy] = apiDate.split('-');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+
+  const to12Hour = (timeValue: string) => {
+    if (!timeValue) return '';
+    const [hStr, mStr] = timeValue.split(':');
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
+  };
+
+  const to24Hour = (timeValue: string) => {
+    if (!timeValue) return '';
+    const match = timeValue.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return timeValue; // already HH:MM
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && hours !== 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  };
+
+  const generateSubjectIdFromName = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+      .slice(0, 24) || `sub_${Date.now()}`;
+  };
+
+  const selectedClassroom: Classroom | undefined = classrooms.find(c => c.classId === formData.classId);
+  const availableSubjects = selectedClassroom?.subjects || [];
+
+  // Add modal subject handlers (for create flow)
+  const handleAddSubjectRow = () => {
+    setNewSubjects(prev => ([...prev, { subjectId: '', subjectName: '', examDate: '', startTime: '', endTime: '' }]));
+  };
+
+  const handleRemoveSubjectRow = (index: number) => {
+    setNewSubjects(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubjectChange = (index: number, field: keyof (typeof newSubjects)[number], value: string) => {
+    setNewSubjects(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+
+  const validateNewTimetable = (): string | null => {
+    if (!formData.examName || !formData.className || !formData.classId || !formData.startDate || !formData.endDate) {
+      return 'Please fill all timetable fields';
+    }
+    if (newSubjects.length === 0) {
+      return 'Add at least one subject';
+    }
+    for (const s of newSubjects) {
+      if (!s.subjectName || !s.examDate || !s.startTime || !s.endTime) {
+        return 'Please fill all subject fields';
+      }
+    }
+    return null;
+  };
+
   const handleAddTimetable = async () => {
     if (!schoolId) return;
-    if (!formData.examName || !formData.className || !formData.classId || !formData.startDate || !formData.endDate) {
-      showDialog('Validation Error', 'Please fill all fields', 'error');
+
+    const validationMsg = validateNewTimetable();
+    if (validationMsg) {
+      showDialog('Validation Error', validationMsg, 'error');
       return;
     }
 
     try {
       setAddingTimetable(true);
       
-      // Format dates to YYYY-MM-DD format as required by the API
-      const formatDateForAPI = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+      const payload = {
+        classId: formData.classId,
+        className: formData.className,
+        examName: formData.examName,
+        examStartDate: inputDateToApi(formData.startDate),
+        examEndDate: inputDateToApi(formData.endDate),
+        subjects: newSubjects.map(s => ({
+          subjectId: s.subjectId && s.subjectId.trim().length > 0 ? s.subjectId.trim() : generateSubjectIdFromName(s.subjectName),
+          subjectName: s.subjectName,
+          examDate: inputDateToApi(s.examDate),
+          startTime: to12Hour(s.startTime),
+          endTime: to12Hour(s.endTime),
+        }))
       };
 
-      const newTimetable = await examTimetableService.createExamTimetable({
-        examName: formData.examName,
-        className: formData.className,
-        classId: formData.classId,
-        startDate: formatDateForAPI(formData.startDate),
-        endDate: formatDateForAPI(formData.endDate),
-        schoolId: schoolId
-      });
+      const newTimetable = await examTimetableService.createExamTimetable(schoolId, academicYear, payload);
 
-      setTimetables([...timetables, newTimetable]);
+      setTimetables(prev => [...prev, newTimetable]);
       setFormData({ examName: '', className: '', classId: '', startDate: '', endDate: '' });
+      setNewSubjects([]);
       setIsSidebarOpen(false);
-      
-      // Show success dialog
       showDialog('Success', 'Timetable created successfully!', 'success');
     } catch (err) {
       showDialog('Error', 'Failed to create timetable', 'error');
@@ -511,62 +521,115 @@ const ExamTimetableComponent: React.FC = () => {
     }
   };
 
-  const handleAddSubject = async () => {
+  // Edit modal state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [updatingTimetable, setUpdatingTimetable] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    timetableId: '',
+    examName: '',
+    className: '',
+    classId: '',
+    startDate: '',
+    endDate: ''
+  });
+  const [editSubjects, setEditSubjects] = useState<Array<{
+    subjectId: string;
+    subjectName: string;
+    examDate: string; // DD/MM/YYYY in UI
+    startTime: string; // HH:MM
+    endTime: string;   // HH:MM
+  }>>([]);
+
+  const selectedEditClassroom: Classroom | undefined = classrooms.find(c => c.classId === editFormData.classId);
+  const availableEditSubjects = selectedEditClassroom?.subjects || [];
+
+  const handleAddEditSubjectRow = () => {
+    setEditSubjects(prev => ([...prev, { subjectId: '', subjectName: '', examDate: '', startTime: '', endTime: '' }]));
+  };
+
+  const handleRemoveEditSubjectRow = (index: number) => {
+    setEditSubjects(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEditSubjectChange = (index: number, field: keyof (typeof editSubjects)[number], value: string) => {
+    setEditSubjects(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+
+  const validateEditTimetable = (): string | null => {
+    if (!editFormData.examName || !editFormData.className || !editFormData.classId || !editFormData.startDate || !editFormData.endDate) {
+      return 'Please fill all timetable fields';
+    }
+    if (editSubjects.length === 0) {
+      return 'Add at least one subject';
+    }
+    for (const s of editSubjects) {
+      if (!s.subjectName || !s.examDate || !s.startTime || !s.endTime) {
+        return 'Please fill all subject fields';
+      }
+    }
+    return null;
+  };
+
+  const openEditModal = (t: ExamTimetable) => {
+    setEditFormData({
+      timetableId: t.timetableId,
+      examName: t.examName,
+      className: t.className,
+      classId: t.classId,
+      startDate: apiToInputDate(t.examStartDate),
+      endDate: apiToInputDate(t.examEndDate),
+    });
+    setEditSubjects((t.subjects || []).map(s => ({
+      subjectId: s.subjectId || generateSubjectIdFromName(s.subjectName),
+      subjectName: s.subjectName,
+      examDate: apiToInputDate(s.examDate),
+      startTime: to24Hour(s.startTime),
+      endTime: to24Hour(s.endTime),
+    })));
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateTimetable = async () => {
     if (!schoolId) return;
-    if (!subjectForm.subjectName || !subjectForm.examDate || !subjectForm.startTime || !subjectForm.endTime || !subjectForm.supervisorName || subjectForm.totalMarks <= 0) {
-      showDialog('Validation Error', 'Please fill all subject fields', 'error');
+
+    const validationMsg = validateEditTimetable();
+    if (validationMsg) {
+      showDialog('Validation Error', validationMsg, 'error');
       return;
     }
 
     try {
-      setAddingSubject(true);
-      
-      // Format date to YYYY-MM-DD format as required by the API
-      const formatDateForAPI = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+      setUpdatingTimetable(true);
+      const payload = {
+        classId: editFormData.classId,
+        className: editFormData.className,
+        examName: editFormData.examName,
+        examStartDate: inputDateToApi(editFormData.startDate),
+        examEndDate: inputDateToApi(editFormData.endDate),
+        subjects: editSubjects.map(s => ({
+          subjectId: s.subjectId && s.subjectId.trim().length > 0 ? s.subjectId.trim() : generateSubjectIdFromName(s.subjectName),
+          subjectName: s.subjectName,
+          examDate: inputDateToApi(s.examDate),
+          startTime: to12Hour(s.startTime),
+          endTime: to12Hour(s.endTime),
+        }))
       };
 
-      const newSubject = await examTimetableService.addSubject(schoolId, {
-        examTimeTableId: selectedTimetable!.timetableId,
-        supervisorName: subjectForm.supervisorName,
-        examDate: formatDateForAPI(subjectForm.examDate),
-        startTime: subjectForm.startTime,
-        endTime: subjectForm.endTime,
-        supervisorId: subjectForm.supervisorId,
-        totalMarks: subjectForm.totalMarks,
-        subjectId: '', // Will be generated by the service if not provided
-        subjectName: subjectForm.subjectName
-      });
+      const updated = await examTimetableService.updateExamTimetable(
+        schoolId,
+        academicYear,
+        editFormData.timetableId,
+        payload
+      );
 
-      // Update the timetables with the new subject from API
-      setTimetables(timetables.map(timetable => 
-        timetable.timetableId === selectedTimetable!.timetableId 
-          ? { ...timetable, subjects: [...timetable.subjects, newSubject] }
-          : timetable
-      ));
-
-      setSubjectForm({
-        examTimeTableId: '',
-        supervisorName: '',
-        supervisorId: '',
-        examDate: '',
-        startTime: '',
-        endTime: '',
-        totalMarks: 0,
-        subjectId: '',
-        subjectName: ''
-      });
-      setIsSubjectSidebarOpen(false);
-      setSelectedTimetable(null);
-      
-      // Show success dialog
-      showDialog('Success', 'Subject added successfully!', 'success');
+      setTimetables(prev => prev.map(tt => tt.timetableId === updated.timetableId ? updated : tt));
+      setIsEditOpen(false);
+      showDialog('Success', 'Timetable updated successfully!', 'success');
     } catch (err) {
-      showDialog('Error', 'Failed to add subject', 'error');
-      console.error('Error adding subject:', err);
+      showDialog('Error', 'Failed to update timetable', 'error');
+      console.error('Error updating timetable:', err);
     } finally {
-      setAddingSubject(false);
+      setUpdatingTimetable(false);
     }
   };
 
@@ -579,17 +642,12 @@ const ExamTimetableComponent: React.FC = () => {
       async () => {
         try {
           setDeletingSubjects(prev => new Set(prev).add(subjectId));
-          
-          // Call the API to delete the subject
-          await examTimetableService.deleteSubject(schoolId, subjectId);
-          
-          // Remove the subject from the local state
+          await examTimetableService.deleteSubject(schoolId, academicYear, timetableId, subjectId);
           setTimetables(timetables.map(timetable => 
             timetable.timetableId === timetableId 
-              ? { ...timetable, subjects: timetable.subjects.filter(subject => subject.examTimeTableSubjectId !== subjectId) }
+              ? { ...timetable, subjects: timetable.subjects.filter(subject => subject.subjectId !== subjectId) }
               : timetable
           ));
-          
           showDialog('Success', 'Subject deleted successfully!', 'success');
         } catch (err) {
           showDialog('Error', 'Failed to delete subject', 'error');
@@ -616,8 +674,7 @@ const ExamTimetableComponent: React.FC = () => {
       async () => {
         try {
           setDeletingTimetables(prev => new Set(prev).add(timetableId));
-          
-          await examTimetableService.deleteExamTimetable(schoolId, timetableId);
+          await examTimetableService.deleteExamTimetable(schoolId, academicYear, timetableId);
           setTimetables(timetables.filter(timetable => timetable.timetableId !== timetableId));
           showDialog('Success', 'Timetable deleted successfully!', 'success');
         } catch (err) {
@@ -648,8 +705,8 @@ const ExamTimetableComponent: React.FC = () => {
   };
 
   const formatSubjectDate = (dateString: string) => {
-    // Convert D/M/YYYY to readable format
-    const [day, month, year] = dateString.split('/');
+    // Convert DD-MM-YYYY to readable format
+    const [day, month, year] = dateString.split('-');
     const date = new Date(`${year}-${month}-${day}`);
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -711,7 +768,12 @@ const ExamTimetableComponent: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={() => setIsSidebarOpen(true)}
+          onClick={() => {
+            if (newSubjects.length === 0) {
+              setNewSubjects([{ subjectId: '', subjectName: '', examDate: '', startTime: '', endTime: '' }]);
+            }
+            setIsSidebarOpen(true);
+          }}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             isDarkMode 
               ? 'bg-primary-600 text-white hover:bg-primary-700' 
@@ -788,7 +850,7 @@ const ExamTimetableComponent: React.FC = () => {
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {timetable.subjects.map((subject) => (
                   <div
-                    key={subject.examTimeTableSubjectId}
+                    key={subject.subjectId}
                     className={`p-3 rounded-lg border ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
@@ -810,25 +872,23 @@ const ExamTimetableComponent: React.FC = () => {
                           </svg>
                           {subject.startTime}-{subject.endTime}
                         </p>
-                        <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} flex items-center gap-1`}>
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          {subject.supervisorName} • 
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
-                          {subject.totalMarks} marks
-                        </p>
                       </div>
                       <button
-                        onClick={() => handleDeleteSubject(timetable.timetableId, subject.examTimeTableSubjectId)}
+                        onClick={() => handleDeleteSubject(timetable.timetableId, subject.subjectId)}
                         className="ml-2 text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
                         title="Delete subject"
+                        disabled={deletingSubjects.has(subject.subjectId)}
                       >
+                        {deletingSubjects.has(subject.subjectId) ? (
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -847,38 +907,17 @@ const ExamTimetableComponent: React.FC = () => {
             {/* Action Buttons - Bottom Row */}
             <div className="flex space-x-2">
               <button
-                onClick={() => {
-                  setSelectedTimetable(timetable);
-                  setIsSubjectSidebarOpen(true);
-                }}
-                disabled={addingSubject}
-                className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
-                  addingSubject
-                    ? 'border-gray-400 text-gray-400 cursor-not-allowed'
-                    : isDarkMode 
+                onClick={() => openEditModal(timetable)}
+                className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
+                  isDarkMode 
                       ? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white hover:border-gray-500' 
                       : 'border-gray-300 hover:bg-gray-50 text-gray-700 hover:text-primary-600 hover:border-primary-300'
                 }`}
+                title="Edit timetable"
               >
-                <span className="flex items-center justify-center">
-                  {addingSubject ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Add Subject
-                    </>
-                  )}
-                </span>
+                Edit
               </button>
+              <div className="flex-1" />
               <button
                 onClick={() => handleDeleteTimetable(timetable.timetableId)}
                 disabled={deletingTimetables.has(timetable.timetableId)}
@@ -917,14 +956,11 @@ const ExamTimetableComponent: React.FC = () => {
         </div>
       )}
 
-      {/* Add Timetable Sidebar */}
+      {/* Add Timetable Modal */}
       {isSidebarOpen && (
-        addingTimetable ? (
-          <ShimmerSidebar />
-        ) : (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
-          <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+          <div className={`relative w-full max-w-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add New Timetable</h2>
@@ -958,12 +994,12 @@ const ExamTimetableComponent: React.FC = () => {
                       <div className="w-full h-10 bg-gray-300 rounded-lg animate-pulse"></div>
                     ) : (
                   <select
-                    value={formData.className}
+                    value={formData.classId}
                         onChange={(e) => {
-                          const selectedClass = classrooms.find(c => c.className === e.target.value);
+                      const selectedClass = classrooms.find(c => c.classId === e.target.value);
                           setFormData({ 
                             ...formData, 
-                            className: e.target.value,
+                        className: selectedClass?.className || '',
                             classId: selectedClass?.classId || ''
                           });
                         }}
@@ -975,14 +1011,15 @@ const ExamTimetableComponent: React.FC = () => {
                   >
                     <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>Select Class</option>
                         {classrooms.map((classroom) => (
-                          <option key={classroom.classId} value={classroom.className} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
-                            {classroom.className}
+                      <option key={classroom.classId} value={classroom.classId} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
+                        {`${classroom.className} ${classroom.section}`}
                       </option>
                     ))}
                   </select>
                     )}
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Date</label>
                   <input
@@ -1009,13 +1046,110 @@ const ExamTimetableComponent: React.FC = () => {
                         : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
                   />
+                  </div>
+                </div>
+
+                {/* Subjects inline */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Subjects</label>
+                    <button
+                      type="button"
+                      onClick={handleAddSubjectRow}
+                      className={`px-2 py-1 text-xs rounded border ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    >
+                      + Add Subject
+                    </button>
+                  </div>
+
+                  {newSubjects.length === 0 && (
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>No subjects added yet.</p>
+                  )}
+
+                  <div className="space-y-3">
+                    {newSubjects.map((s, idx) => (
+                      <div key={idx} className={`p-3 rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Subject</label>
+                            {availableSubjects.length > 0 ? (
+                              <select
+                                value={s.subjectName}
+                                onChange={(e) => {
+                                  const selectedName = e.target.value;
+                                  const autoId = generateSubjectIdFromName(selectedName);
+                                  setNewSubjects(prev => prev.map((item, i) => i === idx ? { ...item, subjectName: selectedName, subjectId: autoId } : item));
+                                }}
+                                className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                              >
+                                <option value="">Select Subject</option>
+                                {availableSubjects.map((subj) => (
+                                  <option key={`${subj.subjectName}-${subj.teacherId}`} value={subj.subjectName}>
+                                    {subj.subjectName}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={s.subjectName}
+                                onChange={(e) => handleSubjectChange(idx, 'subjectName', e.target.value)}
+                                className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                placeholder="e.g., Mathematics"
+                              />
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Exam Date</label>
+                              <input
+                                type="date"
+                                value={s.examDate}
+                                onChange={(e) => handleSubjectChange(idx, 'examDate', e.target.value)}
+                                className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Start Time</label>
+                                <input
+                                  type="time"
+                                  value={s.startTime}
+                                  onChange={(e) => handleSubjectChange(idx, 'startTime', e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                />
+                              </div>
+                              <div>
+                                <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>End Time</label>
+                                <input
+                                  type="time"
+                                  value={s.endTime}
+                                  onChange={(e) => handleSubjectChange(idx, 'endTime', e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSubjectRow(idx)}
+                              className={`px-2 py-1 text-xs rounded ${isDarkMode ? 'bg-red-900 text-red-200 hover:bg-red-800' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <button
                   onClick={handleAddTimetable}
-                  disabled={addingTimetable}
+                  disabled={addingTimetable || !!validateNewTimetable()}
                   className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                    addingTimetable
+                    (addingTimetable || !!validateNewTimetable())
                       ? 'bg-gray-400 cursor-not-allowed'
                       : isDarkMode 
                         ? 'bg-primary-600 text-white hover:bg-primary-700' 
@@ -1038,28 +1172,18 @@ const ExamTimetableComponent: React.FC = () => {
             </div>
           </div>
         </div>
-        )
       )}
 
-      {/* Add Subject Sidebar */}
-      {isSubjectSidebarOpen && selectedTimetable && (
-        addingSubject ? (
-          <ShimmerSubjectSidebar />
-        ) : (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => {
-            setIsSubjectSidebarOpen(false);
-            setSelectedTimetable(null);
-          }} />
-          <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+      {/* Edit Timetable Modal */}
+      {isEditOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsEditOpen(false)} />
+          <div className={`relative w-full max-w-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add Subject to {selectedTimetable.examName}</h2>
+                <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Edit Timetable</h2>
                 <button
-                  onClick={() => {
-                    setIsSubjectSidebarOpen(false);
-                    setSelectedTimetable(null);
-                  }}
+                  onClick={() => setIsEditOpen(false)}
                   className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
                 >
                   ✕
@@ -1068,30 +1192,33 @@ const ExamTimetableComponent: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Subject Name</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Exam Name</label>
                   <input
                     type="text"
-                    value={subjectForm.subjectName}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, subjectName: e.target.value })}
+                    value={editFormData.examName}
+                    onChange={(e) => setEditFormData({ ...editFormData, examName: e.target.value })}
                     className={`w-full px-3 py-2 rounded-lg border ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    placeholder="Enter subject name"
+                    placeholder="Enter exam name"
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Supervisor Name</label>
+                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Class Name</label>
+                  {classroomsLoading ? (
+                    <div className="w-full h-10 bg-gray-300 rounded-lg animate-pulse"></div>
+                  ) : (
                                          <select
-                    value={subjectForm.supervisorName}
+                    value={editFormData.classId}
                        onChange={(e) => {
-                         const selectedTeacher = teachers.find(t => t.name === e.target.value);
-                         setSubjectForm({ 
-                           ...subjectForm, 
-                           supervisorName: e.target.value,
-                           supervisorId: selectedTeacher?.teacherId || ''
+                      const selectedClass = classrooms.find(c => c.classId === e.target.value);
+                      setEditFormData({ 
+                        ...editFormData, 
+                        className: selectedClass?.className || '',
+                        classId: selectedClass?.classId || ''
                          });
                        }}
                     className={`w-full px-3 py-2 rounded-lg border ${
@@ -1100,25 +1227,23 @@ const ExamTimetableComponent: React.FC = () => {
                            : 'bg-white border-gray-300 text-gray-900'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
                      >
-                      <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>Select Supervisor</option>
-                      {teachersLoading ? (
-                        <option value="" disabled>Loading teachers...</option>
-                      ) : (
-                                                 teachers.map((teacher) => (
-                           <option key={teacher.teacherId} value={teacher.name} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
-                             {teacher.name}
+                    <option value="" className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>Select Class</option>
+                    {classrooms.map((classroom) => (
+                      <option key={classroom.classId} value={classroom.classId} className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'}>
+                        {`${classroom.className} ${classroom.section}`}
                            </option>
-                         ))
-                      )}
+                    ))}
                     </select>
+                  )}
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Exam Date</label>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Date</label>
                   <input
                     type="date"
-                    value={subjectForm.examDate}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, examDate: e.target.value })}
+                      value={editFormData.startDate}
+                      onChange={(e) => setEditFormData({ ...editFormData, startDate: e.target.value })}
                     className={`w-full px-3 py-2 rounded-lg border ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
@@ -1127,26 +1252,12 @@ const ExamTimetableComponent: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Start Time</label>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>End Date</label>
                     <input
-                      type="time"
-                      value={subjectForm.startTime}
-                      onChange={(e) => setSubjectForm({ ...subjectForm, startTime: e.target.value })}
-                      className={`w-full px-3 py-2 rounded-lg border ${
-                        isDarkMode 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>End Time</label>
-                    <input
-                      type="time"
-                      value={subjectForm.endTime}
-                      onChange={(e) => setSubjectForm({ ...subjectForm, endTime: e.target.value })}
+                      type="date"
+                      value={editFormData.endDate}
+                      onChange={(e) => setEditFormData({ ...editFormData, endDate: e.target.value })}
                       className={`w-full px-3 py-2 rounded-lg border ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
@@ -1156,50 +1267,129 @@ const ExamTimetableComponent: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Subjects inline */}
+                  <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Subjects</label>
+                    <button
+                      type="button"
+                      onClick={handleAddEditSubjectRow}
+                      className={`px-2 py-1 text-xs rounded border ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    >
+                      + Add Subject
+                    </button>
+                  </div>
+
+                  {editSubjects.length === 0 && (
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>No subjects added yet.</p>
+                  )}
+
+                  <div className="space-y-3">
+                    {editSubjects.map((s, idx) => (
+                      <div key={idx} className={`p-3 rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Subject</label>
+                            {availableEditSubjects.length > 0 ? (
+                              <select
+                                value={s.subjectName}
+                                onChange={(e) => {
+                                  const selectedName = e.target.value;
+                                  const autoId = generateSubjectIdFromName(selectedName);
+                                  setEditSubjects(prev => prev.map((item, i) => i === idx ? { ...item, subjectName: selectedName, subjectId: autoId } : item));
+                                }}
+                                className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                              >
+                                <option value="">Select Subject</option>
+                                {availableEditSubjects.map((subj) => (
+                                  <option key={`${subj.subjectName}-${subj.teacherId}`} value={subj.subjectName}>
+                                    {subj.subjectName}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                    <input
+                                type="text"
+                                value={s.subjectName}
+                                onChange={(e) => handleEditSubjectChange(idx, 'subjectName', e.target.value)}
+                                className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                placeholder="e.g., Mathematics"
+                              />
+                            )}
+                  </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Exam Date</label>
+                              <input
+                                type="date"
+                                value={s.examDate}
+                                onChange={(e) => handleEditSubjectChange(idx, 'examDate', e.target.value)}
+                                className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                              />
+                </div>
+                            <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total Marks</label>
+                                <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Start Time</label>
                   <input
-                    type="number"
-                    value={subjectForm.totalMarks}
-                    onChange={(e) => setSubjectForm({ ...subjectForm, totalMarks: parseInt(e.target.value) || 0 })}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                    placeholder="Enter total marks"
-                    min="1"
-                  />
+                                  type="time"
+                                  value={s.startTime}
+                                  onChange={(e) => handleEditSubjectChange(idx, 'startTime', e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                />
+                              </div>
+                              <div>
+                                <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>End Time</label>
+                                <input
+                                  type="time"
+                                  value={s.endTime}
+                                  onChange={(e) => handleEditSubjectChange(idx, 'endTime', e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEditSubjectRow(idx)}
+                              className={`px-2 py-1 text-xs rounded ${isDarkMode ? 'bg-red-900 text-red-200 hover:bg-red-800' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <button
-                  onClick={handleAddSubject}
-                  disabled={addingSubject}
+                  onClick={handleUpdateTimetable}
+                  disabled={updatingTimetable || !!validateEditTimetable()}
                   className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                    addingSubject
+                    (updatingTimetable || !!validateEditTimetable())
                       ? 'bg-gray-400 cursor-not-allowed'
                       : isDarkMode 
                         ? 'bg-primary-600 text-white hover:bg-primary-700' 
                         : 'bg-primary-500 text-white hover:bg-primary-600'
                   }`}
                 >
-                  {addingSubject ? (
+                  {updatingTimetable ? (
                     <span className="flex items-center justify-center">
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Adding...
+                      Updating...
                     </span>
                   ) : (
-                    'Add Subject'
+                    'Update Timetable'
                   )}
                 </button>
               </div>
             </div>
           </div>
         </div>
-        )
       )}
 
       {/* Dialog Component */}
@@ -1215,7 +1405,7 @@ const ExamTimetableComponent: React.FC = () => {
       />
 
       {/* Shimmer Dialog for loading states */}
-      {(addingTimetable || addingSubject || deletingTimetables.size > 0 || deletingSubjects.size > 0) && (
+      {(addingTimetable || updatingTimetable || deletingTimetables.size > 0 || deletingSubjects.size > 0) && (
         <ShimmerDialog />
       )}
     </div>

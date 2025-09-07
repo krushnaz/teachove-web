@@ -16,6 +16,7 @@ interface AnnouncementForm {
 interface Teacher {
   teacherId: string;
   name: string;
+  teacherName?: string; // Add this field
   email: string;
   role: string;
   schoolId: string;
@@ -335,7 +336,8 @@ const Announcements: React.FC = () => {
     
     if (audience.toLowerCase() === 'teachers') {
       const teacher = teachers.find(t => t.teacherId === recipientId);
-      return teacher ? teacher.name : recipientId;
+      // Use teacherName if available, otherwise fall back to name
+      return teacher ? (teacher.teacherName || teacher.name) : recipientId;
     } else if (audience.toLowerCase() === 'classes') {
       const classroom = classrooms.find(c => c.classId === recipientId);
               return classroom ? `${classroom.className} ${classroom.section}` : recipientId;
@@ -901,7 +903,7 @@ const Announcements: React.FC = () => {
                                         : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                   >
-                                    <div className="text-xs font-medium">{teacher.name}</div>
+                                    <div className="text-xs font-medium">{teacher.teacherName || teacher.name}</div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">{teacher.email}</div>
                                   </button>
                                 ))}

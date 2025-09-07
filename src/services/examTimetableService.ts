@@ -1,23 +1,24 @@
 import { API_CONFIG } from '../config/api';
-import { ExamTimetable, CreateExamTimetableRequest, ExamTimetableResponse, CreateSubjectRequest, Subject } from '../models/examTimetable';
+import { ExamTimetable, CreateExamTimetableRequest } from '../models/examTimetable';
 import { apiClient } from '../config/axios';
+
+const DEFAULT_ACADEMIC_YEAR = '2025-2026';
 
 export const examTimetableService = {
   /**
-   * Fetch exam timetables for a specific school
+   * Fetch exam timetables for a specific school and academic year
    */
-  async getExamTimetables(schoolId: string): Promise<ExamTimetable[]> {
+  async getExamTimetables(schoolId: string, academicYear: string = DEFAULT_ACADEMIC_YEAR): Promise<ExamTimetable[]> {
     try {
-      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.EXAM_TIMETABLES.replace(':schoolId', schoolId);
+      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.GET_TIMETABLES
+        .replace(':schoolId', schoolId)
+        .replace(':yearId', academicYear);
       const response = await apiClient.get(endpoint);
-      
-      // Handle both array response and wrapped response
-      if (Array.isArray(response.data)) {
-        return response.data;
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        return response.data.data;
-      }
-      
+
+      const data = response.data;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data?.timetables)) return data.timetables;
       return [];
     } catch (error) {
       console.error('Error fetching exam timetables:', error);
@@ -26,35 +27,35 @@ export const examTimetableService = {
   },
 
   /**
-   * Create a new exam timetable
+   * Create a new exam timetable (with embedded subjects)
    */
-  async createExamTimetable(data: CreateExamTimetableRequest): Promise<ExamTimetable> {
+  async createExamTimetable(
+    schoolId: string,
+    academicYear: string,
+    data: CreateExamTimetableRequest
+  ): Promise<ExamTimetable> {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.EXAMS.CREATE_EXAM_TIMETABLE, {
-        schoolId: data.schoolId,
-        classId: data.classId || `CLASS${data.className.replace(/\D/g, '')}A`,
+      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.CREATE_TIMETABLE
+        .replace(':schoolId', schoolId)
+        .replace(':yearId', academicYear);
+
+      const response = await apiClient.post(endpoint, {
+        classId: data.classId,
         className: data.className,
         examName: data.examName,
-        examStartDate: data.startDate,
-        examEndDate: data.endDate
+        examStartDate: data.examStartDate,
+        examEndDate: data.examEndDate,
+        subjects: data.subjects,
       });
-      
-      // Handle the response structure
-      if (response.data.timetable) {
-        // Transform the response to match our ExamTimetable interface
-        const newTimetable: ExamTimetable = {
-          examEndDate: response.data.timetable.examEndDate,
-          classId: response.data.timetable.classId,
-          examStartDate: response.data.timetable.examStartDate,
-          timetableId: response.data.timetable.timetableId,
-          schoolId: response.data.timetable.schoolId,
-          examName: response.data.timetable.examName,
-          className: response.data.timetable.className,
-          subjects: [] // New timetables start with no subjects
-        };
-        return newTimetable;
+
+      if (response.status === 201 && response.data?.data) {
+        return response.data.data;
       }
-      
+
+      if (response.data?.timetable) {
+        return response.data.timetable;
+      }
+
       throw new Error('Invalid response format from server');
     } catch (error) {
       console.error('Error creating exam timetable:', error);
@@ -65,11 +66,20 @@ export const examTimetableService = {
   /**
    * Update an existing exam timetable
    */
-  async updateExamTimetable(id: string, data: Partial<CreateExamTimetableRequest>): Promise<ExamTimetable> {
+  async updateExamTimetable(
+    schoolId: string,
+    academicYear: string,
+    timetableId: string,
+    data: Partial<CreateExamTimetableRequest>
+  ): Promise<ExamTimetable> {
     try {
-      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.UPDATE.replace(':id', id);
+      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.UPDATE_TIMETABLE
+        .replace(':schoolId', schoolId)
+        .replace(':yearId', academicYear)
+        .replace(':timetableId', timetableId);
+
       const response = await apiClient.put(endpoint, data);
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       console.error('Error updating exam timetable:', error);
       throw new Error('Failed to update exam timetable');
@@ -79,20 +89,18 @@ export const examTimetableService = {
   /**
    * Delete an exam timetable
    */
-  async deleteExamTimetable(schoolId: string, timetableId: string): Promise<void> {
+  async deleteExamTimetable(schoolId: string, academicYear: string, timetableId: string): Promise<void> {
     try {
-      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.DELETE_EXAM_TIMETABLE
+      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.DELETE_TIMETABLE
         .replace(':schoolId', schoolId)
+        .replace(':yearId', academicYear)
         .replace(':timetableId', timetableId);
-      
+
       const response = await apiClient.delete(endpoint);
-      
-      // Handle the response structure
-      if (response.data.message && response.data.timetableId) {
-        // Successfully deleted
+      if (response.status === 200 || response.status === 204 || response.data?.message) {
         return;
       }
-      
+
       throw new Error('Invalid response format from server');
     } catch (error) {
       console.error('Error deleting exam timetable:', error);
@@ -101,53 +109,26 @@ export const examTimetableService = {
   },
 
   /**
-   * Add a subject to an exam timetable
-   */
-  async addSubject(schoolId: string, subjectData: CreateSubjectRequest): Promise<Subject> {
-    try {
-      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.ADD_SUBJECT.replace(':schoolId', schoolId);
-      
-      const response = await apiClient.post(endpoint, {
-        examTimeTableId: subjectData.examTimeTableId,
-        subjectId: subjectData.subjectId || Date.now().toString(), // Generate if not provided
-        supervisorId: subjectData.supervisorId || Date.now().toString(), // Generate if not provided
-        supervisorName: subjectData.supervisorName,
-        examDate: subjectData.examDate,
-        startTime: subjectData.startTime,
-        endTime: subjectData.endTime,
-        totalMarks: subjectData.totalMarks,
-        subjectName: subjectData.subjectName
-      });
-      
-      // Handle the response structure
-      if (response.data.subject) {
-        return response.data.subject;
-      }
-      
-      throw new Error('Invalid response format from server');
-    } catch (error) {
-      console.error('Error adding subject:', error);
-      throw new Error('Failed to add subject');
-    }
-  },
-
-  /**
    * Delete a subject from an exam timetable
    */
-  async deleteSubject(schoolId: string, subjectId: string): Promise<void> {
+  async deleteSubject(
+    schoolId: string,
+    academicYear: string,
+    timetableId: string,
+    subjectId: string
+  ): Promise<void> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.EXAMS.DELETE_SUBJECT
         .replace(':schoolId', schoolId)
+        .replace(':yearId', academicYear)
+        .replace(':timetableId', timetableId)
         .replace(':subjectId', subjectId);
-      
+
       const response = await apiClient.delete(endpoint);
-      
-      // Handle the response structure
-      if (response.data.message && response.data.examTimeTableSubjectId) {
-        // Successfully deleted
+      if (response.status === 200 || response.status === 204 || response.data?.message) {
         return;
       }
-      
+
       throw new Error('Invalid response format from server');
     } catch (error) {
       console.error('Error deleting subject:', error);
