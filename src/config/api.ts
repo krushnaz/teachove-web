@@ -109,5 +109,13 @@ export const API_CONFIG = {
       DELETE: '/fees/:id',
       PAYMENT: '/fees/payment',
     },
+    EVENTS: {
+      CREATE: '/events/:schoolId/events',
+      GET_ALL: '/events/events/:schoolId',
+      GET_BY_ID: '/events/events/:schoolId/:eventId',
+      UPDATE: '/events/:schoolId/events/:eventId',
+      DELETE: '/events/events/:schoolId/:eventId',
+      DELETE_MULTIPLE: '/events/delete-multiple/:schoolId',
+    },
   },
 }; 
