@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Building, Mail, Phone, MapPin } from 'lucide-react';
+import { X, Save, Building, Mail, Phone, MapPin, Upload, Image } from 'lucide-react';
 import { SchoolProfile, UpdateSchoolProfileRequest } from '../../../services/schoolProfileService';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 
@@ -20,6 +20,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [formData, setFormData] = useState<UpdateSchoolProfileRequest>({});
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
 
   useEffect(() => {
     if (isOpen && profile) {
@@ -32,6 +34,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         currentAcademicYear: profile.currentAcademicYear
       });
       setErrors({});
+      setLogoFile(null);
+      setLogoPreview(profile.logo || '');
     }
   }, [isOpen, profile]);
 
@@ -56,6 +60,23 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(profile?.logo || '');
   };
 
   const validateForm = (): boolean => {
@@ -138,6 +159,58 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
+          {/* Logo Upload Section */}
+          <div className="mb-8">
+            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>School Logo</h3>
+            <div className="flex items-center space-x-6">
+              <div className="relative">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                  {logoPreview ? (
+                    <img 
+                      src={logoPreview} 
+                      alt="School Logo" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Image className="w-8 h-8 text-white" />
+                  )}
+                </div>
+                {logoFile && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <div className="flex-1">
+                <label
+                  htmlFor="logo-upload"
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg cursor-pointer transition-colors ${
+                    isDarkMode 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {logoFile ? 'Change Logo' : 'Upload Logo'}
+                </label>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="hidden"
+                />
+                <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {logoFile ? `Selected: ${logoFile.name}` : 'Choose an image file (JPG, PNG, etc.)'}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
@@ -261,9 +334,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   type="text"
                   value={formData.address?.line1 || ''}
                   onChange={(e) => handleInputChange('address.line1', e.target.value)}
-                                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['address.line1'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors['address.line1'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
+                  }`}
                   placeholder="Enter street address"
                 />
                 {errors['address.line1'] && (
@@ -279,9 +352,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   type="text"
                   value={formData.address?.city || ''}
                   onChange={(e) => handleInputChange('address.city', e.target.value)}
-                                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['address.city'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors['address.city'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
+                  }`}
                   placeholder="Enter city"
                 />
                 {errors['address.city'] && (
@@ -297,9 +370,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   type="text"
                   value={formData.address?.state || ''}
                   onChange={(e) => handleInputChange('address.state', e.target.value)}
-                                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['address.state'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors['address.state'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
+                  }`}
                   placeholder="Enter state"
                 />
                 {errors['address.state'] && (
@@ -315,9 +388,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   type="text"
                   value={formData.address?.pincode || ''}
                   onChange={(e) => handleInputChange('address.pincode', e.target.value)}
-                                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['address.pincode'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
-                    }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors['address.pincode'] ? 'border-red-500' : isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
+                  }`}
                   placeholder="Enter pincode"
                   maxLength={6}
                 />
@@ -356,4 +429,4 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   );
 };
 
-export default EditProfileModal; 
+export default EditProfileModal;

@@ -10,3 +10,4 @@ export { default as SchoolAdminStudentFees } from './StudentFees/StudentFees';
 export { default as SchoolAdminAnnouncements } from './Announcements';
 export { default as SchoolAdminEvents } from './Events';
 export { default as SchoolAdminSubscriptionRequests } from './SubscriptionRequest/SubscriptionRequests';
+export { default as SchoolAdminQuestionPapers } from "./QuestionPapers";

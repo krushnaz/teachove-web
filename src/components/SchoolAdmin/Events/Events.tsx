@@ -123,7 +123,7 @@ const Events: React.FC = () => {
         );
         
         setEvents(validEvents);
-        setTemplates(predefinedTemplates);
+    setTemplates(predefinedTemplates);
       } catch (error) {
         console.error('Error loading events:', error);
         // Show error toast
@@ -137,7 +137,7 @@ const Events: React.FC = () => {
         setEvents([]);
         setTemplates(predefinedTemplates);
       } finally {
-        setLoading(false);
+    setLoading(false);
       }
     };
 
@@ -202,13 +202,13 @@ const Events: React.FC = () => {
 
       const response = await eventService.createEvent(eventData);
       setEvents(prev => [response.event, ...prev]);
-      
-      // Show success toast
-      const successToast = document.createElement('div');
-      successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
-      successToast.textContent = 'Event added successfully!';
-      document.body.appendChild(successToast);
-      setTimeout(() => successToast.remove(), 3000);
+    
+    // Show success toast
+    const successToast = document.createElement('div');
+    successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
+    successToast.textContent = 'Event added successfully!';
+    document.body.appendChild(successToast);
+    setTimeout(() => successToast.remove(), 3000);
     } catch (error) {
       console.error('Error adding event from template:', error);
       // Show error toast
@@ -270,16 +270,16 @@ const Events: React.FC = () => {
         const updateData: UpdateEventRequest = {
           schoolId: user.schoolId,
           eventId: selectedEvent.eventId!,
-          title: formData.title,
-          description: formData.description,
-          date: formData.date,
-          time: formData.time,
+      title: formData.title,
+      description: formData.description,
+      date: formData.date,
+      time: formData.time,
           file: formData.file || null
-        };
+    };
 
         const response = await eventService.updateEvent(updateData);
         setEvents(prev => prev.map(e => e.eventId === selectedEvent.eventId ? response.event : e));
-      } else {
+    } else {
         setIsAddingEvent(true);
         // Create new event
         const createData: CreateEventRequest = {
@@ -293,17 +293,17 @@ const Events: React.FC = () => {
 
         const response = await eventService.createEvent(createData);
         setEvents(prev => [response.event, ...prev]);
-      }
+    }
 
-      setIsAddSidebarOpen(false);
-      setIsEditSidebarOpen(false);
-      setSelectedEvent(null);
+    setIsAddSidebarOpen(false);
+    setIsEditSidebarOpen(false);
+    setSelectedEvent(null);
 
-      const successToast = document.createElement('div');
-      successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
-      successToast.textContent = selectedEvent ? 'Event updated successfully!' : 'Event added successfully!';
-      document.body.appendChild(successToast);
-      setTimeout(() => successToast.remove(), 3000);
+    const successToast = document.createElement('div');
+    successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
+    successToast.textContent = selectedEvent ? 'Event updated successfully!' : 'Event added successfully!';
+    document.body.appendChild(successToast);
+    setTimeout(() => successToast.remove(), 3000);
     } catch (error) {
       console.error('Error saving event:', error);
       // Show error toast
@@ -324,7 +324,7 @@ const Events: React.FC = () => {
     try {
       setIsDeletingEvent(true);
       await eventService.deleteEvent(user.schoolId, selectedEvent.eventId!);
-      setEvents(prev => prev.filter(e => e.eventId !== selectedEvent.eventId));
+        setEvents(prev => prev.filter(e => e.eventId !== selectedEvent.eventId));
       
       setIsDeleteDialogOpen(false);
       setSelectedEvent(null);
@@ -627,30 +627,30 @@ const Events: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.map((event) => (
                   <div key={event.eventId} className={`p-6 rounded-xl shadow-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} hover:shadow-xl transition-all duration-200`}>
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                           {event.title}
-                        </h3>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} line-clamp-3`}>
+                      </h3>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} line-clamp-3`}>
                           {event.description}
-                        </p>
-                      </div>
+                      </p>
                     </div>
-                    
-                    <div className={`flex items-center gap-2 mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                  </div>
+                  
+                  <div className={`flex items-center gap-2 mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                       {formatDate(event.date)}
-                    </div>
-                    
-                    <div className={`flex items-center gap-2 mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  </div>
+                  
+                  <div className={`flex items-center gap-2 mb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                       {formatTime(event.time)}
-                    </div>
+                  </div>
 
                     {event.filePath && (
                       <div 
@@ -664,26 +664,26 @@ const Events: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <button
+                  <div className="flex gap-2">
+                    <button
                         onClick={() => handleViewEvent(event)}
-                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          isDarkMode 
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                            : 'bg-blue-500 hover:bg-blue-600 text-white'
-                        }`}
-                      >
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        isDarkMode 
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
+                    >
                         View
-                      </button>
-                      <button
+                    </button>
+                    <button
                         onClick={() => handleEditEvent(event)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          isDarkMode 
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        isDarkMode 
+                          ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
                             : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                        }`}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
@@ -697,12 +697,12 @@ const Events: React.FC = () => {
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                      </svg>
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             )}
           </div>
 
@@ -716,7 +716,7 @@ const Events: React.FC = () => {
                 <div className={`flex items-center justify-between p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                   <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     Event Templates
-                  </h2>
+            </h2>
                   <button
                     onClick={() => setIsTemplatesSidebarOpen(false)}
                     className={`p-2 rounded-lg transition-colors ${
@@ -727,7 +727,7 @@ const Events: React.FC = () => {
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  </svg>
                   </button>
                 </div>
 
@@ -737,29 +737,29 @@ const Events: React.FC = () => {
                     {filteredTemplates.map((template) => (
                       <div key={template.eventId} className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
                         <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                      <div className="flex-1">
+                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                               {template.title}
-                            </h3>
+                        </h3>
                             <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} line-clamp-2`}>
                               {template.description}
-                            </p>
-                          </div>
-                        </div>
-                        
+                        </p>
+                      </div>
+                    </div>
+                    
                         <div className={`flex items-center gap-2 mb-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                           {formatDate(template.date)}
-                        </div>
-                        
+                    </div>
+                    
                         <div className={`flex items-center gap-2 mb-3 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                           {formatTime(template.time)}
-                        </div>
+                    </div>
 
                         <div className="flex gap-2">
                           <button
@@ -797,10 +797,10 @@ const Events: React.FC = () => {
                                 : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
                             }`}
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                        </svg>
                           </button>
                         </div>
                       </div>
@@ -809,8 +809,8 @@ const Events: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+                      </div>
+                    )}
 
         {/* Add Event Sidebar */}
         {isAddSidebarOpen && (
@@ -823,7 +823,7 @@ const Events: React.FC = () => {
                   <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {selectedEvent ? 'Edit Event' : 'Add New Event'}
                   </h2>
-                  <button
+                      <button
                     onClick={() => setIsAddSidebarOpen(false)}
                     className={`p-2 rounded-lg transition-colors ${
                       isDarkMode 
@@ -1099,18 +1099,18 @@ const Events: React.FC = () => {
                   <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {selectedEvent.title}
                   </h2>
-                  <button
+                      <button
                     onClick={() => setIsViewDialogOpen(false)}
                     className={`p-2 rounded-lg transition-colors ${
-                      isDarkMode 
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                          isDarkMode 
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
+                        }`}
+                      >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                        </svg>
+                      </button>
                 </div>
 
                 {/* Content */}
@@ -1137,7 +1137,7 @@ const Events: React.FC = () => {
                         <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                           Attachment
                         </h3>
-                        <button
+                      <button
                           onClick={() => {
                             setIsViewDialogOpen(false);
                             handleAttachmentPreview(selectedEvent);
@@ -1169,16 +1169,16 @@ const Events: React.FC = () => {
                   <button
                     onClick={() => setIsDeleteDialogOpen(false)}
                     className={`p-2 rounded-lg transition-colors ${
-                      isDarkMode 
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                          isDarkMode 
+                            ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
+                        }`}
+                      >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                        </svg>
+                      </button>
+                    </div>
 
                 {/* Content */}
                 <div className="p-6">
@@ -1215,13 +1215,13 @@ const Events: React.FC = () => {
                         )}
                         {isDeletingEvent ? 'Deleting...' : 'Delete Event'}
                       </button>
-                    </div>
+                  </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+              </div>
+            )}
 
         {/* Attachment Preview Dialog */}
         {isAttachmentPreviewOpen && selectedEvent && selectedEvent.filePath && (
@@ -1262,7 +1262,7 @@ const Events: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
-                  </div>
+          </div>
                 </div>
 
                 {/* Content */}

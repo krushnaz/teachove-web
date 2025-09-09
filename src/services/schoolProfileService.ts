@@ -63,6 +63,47 @@ export const schoolProfileService = {
     return response.data;
   },
 
+  // Update school profile with file upload
+  updateSchoolProfileWithFile: async (
+    schoolId: string,
+    profileData: UpdateSchoolProfileRequest,
+    logoFile?: File | null
+  ): Promise<SchoolProfile> => {
+    const formData = new FormData();
+    
+    // Add all profile data to FormData
+    Object.entries(profileData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'address' && typeof value === 'object') {
+          // Handle address object
+          Object.entries(value).forEach(([addrKey, addrValue]) => {
+            if (addrValue !== undefined && addrValue !== null) {
+              formData.append(addrKey, addrValue as string);
+            }
+          });
+        } else {
+          formData.append(key, value as string);
+        }
+      }
+    });
+    
+    // Add logo file if provided
+    if (logoFile) {
+      formData.append('logo', logoFile);
+    }
+    
+    const response = await apiClient.put(
+      API_CONFIG.ENDPOINTS.SCHOOL.UPDATE_PROFILE_BY_ID.replace(':schoolId', schoolId),
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
   // Change password
   changePassword: async (passwordData: ChangePasswordRequest): Promise<void> => {
     await apiClient.post('/auth/change-password', passwordData);
@@ -72,4 +113,4 @@ export const schoolProfileService = {
   resetPassword: async (email: string): Promise<void> => {
     await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
   },
-}; 
+};

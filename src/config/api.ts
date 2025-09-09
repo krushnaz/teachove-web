@@ -117,5 +117,9 @@ export const API_CONFIG = {
       DELETE: '/events/events/:schoolId/:eventId',
       DELETE_MULTIPLE: '/events/delete-multiple/:schoolId',
     },
+    QUESTION_PAPERS: {
+      GET_CLASSES: '/question-papers/classes',
+      GET_PAPERS: '/question-papers/:classId/:testType',
+    },
   },
 }; 

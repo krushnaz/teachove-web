@@ -8,7 +8,9 @@ import {
   Lock, 
   Building,
   Globe,
-  Award
+  Award,
+  Upload,
+  X
 } from 'lucide-react';
 import { schoolProfileService, type SchoolProfile, type UpdateSchoolProfileRequest } from '../../../services/schoolProfileService';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
@@ -26,12 +28,18 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const data = await schoolProfileService.getSchoolProfile(schoolId);
       setProfile(data);
+      if (data.logo) {
+        setLogoPreview(data.logo);
+      }
     } catch (err) {
       setError('Failed to fetch profile');
       console.error('Error fetching profile:', err);
@@ -46,15 +54,18 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
 
   const handleUpdateProfile = async (updatedProfile: UpdateSchoolProfileRequest) => {
     try {
-      await schoolProfileService.updateSchoolProfile(schoolId, updatedProfile);
+      setUploading(true);
+      await schoolProfileService.updateSchoolProfileWithFile(schoolId, updatedProfile, logoFile);
       await fetchProfile(); // Refresh the profile data
+      setLogoFile(null);
+      setLogoPreview(profile?.logo || '');
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
+    } finally {
+      setUploading(false);
     }
   };
-
-
 
   const handleResetPassword = async (email: string) => {
     try {
@@ -63,6 +74,23 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
       console.error('Error resetting password:', error);
       throw error;
     }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(profile?.logo || '');
   };
 
   const formatDate = (timestamp: { _seconds: number; _nanoseconds: number }) => {
@@ -106,8 +134,38 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
         <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'} rounded-2xl shadow-xl p-8 mb-8`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <Building className="w-10 h-10 text-white" />
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                  {logoPreview ? (
+                    <img 
+                      src={logoPreview} 
+                      alt="School Logo" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Building className="w-10 h-10 text-white" />
+                  )}
+                </div>
+                {/* Logo Upload Button */}
+                <div className="absolute -bottom-1 -right-1">
+                  <label
+                    htmlFor="logo-upload"
+                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
+                      isDarkMode 
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }`}
+                  >
+                    <Upload className="w-4 h-4" />
+                  </label>
+                  <input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                </div>
               </div>
               <div>
                 <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{profile.schoolName}</h1>
@@ -120,14 +178,51 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
             <div className="flex space-x-3">
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                disabled={uploading}
+                className={`px-6 py-3 rounded-lg transition-colors flex items-center space-x-2 ${
+                  uploading
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
               >
                 <Edit3 className="w-5 h-5" />
-                <span>Edit Profile</span>
+                <span>{uploading ? 'Uploading...' : 'Edit Profile'}</span>
               </button>
-
             </div>
           </div>
+
+          {/* Logo Preview and Actions */}
+          {logoFile && (
+            <div className={`mb-6 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <img 
+                    src={logoPreview} 
+                    alt="Logo Preview" 
+                    className="w-12 h-12 rounded-lg object-cover border border-gray-300"
+                  />
+                  <div>
+                    <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                      New Logo Selected
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {logoFile.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveLogo}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                      : 'text-red-500 hover:text-red-700 hover:bg-red-50'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -253,8 +348,6 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
               </div>
             </div>
           </div>
-
-
         </div>
 
         {/* Password Management */}
@@ -299,4 +392,4 @@ const SchoolProfileComponent: React.FC<SchoolProfileProps> = ({ schoolId }) => {
   );
 };
 
-export default SchoolProfileComponent; 
+export default SchoolProfileComponent;
