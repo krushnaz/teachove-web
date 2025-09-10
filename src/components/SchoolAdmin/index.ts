@@ -11,3 +11,5 @@ export { default as SchoolAdminAnnouncements } from './Announcements';
 export { default as SchoolAdminEvents } from './Events';
 export { default as SchoolAdminSubscriptionRequests } from './SubscriptionRequest/SubscriptionRequests';
 export { default as SchoolAdminQuestionPapers } from "./QuestionPapers";
+export { default as SchoolAdminLeaveManagement } from './LeaveManagement/LeaveManagement';
+export { default as SchoolAdminSettings } from './SchoolSettings/SchoolSettings';

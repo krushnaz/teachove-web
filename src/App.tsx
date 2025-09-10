@@ -6,7 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './components/Home/LandingPage';
 import LoginPage from './components/LoginPage';
-import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminClassroom, SchoolAdminStudentFees, SchoolAdminAnnouncements, SchoolAdminEvents, SchoolAdminSubscriptionRequests, SchoolAdminQuestionPapers } from './components/SchoolAdmin';
+import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminClassroom, SchoolAdminStudentFees, SchoolAdminAnnouncements, SchoolAdminEvents, SchoolAdminSubscriptionRequests, SchoolAdminQuestionPapers, SchoolAdminLeaveManagement, SchoolAdminSettings } from './components/SchoolAdmin';
 import SchoolProfile from './components/SchoolAdmin/SchoolProfile/SchoolProfile';
 import { ExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
@@ -48,6 +48,8 @@ function App() {
                     <Route path="announcements" element={<SchoolAdminAnnouncements />} />
                     <Route path="events" element={<SchoolAdminEvents />} />
                     <Route path="question-papers" element={<SchoolAdminQuestionPapers />} />
+                    <Route path="leaves" element={<SchoolAdminLeaveManagement />} />
+                    <Route path="settings" element={<SchoolAdminSettings />} />
                     <Route path="subscription-request" element={<SchoolAdminSubscriptionRequests />} />
                     <Route path="profile" element={<SchoolProfile schoolId="nvGVyZZCGqcIZU8rqJg9" />} />
                   </Routes>

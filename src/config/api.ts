@@ -121,5 +121,14 @@ export const API_CONFIG = {
       GET_CLASSES: '/question-papers/classes',
       GET_PAPERS: '/question-papers/:classId/:testType',
     },
+    TEACHER_LEAVES: {
+      CREATE: 'teacher-leaves/:schoolId/leaves',
+      UPDATE: 'teacher-leaves/:schoolId/leaves/:leaveId',
+      DELETE: 'teacher-leaves/:schoolId/leaves/:leaveId',
+      GET_ALL: 'teacher-leaves/:schoolId/leaves',
+      GET_BY_TEACHER: 'teacher-leaves/:schoolId/leaves/teacher/:teacherId',
+      GET_BY_ID: 'teacher-leaves/:schoolId/leaves/:leaveId',
+      UPDATE_STATUS: 'teacher-leaves/:schoolId/leaves/:leaveId/status',
+    },
   },
-}; 
+};
