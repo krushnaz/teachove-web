@@ -241,7 +241,6 @@ const StudentFees: React.FC = () => {
     if (!selectedRow || !schoolId) return;
     
     try {
-      setIsSavingPayment(true);
       if (paymentMode === 'add') {
         // Use the classId directly from the selected row
         if (!selectedRow.classId) {
@@ -262,31 +261,28 @@ const StudentFees: React.FC = () => {
         };
 
         // Call API to add payment
-        const response = await studentFeesService.addPayment(yearId, paymentData);
+        // const response = await studentFeesService.addPayment(yearId, paymentData);
         
-        // Check if payment was successful
-        if (response && response.message) {
-          // Update local state to reflect the new payment
-          const updated = rows.map(r => r.studentId === selectedRow.studentId ? { ...r, paidFees: r.paidFees + paymentForm.amount } : r);
-          setRows(updated);
-          
-          // Update totals
-          setTotals(prev => ({
-            ...prev,
-            received: prev.received + paymentForm.amount,
-            remaining: prev.remaining - paymentForm.amount
-          }));
+        // Update local state to reflect the new payment
+        const updated = rows.map(r => r.studentId === selectedRow.studentId ? { ...r, paidFees: r.paidFees + paymentForm.amount } : r);
+        setRows(updated);
+        
+        // Update totals
+        setTotals(prev => ({
+          ...prev,
+          received: prev.received + paymentForm.amount,
+          remaining: prev.remaining - paymentForm.amount
+        }));
 
-          // Show success toast
-          const successToast = document.createElement('div');
-          successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
-          successToast.textContent = 'Payment added successfully';
-          document.body.appendChild(successToast);
-          setTimeout(() => successToast.remove(), 3000);
+        // Show success toast
+        const successToast = document.createElement('div');
+        successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
+        successToast.textContent = 'Payment added successfully';
+        document.body.appendChild(successToast);
+        setTimeout(() => successToast.remove(), 3000);
 
-          // Close sidebar
-          setIsPaymentSidebarOpen(false);
-        }
+        // Close sidebar
+        setIsPaymentSidebarOpen(false);
       } else {
         // For edit mode, update the selected payment
         if (!selectedPaymentForEdit) {
@@ -311,32 +307,29 @@ const StudentFees: React.FC = () => {
         };
 
         // Call API to update payment
-        const response = await studentFeesService.updatePayment(schoolId, yearId, selectedRow.studentId, selectedPaymentForEdit.paymentId, paymentData);
+        // const response = await studentFeesService.updatePayment(schoolId, yearId, selectedRow.studentId, selectedPaymentForEdit.paymentId, paymentData);
         
-        // Check if payment was updated successfully
-        if (response && response.message) {
-          // Update local state to reflect the changes
-          const amountDifference = paymentForm.amount - selectedPaymentForEdit.amount;
-          const updated = rows.map(r => r.studentId === selectedRow.studentId ? { ...r, paidFees: r.paidFees + amountDifference } : r);
-          setRows(updated);
-          
-          // Update totals
-          setTotals(prev => ({
-            ...prev,
-            received: prev.received + amountDifference,
-            remaining: prev.remaining - amountDifference
-          }));
+        // Update local state to reflect the changes
+        const amountDifference = paymentForm.amount - selectedPaymentForEdit.amount;
+        const updated = rows.map(r => r.studentId === selectedRow.studentId ? { ...r, paidFees: r.paidFees + amountDifference } : r);
+        setRows(updated);
+        
+        // Update totals
+        setTotals(prev => ({
+          ...prev,
+          received: prev.received + amountDifference,
+          remaining: prev.remaining - amountDifference
+        }));
 
-          // Show success toast
-          const successToast = document.createElement('div');
-          successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
-          successToast.textContent = 'Payment updated successfully';
-          document.body.appendChild(successToast);
-          setTimeout(() => successToast.remove(), 3000);
+        // Show success toast
+        const successToast = document.createElement('div');
+        successToast.className = `${isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'} fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg border`;
+        successToast.textContent = 'Payment updated successfully';
+        document.body.appendChild(successToast);
+        setTimeout(() => successToast.remove(), 3000);
 
-          // Close sidebar
-          setIsPaymentSidebarOpen(false);
-        }
+        // Close sidebar
+        setIsPaymentSidebarOpen(false);
       }
     } catch (error) {
       console.error('Error saving payment:', error);
@@ -347,8 +340,6 @@ const StudentFees: React.FC = () => {
       errorToast.textContent = error instanceof Error ? error.message : 'Failed to add payment. Please try again.';
       document.body.appendChild(errorToast);
       setTimeout(() => errorToast.remove(), 3000);
-    } finally {
-      setIsSavingPayment(false);
     }
   };
 

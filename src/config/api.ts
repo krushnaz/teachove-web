@@ -16,6 +16,7 @@ export const API_CONFIG = {
       DETAILS: '/schools/:schoolId/details',
       GET_PROFILE: '/schools/:schoolId/',
       UPDATE_PROFILE_BY_ID: '/schools/:schoolId/profile',
+      STATS: '/schools/:schoolId/stats',
     },
     STUDENTS: {
       LIST: '/students',
