@@ -5,6 +5,7 @@ import { apiHelper } from '../utils/apiHelper';
 // Local storage keys
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
+const TEACHER_ID_KEY = 'teacher_id';
 
 // Auth Service Class
 class AuthService {
@@ -43,6 +44,21 @@ class AuthService {
   // Remove user data from localStorage
   removeUser(): void {
     localStorage.removeItem(USER_KEY);
+  }
+
+  // Get teacher ID from localStorage
+  getTeacherId(): string | null {
+    return localStorage.getItem(TEACHER_ID_KEY);
+  }
+
+  // Set teacher ID to localStorage
+  setTeacherId(teacherId: string): void {
+    localStorage.setItem(TEACHER_ID_KEY, teacherId);
+  }
+
+  // Remove teacher ID from localStorage
+  removeTeacherId(): void {
+    localStorage.removeItem(TEACHER_ID_KEY);
   }
 
   // Check if user is authenticated
@@ -102,6 +118,12 @@ class AuthService {
       // Since there's no JWT token, we'll use the schoolId as our auth identifier
       this.setToken(response.user.schoolId);
       
+      // Store teacherId if it exists (for teacher role)
+      if (response.user.teacherId) {
+        this.setTeacherId(response.user.teacherId);
+        console.log('Stored teacherId:', response.user.teacherId);
+      }
+      
       console.log('Login successful:', response.user);
       console.log('Stored schoolId:', response.user.schoolId);
 
@@ -126,6 +148,7 @@ class AuthService {
       // Clear local storage
       this.removeToken();
       this.removeUser();
+      this.removeTeacherId();
     }
   }
 
@@ -193,4 +216,4 @@ class AuthService {
 export const authService = new AuthService();
 
 // Export the class for testing purposes
-export default AuthService; 
+export default AuthService;

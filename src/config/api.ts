@@ -25,6 +25,7 @@ export const API_CONFIG = {
       DELETE: '/students/:studentId',
       DETAILS: '/students/:studentId',
       BY_SCHOOL: '/students/school/:schoolId',
+      BY_CLASS: '/students/:schoolId/class/:classId', // Add new endpoint
     },
     TEACHERS: {
       LIST: '/teachers',
@@ -38,6 +39,10 @@ export const API_CONFIG = {
       ADD: '/teachers',
       EDIT: '/teachers/:teacherId',
       DELETE_TEACHER: '/teachers/:teacherId',
+    },
+    TEACHER_PROFILE: {
+      GET_PROFILE: '/teacher-admin/:schoolId/:teacherId/profile',
+      UPDATE_TEACHER: '/teachers/:teacherId',
     },
     TEACHER_ATTENDANCE: {
       MARK: '/teacher-attendance/',

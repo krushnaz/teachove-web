@@ -13,3 +13,4 @@ export { default as SchoolAdminSubscriptionRequests } from './SubscriptionReques
 export { default as SchoolAdminQuestionPapers } from "./QuestionPapers";
 export { default as SchoolAdminLeaveManagement } from './LeaveManagement/LeaveManagement';
 export { default as SchoolAdminSettings } from './SchoolSettings/SchoolSettings';
+export { default as SchoolProfileWrapper } from './SchoolProfile/SchoolProfileWrapper';

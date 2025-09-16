@@ -16,6 +16,7 @@ export interface LoginResponse {
     phoneNo: string;
     email: string;
     currentAcademicYear: string;
+    teacherId?: string; // Optional for teacher role
   };
   timestamp: string;
 }
@@ -27,4 +28,5 @@ export interface User {
   phoneNo: string;
   email: string;
   currentAcademicYear: string;
-} 
+  teacherId?: string; // Optional for teacher role
+}

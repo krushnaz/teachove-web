@@ -24,16 +24,10 @@ class StudentService {
   async getStudentsBySchool(schoolId: string): Promise<StudentsResponse> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.STUDENTS.BY_SCHOOL.replace(':schoolId', schoolId);
-      console.log('🔍 Fetching students for schoolId:', schoolId);
-      console.log('🔗 API Endpoint:', `${API_CONFIG.BASE_URL}${endpoint}`);
-
       const response = await apiHelper.get(endpoint);
-      console.log('📦 Raw API Response:', response);
-      console.log('📊 Response type:', Array.isArray(response) ? 'Array' : typeof response);
 
       // Handle direct array response from API
       if (Array.isArray(response)) {
-        console.log('✅ Response is an array with', response.length, 'students');
         return {
           success: true,
           students: response,
@@ -43,7 +37,6 @@ class StudentService {
       }
 
       // Handle wrapped response format
-      console.log('📋 Response is wrapped object');
       return response;
     } catch (error) {
       logError(error, 'Failed to fetch students');
@@ -95,7 +88,7 @@ class StudentService {
     phoneNo: string;
     password: string;
     admissionYear: string;
-    rollNo: string; // Add rollNo field
+    rollNo: string;
   }, profilePicFile?: File): Promise<any> {
     try {
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.CREATE}`;
@@ -110,7 +103,7 @@ class StudentService {
       formData.append('phoneNo', studentData.phoneNo);
       formData.append('password', studentData.password);
       formData.append('admissionYear', studentData.admissionYear);
-      formData.append('rollNo', studentData.rollNo); // Add rollNo to form data
+      formData.append('rollNo', studentData.rollNo);
       
       // Add profile picture file if provided
       if (profilePicFile) {
@@ -140,7 +133,7 @@ class StudentService {
     email?: string;
     phoneNo?: string;
     admissionYear?: string;
-    rollNo?: string; // Add rollNo field
+    rollNo?: string;
   }, profilePicFile?: File): Promise<any> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.STUDENTS.UPDATE.replace(':studentId', studentId);
@@ -155,7 +148,7 @@ class StudentService {
       if (studentData.email) formData.append('email', studentData.email);
       if (studentData.phoneNo) formData.append('phoneNo', studentData.phoneNo);
       if (studentData.admissionYear) formData.append('admissionYear', studentData.admissionYear);
-      if (studentData.rollNo) formData.append('rollNo', studentData.rollNo); // Add rollNo to form data
+      if (studentData.rollNo) formData.append('rollNo', studentData.rollNo);
       
       // Add profile picture file if provided
       if (profilePicFile) {
@@ -219,6 +212,33 @@ class StudentService {
       return response;
     } catch (error) {
       logError(error, 'Failed to fetch student details');
+      throw error;
+    }
+  }
+
+  // Get students by class ID
+  async getStudentsByClass(schoolId: string, classId: string): Promise<StudentsResponse> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENTS.BY_CLASS
+        .replace(':schoolId', schoolId)
+        .replace(':classId', classId);
+
+      const response = await apiHelper.get(endpoint);
+
+      // Handle direct array response from API
+      if (Array.isArray(response)) {
+        return {
+          success: true,
+          students: response,
+          count: response.length,
+          timestamp: new Date().toISOString()
+        };
+      }
+
+      // Handle wrapped response format
+      return response;
+    } catch (error) {
+      logError(error, 'Failed to fetch students by class');
       throw error;
     }
   }
