@@ -11,6 +11,7 @@ import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolA
 import { ExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
 import { TeacherAdminLayout, DashboardContent, TeacherProfile, Students } from './components/TeacherAdmin';
+import StudentAttendance from './components/TeacherAdmin/Attendance/StudentAttendance';
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
                       <Route index element={<DashboardContent />} />
                       <Route path="profile" element={<TeacherProfile />} />
                       <Route path="students" element={<Students />} />
+                      <Route path="student-attendance" element={<StudentAttendance />} />
                       {/* Add other teacher admin routes here as needed */}
                     </Routes>
                   </TeacherAdminLayout>

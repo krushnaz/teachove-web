@@ -9,6 +9,8 @@ interface User {
   phoneNo: string;
   email: string;
   currentAcademicYear: string;
+  classId?: string;
+  className?: string;
 }
 
 interface AuthContextType {

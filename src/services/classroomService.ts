@@ -47,6 +47,10 @@ export interface ClassroomResponse {
   classes: Classroom[];
 }
 
+export interface ClassDetailsResponse {
+  class: Classroom;
+}
+
 export const classroomService = {
   /**
    * Fetch all classes for a specific school and academic year
@@ -67,6 +71,27 @@ export const classroomService = {
     } catch (error) {
       console.error('Error fetching classrooms:', error);
       throw new Error('Failed to fetch classrooms');
+    }
+  },
+
+  /**
+   * Fetch class details by classId
+   */
+  async getClassById(schoolId: string, classId: string): Promise<Classroom> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.CLASSROOM.GET_CLASS_BY_ID
+        .replace(':schoolId', schoolId)
+        .replace(':classId', classId);
+      const response = await apiClient.get(endpoint);
+      
+      if (response.data.class) {
+        return response.data.class;
+      }
+      
+      throw new Error('Class not found');
+    } catch (error) {
+      console.error('Error fetching class details:', error);
+      throw new Error('Failed to fetch class details');
     }
   },
 

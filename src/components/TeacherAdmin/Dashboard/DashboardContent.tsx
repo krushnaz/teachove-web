@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTeacherProfile } from '../../../contexts/TeacherProfileContext';
+import { classroomService } from '../../../services/classroomService';
 
 // Shimmer Loading Component
 const ShimmerCard: React.FC<{ className?: string }> = ({ className = "" }) => (
@@ -91,16 +92,49 @@ const TeacherAdminDashboard: React.FC = () => {
   const { isDarkMode } = useDarkMode();
   const { user } = useAuth();
   const { teacherProfile, isLoading, error } = useTeacherProfile();
+  const [classDetails, setClassDetails] = useState<{ className: string; section: string } | null>(null);
+  const [classLoading, setClassLoading] = useState(false);
+
+  // Fetch class details when component mounts
+  useEffect(() => {
+    const fetchClassDetails = async () => {
+      if (user?.classId && user?.schoolId) {
+        setClassLoading(true);
+        try {
+          const classData = await classroomService.getClassById(user.schoolId, user.classId);
+          setClassDetails({
+            className: classData.className,
+            section: classData.section
+          });
+        } catch (error) {
+          console.error('Error fetching class details:', error);
+          // Fallback to teacher profile data if available
+          if (teacherProfile?.classes && teacherProfile.classes.length > 0) {
+            const firstClass = teacherProfile.classes[0];
+            setClassDetails({
+              className: firstClass.className,
+              section: firstClass.section
+            });
+          }
+        } finally {
+          setClassLoading(false);
+        }
+      }
+    };
+
+    fetchClassDetails();
+  }, [user?.classId, user?.schoolId, teacherProfile?.classes]);
 
   // Add debugging
   useEffect(() => {
     console.log('=== DASHBOARD DEBUG INFO ===');
     console.log('User data:', user);
     console.log('Teacher profile data:', teacherProfile);
+    console.log('Class details:', classDetails);
     console.log('Is loading:', isLoading);
     console.log('Error:', error);
     console.log('=== END DEBUG INFO ===');
-  }, [user, teacherProfile, isLoading, error]);
+  }, [user, teacherProfile, classDetails, isLoading, error]);
 
   // Get teacher and school information
   const teacherName = teacherProfile?.teacher?.teacherName || user?.email?.split('@')[0] || 'Teacher';
@@ -115,6 +149,13 @@ const TeacherAdminDashboard: React.FC = () => {
 
   // Format class names properly (e.g., "2nd A" instead of "2ndA, 2ndA")
   const uniqueClasses = teacherClasses.map(cls => `${cls.className} ${cls.section}`).filter((value, index, self) => self.indexOf(value) === index);
+
+  // Get the current class name for display
+  const currentClassName = classDetails 
+    ? `${classDetails.className} ${classDetails.section}`.trim()
+    : uniqueClasses.length > 0 
+      ? uniqueClasses[0] 
+      : 'My Class';
 
   const stats = [
     { 
@@ -426,12 +467,12 @@ const TeacherAdminDashboard: React.FC = () => {
                 </svg>
                 {schoolName}
               </p>
-              {uniqueClasses.length > 0 && (
+              {currentClassName && (
                 <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} flex items-center`}>
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
-                  Teaching: {uniqueClasses.join(', ')}
+                  Teaching: {classLoading ? 'Loading...' : currentClassName}
                 </p>
               )}
             </div>

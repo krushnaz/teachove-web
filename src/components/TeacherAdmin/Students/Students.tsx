@@ -1,50 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { studentService } from '../../../services/studentService';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useTeacherProfile } from '../../../contexts/TeacherProfileContext';
 import { Student } from '../../../models';
 import AddStudentDrawer from './AddStudentDrawer';
 import { toast } from 'react-toastify';
 
 const Students: React.FC = () => {
   const { user } = useAuth();
-  const { teacherProfile } = useTeacherProfile();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Fetch students from teacher's classes
+  // Fetch students from teacher's class
   useEffect(() => {
     const fetchStudents = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        if (user?.schoolId && teacherProfile?.classes) {
-          const allStudents: Student[] = [];
-          
-          // Fetch students from each class the teacher teaches
-          for (const classInfo of teacherProfile.classes) {
-            try {
-              const response = await studentService.getStudentsByClass(user.schoolId, classInfo.classId);
-              if (response.success) {
-                allStudents.push(...response.students);
-              }
-            } catch (error) {
-              console.error(`Error fetching students for class ${classInfo.className}:`, error);
-            }
+        if (user?.schoolId && user?.classId) {
+          const response = await studentService.getStudentsByClass(user.schoolId, user.classId);
+          if (response.success) {
+            setStudents(response.students);
+          } else {
+            setError('Failed to load students');
           }
-          
-          setStudents(allStudents);
         } else {
-          setError('School ID or teacher classes not found');
+          setError('School ID or Class ID not found');
         }
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -54,10 +42,10 @@ const Students: React.FC = () => {
       }
     };
 
-    if (teacherProfile?.classes) {
+    if (user?.schoolId && user?.classId) {
       fetchStudents();
     }
-  }, [user?.schoolId, teacherProfile?.classes]);
+  }, [user?.schoolId, user?.classId]);
 
   // Handler for adding a new student
   const handleAddStudent = async (studentData: {
@@ -204,11 +192,7 @@ const Students: React.FC = () => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (student.rollNo && student.rollNo.toLowerCase().includes(searchTerm.toLowerCase()));
-    const studentClass = student.className && student.section
-      ? `${student.className}-${student.section}`
-      : student.classId;
-    const matchesClass = selectedClass === 'all' || studentClass === selectedClass;
-    return matchesSearch && matchesClass;
+    return matchesSearch;
   }).sort((a, b) => {
     // Sort by roll number if both have roll numbers
     if (a.rollNo && b.rollNo) {
@@ -229,13 +213,6 @@ const Students: React.FC = () => {
     // If neither has roll number, sort by name
     return a.name.localeCompare(b.name);
   });
-
-  // Get unique classes for filter dropdown (only teacher's classes)
-  const uniqueClasses = Array.from(new Set(students.map(s => {
-    return s.className && s.section
-      ? `${s.className}-${s.section}`
-      : s.classId;
-  })));
 
   // Loading state
   if (loading) {
@@ -308,8 +285,8 @@ const Students: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">My Classes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{uniqueClasses.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">My Class</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">1</p>
             </div>
           </div>
         </div>
@@ -348,19 +325,6 @@ const Students: React.FC = () => {
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-            </div>
-
-            <div className="sm:w-32">
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Classes</option>
-                {uniqueClasses.map((classInfo) => (
-                  <option key={classInfo} value={classInfo}>{classInfo}</option>
-                ))}
-              </select>
             </div>
           </div>
 
@@ -481,8 +445,18 @@ const Students: React.FC = () => {
         }}
         onAddStudent={handleAddStudent}
         onEditStudent={handleEditStudent}
-        student={editingStudent || undefined}
-        teacherClasses={teacherProfile?.classes || []}
+        student={editingStudent ? {
+          studentId: editingStudent.studentId,
+          name: editingStudent.name,
+          email: editingStudent.email,
+          phoneNo: editingStudent.phoneNo,
+          admissionYear: editingStudent.admissionYear,
+          classId: editingStudent.classId,
+          rollNo: editingStudent.rollNo || '',
+          profilePic: editingStudent.profilePic
+        } : undefined}
+        teacherClassId={user?.classId || ''}
+        teacherClassName={user?.className || 'My Class'}
       />
 
       {/* Delete Confirmation Dialog */}
