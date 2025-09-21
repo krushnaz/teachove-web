@@ -53,6 +53,12 @@ export const API_CONFIG = {
       GET_STATUS: '/teacher-attendance/teacher/:schoolId/:date/:teacherId',
       BULK_MARK: '/teacher-attendance/',
     },
+    STUDENT_ATTENDANCE: {
+      MARK: '/student-attendance/:schoolId/studentAttendance',
+      GET_BY_DATE: '/student-attendance/:schoolId/studentAttendance/date/:date',
+      GET_MARKED_DATES: '/student-attendance/:schoolId/studentAttendance/dates',
+      DOWNLOAD_REPORT: '/student-attendance/studentAttendance/report',
+    },
     CLASSROOM: {
       GET_CLASSES: '/classrooms/:schoolId/academicYears/:yearId/classes',
       CREATE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes',

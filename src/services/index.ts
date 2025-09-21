@@ -3,6 +3,7 @@ export { schoolService } from './schoolService';
 export { studentService } from './studentService';
 export { teacherService } from './teacherService';
 export { teacherAttendanceService } from './teacherAttendanceService';
+export { studentAttendanceService } from './studentAttendanceService';
 export { classroomService } from './classroomService';
 export { examTimetableService } from './examTimetableService';
 export { studentFeesService } from './studentFeesService';
