@@ -143,5 +143,16 @@ export const API_CONFIG = {
       GET_BY_ID: 'teacher-leaves/:schoolId/leaves/:leaveId',
       UPDATE_STATUS: 'teacher-leaves/:schoolId/leaves/:leaveId/status',
     },
+    RESULTS: {
+      GET_BY_SCHOOL: "/results/school/:schoolId",
+      GET_BY_CLASS: "/results/school/:schoolId/class/:classId",
+      GET_BY_STUDENT: "/results/school/:schoolId/student/:studentId",
+      GET_BY_ID: "/results/school/:schoolId/result/:resultId",
+      CREATE: "/results/school/:schoolId",
+      UPDATE: "/results/school/:schoolId/result/:resultId",
+      DELETE: "/results/school/:schoolId/result/:resultId",
+      STATISTICS: "/results/school/:schoolId/class/:classId/statistics",
+      DOWNLOAD_REPORT: "/results/school/:schoolId/class/:classId/report",
+    },
   },
 };

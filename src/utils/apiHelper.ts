@@ -55,5 +55,70 @@ export const apiHelper = {
       console.error('API request failed:', error);
       throw error;
     }
+  },
+
+  async put(endpoint: string, data: any) {
+    const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      // Get the response body regardless of status code
+      const responseData = await response.json();
+
+      // If the response has a success field and it's false, return the response data
+      if (responseData.hasOwnProperty('success') && !responseData.success) {
+        return responseData;
+      }
+
+      // For other non-2xx status codes, throw an error
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
+  },
+
+  async delete(endpoint: string) {
+    const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      // Get the response body regardless of status code
+      const responseData = await response.json();
+
+      // If the response has a success field and it's false, return the response data
+      if (responseData.hasOwnProperty('success') && !responseData.success) {
+        return responseData;
+      }
+
+      // For other non-2xx status codes, throw an error
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
   }
-}; 
+};

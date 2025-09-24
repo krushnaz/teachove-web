@@ -5,3 +5,4 @@ export { default as TeacherAdminDashboard } from './TeacherAdminDashboard';
 export { default as DashboardContent } from './Dashboard/DashboardContent';
 export { TeacherProfile, EditProfileModal } from './Profile';
 export { Students } from './Students';
+export { StudentResult } from './Results';

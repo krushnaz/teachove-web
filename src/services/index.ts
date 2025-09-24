@@ -15,3 +15,4 @@ export { questionPapersService } from './questionPapersService';
 export { leaveManagementService } from './leaveManagementService';
 export { teacherLeaveService } from './teacherLeaveService';
 export { teacherProfileService } from './teacherProfileService';
+export { resultService } from './resultService';
