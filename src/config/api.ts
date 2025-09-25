@@ -154,5 +154,11 @@ export const API_CONFIG = {
       STATISTICS: "/results/school/:schoolId/class/:classId/statistics",
       DOWNLOAD_REPORT: "/results/school/:schoolId/class/:classId/report",
     },
+    STUDENT_RESULTS: {
+      CREATE: "/student-results/",
+      GET_BY_STUDENT_CLASS: "/student-results/:schoolId/student/:studentId/class/:classId",
+      UPDATE: "/student-results/:schoolId/:resultId",
+      DELETE: "/student-results/:schoolId/:resultId",
+    },
   },
 };

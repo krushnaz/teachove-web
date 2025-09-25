@@ -75,8 +75,18 @@ class ResultService {
   }
 
   // Get results for a specific student
-  async getResultsByStudent(schoolId: string, studentId: string): Promise<ResultsResponse> {
+  async getResultsByStudent(schoolId: string, studentId: string, classId?: string): Promise<ResultsResponse | any[]> {
     try {
+      // Prefer new student-results endpoint when classId is provided
+      if (classId) {
+        const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.GET_BY_STUDENT_CLASS
+          .replace(':schoolId', schoolId)
+          .replace(':studentId', studentId)
+          .replace(':classId', classId);
+        const resp = await apiHelper.get(endpoint);
+        return Array.isArray(resp) ? resp : (resp?.data || resp?.results || []);
+      }
+
       const endpoint = `/results/school/${schoolId}/student/${studentId}`;
       const response = await apiHelper.get(endpoint);
 
@@ -113,14 +123,61 @@ class ResultService {
   // Create a new result
   async createResult(schoolId: string, resultData: CreateResultRequest): Promise<ResultResponse> {
     try {
-      const endpoint = `/results/school/${schoolId}`;
-      const response = await apiHelper.post(endpoint, {
-        ...resultData,
-        schoolId
-      });
+      // Prefer new student-results endpoint if payload matches expected shape
+      const srEndpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS?.CREATE || '/student-results/';
+      const payload = {
+        schoolId,
+        classId: (resultData as any).classId,
+        studentId: resultData.studentId,
+        examName: (resultData as any).examName || resultData.examType || '',
+        examDate: (resultData as any).examDate,
+        subjects: (resultData.subjects || []).map((s: any) => ({
+          subjectName: s.subjectName,
+          marksObtained: s.marksObtained,
+          totalMarks: s.totalMarks,
+          percentage: s.totalMarks ? (s.marksObtained / s.totalMarks) * 100 : 0,
+          grade: s.grade || 'N/A'
+        })),
+        totalObtained: (resultData.subjects || []).reduce((sum: number, s: any) => sum + (s.marksObtained || 0), 0),
+        totalMaximum: (resultData.subjects || []).reduce((sum: number, s: any) => sum + (s.totalMarks || 0), 0),
+        percentage: (() => {
+          const total = (resultData.subjects || []).reduce((sum: number, s: any) => sum + (s.totalMarks || 0), 0);
+          const obt = (resultData.subjects || []).reduce((sum: number, s: any) => sum + (s.marksObtained || 0), 0);
+          return total > 0 ? (obt / total) * 100 : 0;
+        })(),
+        overallGrade: (resultData as any).overallGrade,
+        remarks: (resultData as any).remarks || ''
+      };
+
+      const response = await apiHelper.post(srEndpoint, payload);
       return response;
     } catch (error) {
       logError(error, 'Failed to create result');
+      throw error;
+    }
+  }
+
+  // Create student result with explicit payload (new endpoint)
+  async createStudentResult(payload: {
+    schoolId: string;
+    classId: string;
+    studentId: string;
+    examType?: string;
+    examName: string;
+    examDate: string;
+    subjects: Array<{ subjectName: string; marksObtained: number; totalMarks: number; percentage: number; grade: string }>;
+    totalObtained: number;
+    totalMaximum: number;
+    percentage: number;
+    overallGrade: string;
+    remarks?: string;
+  }): Promise<any> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.CREATE;
+      const response = await apiHelper.post(endpoint, payload);
+      return response;
+    } catch (error) {
+      logError(error, 'Failed to create student result');
       throw error;
     }
   }
@@ -137,6 +194,30 @@ class ResultService {
     }
   }
 
+  // Update student result (new endpoint)
+  async updateStudentResult(schoolId: string, resultId: string, payload: {
+    examType?: string;
+    examName: string;
+    examDate: string;
+    subjects: Array<{ subjectName: string; marksObtained: number; totalMarks: number; percentage: number; grade: string }>;
+    totalObtained: number;
+    totalMaximum: number;
+    percentage: number;
+    overallGrade: string;
+    remarks?: string;
+  }): Promise<any> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.UPDATE
+        .replace(':schoolId', schoolId)
+        .replace(':resultId', resultId);
+      const response = await apiHelper.put(endpoint, payload);
+      return response;
+    } catch (error) {
+      logError(error, 'Failed to update student result');
+      throw error;
+    }
+  }
+
   // Delete a result
   async deleteResult(schoolId: string, resultId: string): Promise<any> {
     try {
@@ -145,6 +226,20 @@ class ResultService {
       return response;
     } catch (error) {
       logError(error, 'Failed to delete result');
+      throw error;
+    }
+  }
+
+  // Delete student result (new endpoint)
+  async deleteStudentResult(schoolId: string, resultId: string): Promise<any> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.DELETE
+        .replace(':schoolId', schoolId)
+        .replace(':resultId', resultId);
+      const response = await apiHelper.delete(endpoint);
+      return response;
+    } catch (error) {
+      logError(error, 'Failed to delete student result');
       throw error;
     }
   }

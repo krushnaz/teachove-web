@@ -960,7 +960,7 @@ const ExamTimetableComponent: React.FC = () => {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
-          <div className={`relative w-full max-w-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg`}>
+          <div className={`relative w-full max-w-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg max-h-[90vh] overflow-y-auto`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Add New Timetable</h2>
@@ -1178,7 +1178,7 @@ const ExamTimetableComponent: React.FC = () => {
       {isEditOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsEditOpen(false)} />
-          <div className={`relative w-full max-w-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg`}>
+          <div className={`relative w-full max-w-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg max-h-[90vh] overflow-y-auto`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Edit Timetable</h2>
