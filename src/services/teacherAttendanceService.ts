@@ -156,4 +156,33 @@ export const teacherAttendanceService = {
     }
     return await response.blob();
   },
+
+  async getTeacherAttendanceForTeacher(schoolId: string, teacherId: string): Promise<{ teacherId: string; totalPresent: number; presentDates: string[]; totalAbsent: number; absentDates: string[] }> {
+    const endpoint = API_CONFIG.ENDPOINTS.TEACHER_ATTENDANCE.BY_TEACHER
+      .replace(':schoolId', schoolId)
+      .replace(':teacherId', teacherId);
+    const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+
+    console.log('GET teacher attendance (calendar) request to:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Teacher attendance response error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return {
+      teacherId: data.teacherId,
+      totalPresent: Number.isFinite(data.totalPresent) ? data.totalPresent : 0,
+      presentDates: Array.isArray(data.presentDates) ? data.presentDates : [],
+      totalAbsent: Number.isFinite(data.totalAbsent) ? data.totalAbsent : 0,
+      absentDates: Array.isArray(data.absentDates) ? data.absentDates : [],
+    };
+  },
 };

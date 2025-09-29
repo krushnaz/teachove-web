@@ -52,6 +52,8 @@ export const API_CONFIG = {
       SUMMARY: '/teacher-attendance/teacher/summary',
       GET_STATUS: '/teacher-attendance/teacher/:schoolId/:date/:teacherId',
       BULK_MARK: '/teacher-attendance/',
+      // Fetch attendance summary for a specific teacher
+      BY_TEACHER: '/teacher-attendance/:schoolId/attendance/teacher/:teacherId',
     },
     STUDENT_ATTENDANCE: {
       MARK: '/student-attendance/:schoolId/studentAttendance',
@@ -84,6 +86,8 @@ export const API_CONFIG = {
       UPDATE_TIMETABLE: '/exam-timetables/:schoolId/:yearId/examTimetable/:timetableId',
       DELETE_TIMETABLE: '/exam-timetables/:schoolId/:yearId/examTimetable/:timetableId',
       DELETE_SUBJECT: '/exam-timetables/:schoolId/:yearId/examTimetable/:timetableId/subject/:subjectId',
+      // Get exam timetables by class
+      GET_BY_CLASS: '/exam-timetables/:schoolId/class/:classId/exam-timetable',
     },
     STUDENT_PAYMENTS: {
       SUMMARY_BY_SCHOOL: '/student-payments/school/:schoolId/:yearId/summary',
@@ -102,6 +106,8 @@ export const API_CONFIG = {
       CREATE_ANNOUNCEMENT: '/announcements/:schoolId/announcements',
       UPDATE_ANNOUNCEMENT: '/announcements/:schoolId/announcements/:announcementId',
       DELETE_ANNOUNCEMENT: '/announcements/:schoolId/announcements/:announcementId',
+      // Get announcements by class or teacher for teacher admin
+      GET_BY_CLASS_OR_TEACHER: '/announcements/:schoolId/announcements/filter/:classId/:teacherId',
     },
     SUBSCRIPTIONS: {
       GET_BY_SCHOOL: '/subscriptions/school/:schoolId',
@@ -129,6 +135,8 @@ export const API_CONFIG = {
       UPDATE: '/events/:schoolId/events/:eventId',
       DELETE: '/events/events/:schoolId/:eventId',
       DELETE_MULTIPLE: '/events/delete-multiple/:schoolId',
+      // Get events for teacher admin
+      GET_EVENTS: '/events/events/:schoolId',
     },
     QUESTION_PAPERS: {
       GET_CLASSES: '/question-papers/classes',

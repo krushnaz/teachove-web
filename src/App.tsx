@@ -8,9 +8,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './components/Home/LandingPage';
 import LoginPage from './components/LoginPage';
 import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminClassroom, SchoolAdminStudentFees, SchoolAdminAnnouncements, SchoolAdminEvents, SchoolAdminSubscriptionRequests, SchoolAdminQuestionPapers, SchoolAdminLeaveManagement, SchoolAdminSettings, SchoolProfileWrapper } from './components/SchoolAdmin';
-import { ExamTimetable } from './components/SchoolAdmin/Exams';
+import { ExamTimetable as SchoolExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
-import { TeacherAdminLayout, DashboardContent, TeacherProfile, Students } from './components/TeacherAdmin';
+import { TeacherAdminLayout, DashboardContent, TeacherProfile, Students, ExamTimetable, Events, TeacherAnnouncements, YourAttendance, TeacherLeave, Homework } from './components/TeacherAdmin';
 import { StudentResult } from './components/TeacherAdmin';
 import StudentAttendance from './components/TeacherAdmin/Attendance/StudentAttendance';
 
@@ -37,7 +37,7 @@ function App() {
                       <Route path="teachers" element={<SchoolAdminTeachers />} />
                       <Route path="attendance" element={<SchoolAdminAttendance />} />
                       <Route path="classroom" element={<SchoolAdminClassroom />} />
-                      <Route path="exams" element={<ExamTimetable />} />
+                      <Route path="exams" element={<SchoolExamTimetable />} />
                       <Route path="fees" element={<SchoolAdminStudentFees />} />
                       <Route path="announcements" element={<SchoolAdminAnnouncements />} />
                       <Route path="events" element={<SchoolAdminEvents />} />
@@ -60,7 +60,13 @@ function App() {
                       <Route path="profile" element={<TeacherProfile />} />
                       <Route path="students" element={<Students />} />
                       <Route path="student-attendance" element={<StudentAttendance />} />
+                      <Route path="your-attendance" element={<YourAttendance />} />
                       <Route path="student-results" element={<StudentResult />} />
+                      <Route path="exam-schedule" element={<ExamTimetable />} />
+                      <Route path="events" element={<Events />} />
+                      <Route path="homework" element={<Homework />} />
+                      <Route path="announcements" element={<TeacherAnnouncements />} />
+                      <Route path="leave" element={<TeacherLeave />} />
                       {/* Add other teacher admin routes here as needed */}
                     </Routes>
                   </TeacherAdminLayout>

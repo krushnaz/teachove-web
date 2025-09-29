@@ -134,5 +134,32 @@ export const examTimetableService = {
       console.error('Error deleting subject:', error);
       throw new Error('Failed to delete subject');
     }
+  },
+
+  /**
+   * Fetch exam timetables for a specific class
+   */
+  async getExamTimetablesByClass(schoolId: string, classId: string): Promise<ExamTimetable[]> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.EXAMS.GET_BY_CLASS
+        .replace(':schoolId', schoolId)
+        .replace(':classId', classId);
+      
+      const response = await apiClient.get(endpoint);
+      const data = response.data;
+
+      if (Array.isArray(data?.timetables)) {
+        return data.timetables;
+      }
+      
+      if (Array.isArray(data)) {
+        return data;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error fetching exam timetables by class:', error);
+      throw new Error('Failed to fetch exam timetables for class');
+    }
   }
 }; 

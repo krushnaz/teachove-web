@@ -48,14 +48,18 @@ export const teacherLeaveService = {
     return response.data;
   },
 
-  // Get teacher leaves by teacher ID
+  // Get teacher leaves by teacher ID - supports array or wrapped response
   getTeacherLeavesByTeacher: async (schoolId: string, teacherId: string): Promise<TeacherLeavesResponse> => {
     const response = await apiClient.get(
       `${API_CONFIG.ENDPOINTS.TEACHER_LEAVES.GET_BY_TEACHER
         .replace(':schoolId', schoolId)
         .replace(':teacherId', teacherId)}`
     );
-    return response.data;
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return { leaves: data, total: data.length, success: true } as TeacherLeavesResponse;
+    }
+    return data;
   },
 
   // Get teacher leave by ID

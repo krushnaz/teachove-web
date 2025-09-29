@@ -212,5 +212,32 @@ export const announcementService = {
       console.error('Error fetching announcement:', error);
       return null;
     }
+  },
+
+  /**
+   * Get announcements by class or teacher for teacher admin
+   */
+  async getAnnouncementsByClassOrTeacher(schoolId: string, classId: string, teacherId: string): Promise<Announcement[]> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.ANNOUNCEMENTS.GET_BY_CLASS_OR_TEACHER
+        .replace(':schoolId', schoolId)
+        .replace(':classId', classId)
+        .replace(':teacherId', teacherId);
+      
+      const response = await apiClient.get(endpoint);
+
+      // Handle both array and wrapped object responses
+      if (Array.isArray(response.data)) {
+        return response.data as Announcement[];
+      }
+      if (Array.isArray(response.data?.announcements)) {
+        return response.data.announcements as Announcement[];
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error fetching announcements by class or teacher:', error);
+      throw new Error('Failed to fetch announcements');
+    }
   }
 }; 
