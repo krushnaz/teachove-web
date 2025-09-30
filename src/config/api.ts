@@ -142,6 +142,13 @@ export const API_CONFIG = {
       GET_CLASSES: '/question-papers/classes',
       GET_PAPERS: '/question-papers/:classId/:testType',
     },
+    HOMEWORKS: {
+      CREATE_OR_GET_BY_DATE: '/homeworks/:schoolId/homeworks',
+      GET_BY_DATE: '/homeworks/:schoolId/homeworks/date/:date',
+      GET_DATES: '/homeworks/:schoolId/homeworks/dates',
+      UPDATE: '/homeworks/:schoolId/homeworks/:homeworkId',
+      DELETE: '/homeworks/:schoolId/homeworks/:homeworkId',
+    },
     TEACHER_LEAVES: {
       CREATE: 'teacher-leaves/:schoolId/leaves',
       UPDATE: 'teacher-leaves/:schoolId/leaves/:leaveId',

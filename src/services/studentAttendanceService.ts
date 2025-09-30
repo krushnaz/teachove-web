@@ -111,7 +111,17 @@ class StudentAttendanceService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      // Get the blob with proper content type for Excel files
       const blob = await response.blob();
+      
+      // If the response doesn't have the correct content type, set it manually
+      if (blob.type === 'application/octet-stream' || blob.type === '') {
+        const excelBlob = new Blob([blob], { 
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+        return excelBlob;
+      }
+      
       return blob;
     } catch (error) {
       console.error('Error downloading attendance report:', error);

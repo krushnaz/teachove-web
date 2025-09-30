@@ -3,7 +3,8 @@ import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTeacherProfile } from '../../../contexts/TeacherProfileContext';
 import { studentService } from '../../../services/studentService';
-import { studentAttendanceService, AttendanceData } from '../../../services/studentAttendanceService';
+import { studentAttendanceService, AttendanceData, DownloadReportRequest } from '../../../services/studentAttendanceService';
+import { authService } from '../../../services/authService';
 import { Student } from '../../../models';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -436,11 +437,35 @@ const StudentAttendance: React.FC = () => {
       return;
     }
 
+    const teacherId = authService.getTeacherId();
+    if (!user?.schoolId || !user?.classId || !teacherId) {
+      toast.error('Missing required information for report generation');
+      return;
+    }
+
     setIsGeneratingReport(true);
     try {
-      // This would be an API call to generate and download the report
-      console.log('Generating report from', reportFromDate, 'to', reportToDate);
-      toast.success('Report generated successfully!');
+      const reportData: DownloadReportRequest = {
+        schoolId: user.schoolId,
+        classId: user.classId,
+        fromDate: reportFromDate,
+        toDate: reportToDate,
+        teacherId: teacherId
+      };
+
+      const blob = await studentAttendanceService.downloadAttendanceReport(reportData);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `attendance-report-${reportFromDate}-to-${reportToDate}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Report downloaded successfully!');
       setShowReportModal(false);
     } catch (error) {
       console.error('Error generating report:', error);
