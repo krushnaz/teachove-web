@@ -8,6 +8,7 @@ export interface HomeworkPayload {
   deadline: string; // YYYY-MM-DD
   classId: string;
   className?: string;
+  teacherId: string;
   file?: File; // For file upload
 }
 
@@ -18,6 +19,7 @@ export interface UpdateHomeworkRequest {
   deadline?: string;
   classId?: string;
   className?: string;
+  teacherId?: string;
   isActive?: boolean;
   file?: File; // For file upload
 }
@@ -32,11 +34,12 @@ export interface HomeworkItem {
   isActive?: boolean;
   createdAt?: string;
   classId?: string;
+  className?: string;
 }
 
 export const homeworkService = {
   async createHomework(schoolId: string, payload: HomeworkPayload): Promise<HomeworkItem> {
-    const endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.CREATE_OR_GET_BY_DATE.replace(':schoolId', schoolId);
+    const endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.CREATE.replace(':schoolId', schoolId);
     
     const formData = new FormData();
     formData.append('title', payload.title);
@@ -44,6 +47,7 @@ export const homeworkService = {
     formData.append('description', payload.description);
     formData.append('deadline', payload.deadline);
     formData.append('classId', payload.classId);
+    formData.append('teacherId', payload.teacherId);
     if (payload.className) {
       formData.append('className', payload.className);
     }
@@ -75,6 +79,7 @@ export const homeworkService = {
     if (payload.deadline) formData.append('deadline', payload.deadline);
     if (payload.classId) formData.append('classId', payload.classId);
     if (payload.className) formData.append('className', payload.className);
+    if (payload.teacherId) formData.append('teacherId', payload.teacherId);
     if (payload.isActive !== undefined) formData.append('isActive', payload.isActive.toString());
     if (payload.file) formData.append('file', payload.file);
     
@@ -97,17 +102,23 @@ export const homeworkService = {
     await apiClient.delete(endpoint);
   },
 
-  async getHomeworkDates(schoolId: string): Promise<string[]> {
-    const endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.GET_DATES.replace(':schoolId', schoolId);
+  async getHomeworkDates(schoolId: string, teacherId?: string): Promise<string[]> {
+    let endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.GET_DATES.replace(':schoolId', schoolId);
+    if (teacherId) {
+      endpoint += `?teacherId=${teacherId}`;
+    }
     const response = await apiClient.get(endpoint);
     return response.data?.dates || response.data || [];
   },
 
-  async getHomeworkByDate(schoolId: string, dateISO: string): Promise<HomeworkItem[]> {
-    // GET /homeworks/:schoolId/homeworks/date/:date
-    const endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.GET_BY_DATE
+  async getHomeworkByDate(schoolId: string, dateISO: string, teacherId?: string): Promise<HomeworkItem[]> {
+    let endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.GET_BY_DATE
       .replace(':schoolId', schoolId)
       .replace(':date', dateISO);
+    
+    if (teacherId) {
+      endpoint += `?teacherId=${teacherId}`;
+    }
     
     const response = await apiClient.get(endpoint);
     const data = response.data;

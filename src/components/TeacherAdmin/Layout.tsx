@@ -19,8 +19,8 @@ const TeacherAdminLayout: React.FC<TeacherAdminLayoutProps> = ({
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40">
+      {/* Sticky Header (offset for fixed sidebar on large screens) */}
+      <div className="sticky top-0 z-50 lg:ml-64">
         <TeacherAdminHeader 
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
@@ -30,16 +30,14 @@ const TeacherAdminLayout: React.FC<TeacherAdminLayoutProps> = ({
       </div>
 
       <div className="flex">
-        {/* Sticky Sidebar */}
-        <div className="sticky top-0 h-screen">
-          <TeacherAdminSidebar 
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-          />
-        </div>
+        {/* Fixed Sidebar (independent from main scroll) */}
+        <TeacherAdminSidebar 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
         {/* Scrollable Main Content */}
-        <div className="flex-1 min-h-screen overflow-y-auto">
+        <div className="flex-1 min-h-screen overflow-y-auto lg:ml-64">
           <div className="p-4 lg:p-8">
             {children}
           </div>

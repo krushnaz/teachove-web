@@ -12,3 +12,4 @@ export { TeacherAnnouncements } from './Announcements';
 export { StudentAttendance, YourAttendance } from './Attendance';
 export { TeacherLeave } from './Leave';
 export { Homework } from './Homework';
+export { ClassSchedule } from './ClassSchedule';

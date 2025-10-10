@@ -153,9 +153,9 @@ const TeacherAdminSidebar: React.FC<TeacherAdminSidebarProps> = ({ sidebarOpen, 
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out`}>
-        <div className={`h-full ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r shadow-xl`}>
+      {/* Sidebar - fixed and non-scrollable with page */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out`}>
+        <div className={`h-full ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r shadow-xl overflow-y-auto`}> 
           {/* Logo/Header */}
           <div className={`flex items-center justify-between p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center space-x-3">

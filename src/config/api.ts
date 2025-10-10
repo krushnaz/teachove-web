@@ -143,7 +143,7 @@ export const API_CONFIG = {
       GET_PAPERS: '/question-papers/:classId/:testType',
     },
     HOMEWORKS: {
-      CREATE_OR_GET_BY_DATE: '/homeworks/:schoolId/homeworks',
+      CREATE: '/homeworks/:schoolId/homeworks',
       GET_BY_DATE: '/homeworks/:schoolId/homeworks/date/:date',
       GET_DATES: '/homeworks/:schoolId/homeworks/dates',
       UPDATE: '/homeworks/:schoolId/homeworks/:homeworkId',
@@ -174,6 +174,14 @@ export const API_CONFIG = {
       GET_BY_STUDENT_CLASS: "/student-results/:schoolId/student/:studentId/class/:classId",
       UPDATE: "/student-results/:schoolId/:resultId",
       DELETE: "/student-results/:schoolId/:resultId",
+      DOWNLOAD: "/student-results/:schoolId/results/:resultId/download",
+    },
+    CLASS_SCHEDULES: {
+      CREATE: '/class-schedules/:schoolId/:classId/schedules',
+      GET_ALL: '/class-schedules/:schoolId/:classId/schedules',
+      GET_BY_ID: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
+      UPDATE: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
+      DELETE: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
     },
   },
 };

@@ -63,17 +63,46 @@ const TeacherProfile: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-8">
-        <div className={`rounded-2xl p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="animate-pulse">
-            <div className="flex items-center space-x-6">
-              <div className="w-24 h-24 bg-gray-300 rounded-full"></div>
-              <div className="space-y-2">
-                <div className="h-8 w-64 bg-gray-300 rounded"></div>
-                <div className="h-4 w-48 bg-gray-300 rounded"></div>
-                <div className="h-4 w-32 bg-gray-300 rounded"></div>
+        {/* Hero/Profile shimmer */}
+        <div className={`relative overflow-hidden rounded-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className={`h-32 ${isDarkMode ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-blue-100 to-purple-100'}`} />
+          <div className="p-6 pt-0 -mt-10">
+            <div className="animate-pulse flex items-end justify-between">
+              <div className="flex items-end gap-4">
+                <div className="w-24 h-24 rounded-2xl bg-gray-300 ring-4 ring-white dark:ring-gray-800" />
+                <div className="space-y-3">
+                  <div className="h-6 w-60 bg-gray-300 rounded" />
+                  <div className="h-4 w-40 bg-gray-300 rounded" />
+                  <div className="h-4 w-32 bg-gray-300 rounded" />
+                </div>
               </div>
+              <div className="h-10 w-32 bg-gray-300 rounded-xl" />
             </div>
           </div>
+        </div>
+
+        {/* Stats shimmer */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[1,2,3].map(i => (
+            <div key={i} className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} animate-pulse`}>
+              <div className="h-4 w-24 bg-gray-300 rounded mb-3" />
+              <div className="h-8 w-20 bg-gray-300 rounded" />
+            </div>
+          ))}
+        </div>
+
+        {/* Two columns shimmer */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {[1,2].map(i => (
+            <div key={i} className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} animate-pulse`}>
+              <div className="h-5 w-40 bg-gray-300 rounded mb-6" />
+              <div className="space-y-4">
+                {[...Array(4)].map((_, j) => (
+                  <div key={j} className="h-12 bg-gray-300/60 rounded-xl" />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -110,235 +139,138 @@ const TeacherProfile: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* School & Teacher Association Header */}
-      <div className={`rounded-2xl overflow-hidden ${isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'} border ${isDarkMode ? 'border-gray-600' : 'border-blue-100'}`}>
-        {/* School Header Section */}
-        <div className={`px-8 py-6 border-b ${isDarkMode ? 'border-gray-600 bg-gray-700/50' : 'border-blue-200 bg-white/50'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <img
-                  src={school.logo}
-                  alt="School Logo"
-                  className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-lg"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(school.schoolName)}&background=6366f1&color=fff&size=200`;
-                  }}
-                />
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-1`}>
-                  {school.schoolName}
-                </h2>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-1`}>
-                  {school.address.line1}, {school.address.city}, {school.address.state} {school.address.pincode}
-                </p>
-                <div className="flex items-center space-x-4">
-                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
-                    {school.type} School
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700'}`}>
-                    Active Institution
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>
-                    AY: {school.currentAcademicYear}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Associated Since
-              </p>
-              <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {associatedSince}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Teacher Profile Section */}
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
+      {/* Profile Hero */}
+      <div className={`relative overflow-hidden rounded-2xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className={`h-36 ${isDarkMode ? 'bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-100 via-purple-100 to-blue-100'}`} />
+        <div className="p-6 pt-0 -mt-12">
+          <div className="flex items-end justify-between">
+            <div className="flex items-end gap-4">
               <div className="relative">
                 <img
                   src={teacher.profilePic}
                   alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-xl"
+                  className="w-24 h-24 rounded-2xl object-cover ring-4 ring-white dark:ring-gray-900 shadow-xl"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.teacherName)}&background=6366f1&color=fff&size=200`;
                   }}
                 />
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full border-4 border-white flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                  </svg>
+                <div className="absolute -bottom-2 -right-2 px-2 py-1 text-xs rounded-full bg-blue-600 text-white border-4 border-white dark:border-gray-900 shadow">
+                  Teacher
                 </div>
               </div>
               <div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {teacher.teacherName}
-                  </h1>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>
-                    Teacher
-                  </span>
-                </div>
-                <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-1`}>
-                  {teacher.email}
-                </p>
-                <div className="flex items-center space-x-4">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    📧 {teacher.email}
-                  </span>
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    📱 {teacher.phoneNo}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-4 mt-2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700'}`}>
-                    Active Teacher
-                  </span>
+                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{teacher.teacherName}</h1>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700'}`}>Active</span>
                   {teacherSubjects.length > 0 && (
-                    <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}>
-                      {teacherSubjects.join(', ')}
-                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}>{teacherSubjects.join(', ')}</span>
                   )}
+                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>AY {school.currentAcademicYear}</span>
                 </div>
               </div>
             </div>
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg ${
-                isDarkMode 
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700' 
-                  : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
+              className={`px-4 py-2 rounded-xl font-semibold transition-all duration-200 shadow ${
+                isDarkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <span>Edit Profile</span>
-              </div>
+              Edit Profile
             </button>
           </div>
         </div>
       </div>
 
-      {/* Teaching Information */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Classes Taught */}
-        <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Classes Taught
-            </h3>
-            <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-blue-400' : 'bg-blue-500'}`}></div>
-          </div>
-          
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className={`rounded-2xl p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Associated Since</p>
+          <p className={`mt-1 text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{associatedSince}</p>
+        </div>
+        <div className={`rounded-2xl p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Classes</p>
+          <p className={`mt-1 text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{teacherClasses.length}</p>
+        </div>
+        <div className={`rounded-2xl p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Subjects</p>
+          <p className={`mt-1 text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{teacherSubjects.length}</p>
+        </div>
+      </div>
+
+      {/* Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Personal Info Card */}
+        <div className={`rounded-2xl p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm lg:col-span-1`}>
+          <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Personal Information</h3>
           <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-700">
+              <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Full Name</span>
+              <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{teacher.teacherName}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-700">
+              <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Email</span>
+              <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium truncate max-w-[60%]`}>{teacher.email}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-700">
+              <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Phone</span>
+              <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-medium`}>{teacher.phoneNo}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* School Info + Classes */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className={`rounded-2xl p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>School</h3>
+              <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{school.type} School</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <img
+                src={school.logo}
+                alt="School Logo"
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-gray-700"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(school.schoolName)}&background=1d4ed8&color=fff&size=200`;
+                }}
+              />
+              <div>
+                <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{school.schoolName}</p>
+                <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>{school.address.line1}, {school.address.city}, {school.address.state} {school.address.pincode}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`rounded-2xl p-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Classes Taught</h3>
+              <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-blue-400' : 'bg-blue-500'}`} />
+            </div>
             {teacherClasses.length > 0 ? (
-              teacherClasses.map((classData, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        Class {classData.className} - Section {classData.section}
-                      </p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Subjects: {classData.subjects.filter(s => s.teacherId === teacher.teacherId).map(s => s.subjectName).join(', ')}
-                      </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {teacherClasses.map((classData, index) => (
+                  <div key={index} className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Class {classData.className} - {classData.section}</p>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Subjects: {classData.subjects.filter(s => s.teacherId === teacher.teacherId).map(s => s.subjectName).join(', ') || '—'}</p>
+                      </div>
+                      <div className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'} border ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                        ₹{classData.classFees.toLocaleString()}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      ₹{classData.classFees.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-500">Class Fees</p>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
-              <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className={`text-center py-10 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 <div className="text-4xl mb-2">📚</div>
                 <p>No classes assigned yet</p>
                 <p className="text-sm">Contact your school administrator</p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Personal Information */}
-        <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Personal Information
-            </h3>
-            <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-green-400' : 'bg-green-500'}`}></div>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Full Name
-                </p>
-                <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {teacher.teacherName}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
-              <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Email Address
-                </p>
-                <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {teacher.email}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
-              <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Phone Number
-                </p>
-                <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {teacher.phoneNo}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

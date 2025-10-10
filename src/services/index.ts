@@ -16,3 +16,5 @@ export { leaveManagementService } from './leaveManagementService';
 export { teacherLeaveService } from './teacherLeaveService';
 export { teacherProfileService } from './teacherProfileService';
 export { resultService } from './resultService';
+export { homeworkService } from './homeworkService';
+export { classScheduleService } from './classScheduleService';

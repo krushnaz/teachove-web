@@ -129,6 +129,103 @@ const EditResultPickerModal: React.FC<{
   );
 };
 
+// Download Results Modal
+const DownloadResultsModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  isDarkMode: boolean;
+  student: Student | null;
+  results: StudentResult[];
+  onDownload: (resultId: string) => void;
+  isDownloading: boolean;
+}> = ({ isOpen, onClose, isDarkMode, student, results, onDownload, isDownloading }) => {
+  if (!isOpen || !student) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+      <div className={`rounded-xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Download Results</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{student.name} - {student.rollNo}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className={`rounded-xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Exam Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subjects</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Overall Grade</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {results.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No results available.</td>
+                  </tr>
+                )}
+                {results.map((r) => {
+                  const resultId = (r as any).id || r.resultId;
+                  return (
+                    <tr key={resultId} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{r.examName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{r.examType}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{r.examDate}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 dark:text-white">{r.subjects?.length ?? 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          r.overallGrade === 'A+' || r.overallGrade === 'A' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                            : r.overallGrade === 'B+' || r.overallGrade === 'B'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                            : r.overallGrade === 'C+' || r.overallGrade === 'C'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            : r.overallGrade === 'D'
+                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        }`}>
+                          {r.overallGrade || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => onDownload(resultId)}
+                          disabled={isDownloading}
+                          className="group inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-3 h-3 mr-1 group-hover:translate-y-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Download
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">Close</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Delete Results Modal (multi-select)
 const DeleteResultsModal: React.FC<{
   isOpen: boolean;
@@ -687,7 +784,9 @@ const StudentResults: React.FC = () => {
   const [selectedExamType, setSelectedExamType] = useState('');
   const [showEditPicker, setShowEditPicker] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -812,6 +911,11 @@ const StudentResults: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  const openDownloadModal = (student: Student) => {
+    setSelectedStudent(student);
+    setShowDownloadModal(true);
+  };
+
   const confirmBulkDelete = async (ids: string[]) => {
     if (!user?.schoolId || !selectedStudent) return;
     setIsDeleting(true);
@@ -828,6 +932,40 @@ const StudentResults: React.FC = () => {
       toast.error('Failed to delete selected results');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleDownloadResults = async (resultId: string) => {
+    if (!selectedStudent || !user?.schoolId) return;
+    setIsDownloading(true);
+    try {
+      // Get the specific result
+      const studentResultData = studentResults.find(sr => sr.studentId === selectedStudent.studentId);
+      if (!studentResultData) return;
+      
+      const result = studentResultData.results.find(r => r.resultId === resultId);
+      if (!result) return;
+      
+      // Download PDF from API
+      const blob = await resultService.downloadStudentResult(user.schoolId, resultId);
+      
+      // Create and download file
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${selectedStudent.name}_${result.examName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Result PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading result:', error);
+      toast.error('Failed to download result PDF');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -989,20 +1127,6 @@ const StudentResults: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Results</h1>
           <p className="text-gray-600 dark:text-gray-400">Manage and track student examination results</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => {
-              // Download results report functionality can be added here
-              toast.info('Report download feature coming soon!');
-            }}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download Report
-          </button>
-        </div>
       </div>
 
       {/* Filters */}
@@ -1103,23 +1227,38 @@ const StudentResults: React.FC = () => {
                       <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => handleAddResult(student)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                          className="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                         >
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
-                          Add
+                          Add Result
                         </button>
                         <button
                           onClick={() => openEditPicker(student)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                          className="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
+                          <svg className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
                           Edit
                         </button>
                         <button
-                          onClick={() => openDeleteModal(student)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                          onClick={() => openDownloadModal(student)}
+                          className="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
                         >
+                          <svg className="w-4 h-4 mr-2 group-hover:translate-y-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Download
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(student)}
+                          className="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        >
+                          <svg className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                           Delete
                         </button>
                       </div>
@@ -1172,6 +1311,16 @@ const StudentResults: React.FC = () => {
         results={selectedStudent ? (studentResults.find(sr => sr.studentId === selectedStudent.studentId)?.results || []) : []}
         onConfirm={confirmBulkDelete}
         isSubmitting={isDeleting}
+      />
+
+      <DownloadResultsModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        isDarkMode={isDarkMode}
+        student={selectedStudent}
+        results={selectedStudent ? (studentResults.find(sr => sr.studentId === selectedStudent.studentId)?.results || []) : []}
+        onDownload={handleDownloadResults}
+        isDownloading={isDownloading}
       />
 
       <ResultModal

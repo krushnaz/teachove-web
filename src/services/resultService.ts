@@ -244,6 +244,33 @@ class ResultService {
     }
   }
 
+  // Download student result PDF (new endpoint)
+  async downloadStudentResult(schoolId: string, resultId: string): Promise<Blob> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.DOWNLOAD
+        .replace(':schoolId', schoolId)
+        .replace(':resultId', resultId);
+      
+      const url = `${this.baseURL}${endpoint}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.blob();
+    } catch (error) {
+      logError(error, 'Failed to download student result');
+      throw error;
+    }
+  }
+
   // Get result statistics for a class
   async getResultStatistics(schoolId: string, classId: string, examType?: string): Promise<any> {
     try {

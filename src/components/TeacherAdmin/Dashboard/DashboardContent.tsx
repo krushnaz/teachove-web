@@ -12,23 +12,24 @@ const ShimmerCard: React.FC<{ className?: string }> = ({ className = "" }) => (
   </div>
 );
 
-// Shimmer for welcome section
+// Shimmer for welcome section (avatar + school)
 const ShimmerWelcome: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => (
-  <div className={`rounded-2xl p-8 ${isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'} border ${isDarkMode ? 'border-gray-600' : 'border-blue-100'}`}>
-    <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded-lg w-80 mb-4"></div>
-          <div className="space-y-2 mb-4">
-            <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-64"></div>
-            <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-48"></div>
-            <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-56"></div>
+  <div className={`rounded-2xl overflow-hidden border ${isDarkMode ? 'border-gray-700' : 'border-blue-100'}`}>
+    <div className={`${isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'} h-28`} />
+    <div className="p-6 pt-0 -mt-10">
+      <div className="flex items-end justify-between animate-pulse">
+        <div className="flex items-end gap-4">
+          <div className="w-20 h-20 rounded-2xl bg-gray-300 dark:bg-gray-600 ring-4 ring-white dark:ring-gray-800" />
+          <div className="space-y-3">
+            <div className="h-6 w-64 bg-gray-300 dark:bg-gray-600 rounded" />
+            <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded" />
+            <div className="h-4 w-40 bg-gray-300 dark:bg-gray-600 rounded" />
           </div>
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-72"></div>
         </div>
-      </div>
-      <div className="hidden md:block ml-6">
-        <div className="w-24 h-24 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-28 bg-gray-300 dark:bg-gray-600 rounded-xl" />
+          <div className="hidden md:block w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-xl" />
+        </div>
       </div>
     </div>
   </div>
@@ -125,16 +126,7 @@ const TeacherAdminDashboard: React.FC = () => {
     fetchClassDetails();
   }, [user?.classId, user?.schoolId, teacherProfile?.classes]);
 
-  // Add debugging
-  useEffect(() => {
-    console.log('=== DASHBOARD DEBUG INFO ===');
-    console.log('User data:', user);
-    console.log('Teacher profile data:', teacherProfile);
-    console.log('Class details:', classDetails);
-    console.log('Is loading:', isLoading);
-    console.log('Error:', error);
-    console.log('=== END DEBUG INFO ===');
-  }, [user, teacherProfile, classDetails, isLoading, error]);
+  // Remove noisy debug logs in production
 
   // Get teacher and school information
   const teacherName = teacherProfile?.teacher?.teacherName || user?.email?.split('@')[0] || 'Teacher';
@@ -445,63 +437,47 @@ const TeacherAdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section with Teacher Info and School Logo */}
-      <div className={`rounded-2xl p-8 ${isDarkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'} border ${isDarkMode ? 'border-gray-600' : 'border-blue-100'} shadow-lg`}>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              Welcome back, {teacherName}!
-            </h1>
-            <div className="space-y-1 mb-4">
-              {teacherEmail && (
-                <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} flex items-center`}>
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  {teacherEmail}
-                </p>
-              )}
-              <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} flex items-center`}>
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                {schoolName}
-              </p>
-              {currentClassName && (
-                <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} flex items-center`}>
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  Teaching: {classLoading ? 'Loading...' : currentClassName}
-                </p>
-              )}
+      {/* Welcome Section with Teacher + School */}
+      <div className={`rounded-2xl overflow-hidden border ${isDarkMode ? 'border-gray-700' : 'border-blue-100'} shadow-lg`}>
+        <div className={`${isDarkMode ? 'bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50'} h-28`} />
+        <div className="p-6 pt-0 -mt-12">
+          <div className="flex items-end justify-between">
+            <div className="flex items-end gap-4">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white dark:ring-gray-800 shadow-xl">
+                <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                  {teacherName.charAt(0)}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Welcome back, {teacherName}!</h1>
+                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>Teacher</span>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  {teacherEmail && (
+                    <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{teacherEmail}</span>
+                  )}
+                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>Teaching: {classLoading ? 'Loading…' : currentClassName}</span>
+                </div>
+              </div>
             </div>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Here's what's happening in your classes today
-            </p>
-          </div>
-          <div className="hidden md:block ml-6">
-            {schoolLogo ? (
-              <div className="w-24 h-24 rounded-full overflow-hidden shadow-lg border-4 border-white dark:border-gray-600">
-                <img 
-                  src={schoolLogo} 
-                  alt={schoolName}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.innerHTML = `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">${schoolName.charAt(0)}</div>`;
-                    }
-                  }}
-                />
+            <div className="flex items-center gap-4">
+              <div className="hidden md:block">
+                {schoolLogo ? (
+                  <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg border-4 border-white dark:border-gray-700">
+                    <img src={schoolLogo} alt={schoolName} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                    {schoolName.charAt(0)}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                {schoolName.charAt(0)}
+              <div className="text-right">
+                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-sm`}>{schoolName}</p>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Academic Year: {teacherProfile?.school?.currentAcademicYear || '-'}</p>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

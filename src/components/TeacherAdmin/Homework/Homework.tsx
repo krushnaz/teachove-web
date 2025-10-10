@@ -3,8 +3,9 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { classroomService, Classroom, Subject } from '../../../services/classroomService';
 import { homeworkService, HomeworkPayload, UpdateHomeworkRequest } from '../../../services/homeworkService';
+import { authService } from '../../../services/authService';
 import { Card, CardHeader, CardContent, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Chip, Skeleton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Tooltip, CircularProgress } from '@mui/material';
-import { Add, Edit, Delete, CloudUpload, ChevronLeft, ChevronRight, Today, Assignment, AttachFile } from '@mui/icons-material';
+import { Add, Edit, Delete, CloudUpload, ChevronLeft, ChevronRight, Today, Assignment, AttachFile, Refresh } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
 // Shimmer Loading Components
@@ -101,6 +102,7 @@ const Homework: React.FC = () => {
   const [homeworks, setHomeworks] = useState<HomeworkItem[]>([]);
   const [markedDates, setMarkedDates] = useState<string[]>([]);
   const [loadingHomework, setLoadingHomework] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -110,11 +112,12 @@ const Homework: React.FC = () => {
         const cls = await classroomService.getClassesBySchoolId(user.schoolId);
         setClasses(cls);
         // Load homework dates for calendar indicators
-        try {
-          const dates = await homeworkService.getHomeworkDates(user.schoolId);
-          setMarkedDates(Array.isArray(dates) ? dates : []);
-        } catch (error) {
-          console.error('Error fetching homework dates:', error);
+      try {
+        const teacherId = authService.getTeacherId();
+        const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
+        setMarkedDates(Array.isArray(dates) ? dates : []);
+      } catch (error) {
+        console.error('Error fetching homework dates:', error);
         }
       } finally {
         setLoadingClasses(false);
@@ -143,7 +146,8 @@ const Homework: React.FC = () => {
       if (!user?.schoolId) return;
       try {
         setLoadingHomework(true);
-        const items = await homeworkService.getHomeworkByDate(user.schoolId, selectedKey);
+        const teacherId = authService.getTeacherId();
+        const items = await homeworkService.getHomeworkByDate(user.schoolId, selectedKey, teacherId || undefined);
         
         // Normalize API items to local HomeworkItem shape
         const mapped: HomeworkItem[] = items.map(i => ({
@@ -157,7 +161,7 @@ const Homework: React.FC = () => {
           createdAt: i.createdAt,
           classId: i.classId || '',
           schoolId: user.schoolId,
-          className: classes.find(c => c.classId === (i.classId || ''))?.className,
+          className: i.className || '', // Use className directly from API response
         }));
         
         // Replace homework items for the selected date
@@ -209,7 +213,12 @@ const Homework: React.FC = () => {
     setSaving(true);
     try {
       const cls = classes.find(c => c.classId === form.classId);
-      const className = cls ? `${cls.className}-${cls.section}` : '';
+      const selectedClassName = cls ? `${cls.className}-${cls.section}` : '';
+      const teacherId = authService.getTeacherId();
+      if (!teacherId) {
+        toast.error('Teacher ID not found');
+        return;
+      }
       
       if (editing) {
         // Update existing homework
@@ -219,7 +228,8 @@ const Homework: React.FC = () => {
           description: form.description,
           deadline: form.deadline,
           classId: form.classId,
-          className: className,
+          className: selectedClassName,
+          teacherId: teacherId,
           isActive: true,
           file: file || undefined, // Pass the file for upload
         });
@@ -227,7 +237,7 @@ const Homework: React.FC = () => {
         const newItem: HomeworkItem = {
           schoolId: user.schoolId,
           classId: form.classId,
-          className: className,
+          className: selectedClassName,
           title: form.title,
           subjectName: form.subjectName,
           description: form.description,
@@ -248,14 +258,15 @@ const Homework: React.FC = () => {
           description: form.description,
           deadline: form.deadline,
           classId: form.classId,
-          className: className,
+          className: selectedClassName,
+          teacherId: teacherId,
           file: file || undefined, // Pass the file for upload
         } as HomeworkPayload);
         
         const newItem: HomeworkItem = {
           schoolId: user.schoolId,
           classId: form.classId,
-          className: className,
+          className: selectedClassName,
           title: form.title,
           subjectName: form.subjectName,
           description: form.description,
@@ -272,7 +283,8 @@ const Homework: React.FC = () => {
       
       // Refresh homework dates for calendar indicators
       try {
-        const dates = await homeworkService.getHomeworkDates(user.schoolId);
+        const teacherId = authService.getTeacherId();
+        const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
         setMarkedDates(Array.isArray(dates) ? dates : []);
       } catch (error) {
         console.error('Error refreshing homework dates:', error);
@@ -295,7 +307,8 @@ const Homework: React.FC = () => {
       
       // Refresh homework dates for calendar indicators
       try {
-        const dates = await homeworkService.getHomeworkDates(user.schoolId);
+        const teacherId = authService.getTeacherId();
+        const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
         setMarkedDates(Array.isArray(dates) ? dates : []);
       } catch (error) {
         console.error('Error refreshing homework dates:', error);
@@ -312,6 +325,44 @@ const Homework: React.FC = () => {
 
   const monthLabel = selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
+  const handleRefresh = async () => {
+    if (!user?.schoolId) return;
+    setRefreshing(true);
+    try {
+      const teacherId = authService.getTeacherId();
+      
+      // Refresh homework dates for calendar indicators
+      const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
+      setMarkedDates(Array.isArray(dates) ? dates : []);
+      
+      // Refresh homework for selected date
+      const items = await homeworkService.getHomeworkByDate(user.schoolId, selectedKey, teacherId || undefined);
+      
+      // Normalize API items to local HomeworkItem shape
+      const mapped: HomeworkItem[] = items.map(i => ({
+        homeworkId: i.homeworkId || '',
+        title: i.title,
+        subjectName: i.subjectName,
+        description: i.description,
+        deadline: i.deadline,
+        file: i.file || '',
+        isActive: i.isActive,
+        createdAt: i.createdAt,
+        classId: i.classId || '',
+        schoolId: user.schoolId,
+        className: i.className || '',
+      }));
+      
+      setHomeworks(mapped);
+      toast.success('Data refreshed successfully!');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error('Failed to refresh data');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div>
       <Card className="mb-6 dark:bg-gray-800 dark:border dark:border-gray-700">
@@ -319,7 +370,24 @@ const Homework: React.FC = () => {
           title="Homework"
           subheader="Send daily homework to selected class"
           sx={{ '& .MuiCardHeader-title': { color: isDarkMode ? '#ffffff' : '#111827' }, '& .MuiCardHeader-subheader': { color: isDarkMode ? '#9CA3AF' : '#6B7280' } }}
-          action={<Button startIcon={<Add sx={{ color: isDarkMode ? '#E5E7EB' : undefined }} />} variant="contained" onClick={openAdd}>Send Homework</Button>}
+          action={
+            <div className="flex items-center gap-2">
+              <Tooltip title="Refresh Data">
+                <IconButton 
+                  onClick={handleRefresh} 
+                  disabled={refreshing}
+                  sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}
+                >
+                  {refreshing ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <Refresh />
+                  )}
+                </IconButton>
+              </Tooltip>
+              <Button startIcon={<Add sx={{ color: isDarkMode ? '#E5E7EB' : undefined }} />} variant="contained" onClick={openAdd}>Send Homework</Button>
+            </div>
+          }
         />
         <CardContent>
           {/* Horizontal Calendar */}
@@ -385,7 +453,7 @@ const Homework: React.FC = () => {
                   filtered.map(h => (
                     <TableRow key={h.homeworkId} hover>
                       <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.title}</TableCell>
-                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.className || classes.find(c => c.classId === h.classId)?.className}</TableCell>
+                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.className || '-'}</TableCell>
                       <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.subjectName}</TableCell>
                       <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.deadline}</TableCell>
                       <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.file ? (

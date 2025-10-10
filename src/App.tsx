@@ -10,7 +10,7 @@ import LoginPage from './components/LoginPage';
 import { SchoolAdminDashboard, SchoolAdminStudents, SchoolAdminTeachers, SchoolAdminAttendance, SchoolAdminClassroom, SchoolAdminStudentFees, SchoolAdminAnnouncements, SchoolAdminEvents, SchoolAdminSubscriptionRequests, SchoolAdminQuestionPapers, SchoolAdminLeaveManagement, SchoolAdminSettings, SchoolProfileWrapper } from './components/SchoolAdmin';
 import { ExamTimetable as SchoolExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
-import { TeacherAdminLayout, DashboardContent, TeacherProfile, Students, ExamTimetable, Events, TeacherAnnouncements, YourAttendance, TeacherLeave, Homework } from './components/TeacherAdmin';
+import { TeacherAdminLayout, DashboardContent, TeacherProfile, Students, ExamTimetable, Events, TeacherAnnouncements, YourAttendance, TeacherLeave, Homework, ClassSchedule } from './components/TeacherAdmin';
 import { StudentResult } from './components/TeacherAdmin';
 import StudentAttendance from './components/TeacherAdmin/Attendance/StudentAttendance';
 
@@ -67,6 +67,7 @@ function App() {
                       <Route path="homework" element={<Homework />} />
                       <Route path="announcements" element={<TeacherAnnouncements />} />
                       <Route path="leave" element={<TeacherLeave />} />
+                      <Route path="class-schedule" element={<ClassSchedule />} />
                       {/* Add other teacher admin routes here as needed */}
                     </Routes>
                   </TeacherAdminLayout>
