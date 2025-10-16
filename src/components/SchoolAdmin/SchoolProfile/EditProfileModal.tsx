@@ -258,15 +258,25 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                   Academic Year *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.currentAcademicYear || ''}
                   onChange={(e) => handleInputChange('currentAcademicYear', e.target.value)}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     isDarkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300'
                   }`}
-                  placeholder="e.g., 2025-2026"
-                />
+                >
+                  <option value="">Select Academic Year</option>
+                  {Array.from({ length: 17 }, (_, i) => {
+                    const startYear = 2024 + i;
+                    const endYear = startYear + 1;
+                    const academicYear = `${startYear}-${endYear}`;
+                    return (
+                      <option key={academicYear} value={academicYear}>
+                        {academicYear}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
             </div>
 

@@ -58,19 +58,26 @@ const LoginPage: React.FC = () => {
   }, [isAuthenticated, navigate, location]);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'} flex`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-[#0A0E27]' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'} flex relative overflow-hidden`}>
+      {/* Animated Background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className={`absolute -top-40 -left-40 h-80 w-80 rounded-full ${isDarkMode ? 'bg-blue-600/20' : 'bg-blue-400/30'} blur-3xl animate-pulse`} />
+        <div className={`absolute top-1/4 -right-40 h-96 w-96 rounded-full ${isDarkMode ? 'bg-purple-600/20' : 'bg-purple-400/30'} blur-3xl animate-pulse`} style={{ animationDelay: '1s' }} />
+        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full ${isDarkMode ? 'bg-pink-600/20' : 'bg-pink-400/30'} blur-3xl animate-pulse`} style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Left Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 relative z-10">
         <div className="w-full max-w-md">
           {/* Back to Home Link */}
           <div className="mb-8">
             <Link
               to="/"
-              className={`inline-flex items-center space-x-2 text-sm font-medium transition-all duration-200 hover:scale-105 ${
+              className={`inline-flex items-center space-x-2 text-sm font-semibold transition-all duration-300 hover:translate-x-1 ${
                 isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span>Back to Home</span>
@@ -78,26 +85,41 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* Login Form */}
-          <div className={`rounded-3xl shadow-2xl border ${isDarkMode ? 'bg-gray-800/95 border-gray-700' : 'bg-white border-gray-100'} p-8 lg:p-10`}>
+          <div className={`rounded-3xl shadow-2xl border ${isDarkMode ? 'bg-white/5 border-white/10 backdrop-blur-xl' : 'bg-white/90 border-gray-200 backdrop-blur-xl'} p-8 lg:p-10`}>
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className={`inline-flex h-16 w-16 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500' : 'bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600'} shadow-xl mb-4 items-center justify-center mx-auto`}>
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <h2 className={`text-3xl sm:text-4xl font-extrabold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Welcome Back
+              </h2>
+              <p className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Sign in to your account to continue
+              </p>
+            </div>
+
           {/* Error Message */}
           {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center space-x-2">
-                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`mb-6 p-4 rounded-2xl flex items-start space-x-3 ${isDarkMode ? 'bg-red-500/10 border border-red-500/20 text-red-300' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{error}</span>
+                <span className="text-sm font-medium">{error}</span>
             </div>
           )}
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Phone Number Field */}
             <div>
-                <label htmlFor="phoneNo" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <label htmlFor="phoneNo" className={`block text-sm font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Phone Number
               </label>
-              <div className="relative">
+              <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-blue-400' : 'text-gray-400 group-focus-within:text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
@@ -108,8 +130,10 @@ const LoginPage: React.FC = () => {
                   value={formData.phoneNo}
                   onChange={handleInputChange}
                   required
-                    className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
+                    className={`w-full pl-12 pr-4 py-4 border-2 rounded-2xl focus:ring-4 transition-all duration-300 outline-none ${
+                      isDarkMode 
+                        ? 'bg-white/5 border-white/10 text-white placeholder-gray-400 focus:bg-white/10 focus:border-blue-500 focus:ring-blue-500/20' 
+                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-blue-500 focus:ring-blue-500/20'
                   }`}
                   placeholder="Enter your phone number"
                 />
@@ -118,12 +142,12 @@ const LoginPage: React.FC = () => {
 
             {/* Password Field */}
             <div>
-                <label htmlFor="password" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <label htmlFor="password" className={`block text-sm font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Password
               </label>
-              <div className="relative">
+              <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-purple-400' : 'text-gray-400 group-focus-within:text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
@@ -134,16 +158,18 @@ const LoginPage: React.FC = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                    className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'
+                    className={`w-full pl-12 pr-12 py-4 border-2 rounded-2xl focus:ring-4 transition-all duration-300 outline-none ${
+                      isDarkMode 
+                        ? 'bg-white/5 border-white/10 text-white placeholder-gray-400 focus:bg-white/10 focus:border-purple-500 focus:ring-purple-500/20' 
+                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-purple-500 focus:ring-purple-500/20'
                   }`}
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute inset-y-0 right-0 pr-4 flex items-center transition-colors duration-200 ${
-                      isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                    className={`absolute inset-y-0 right-0 pr-4 flex items-center transition-all duration-300 ${
+                      isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     {showPassword ? (
@@ -162,12 +188,12 @@ const LoginPage: React.FC = () => {
 
             {/* Role Selection */}
             <div>
-                <label htmlFor="role" className={`block text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <label htmlFor="role" className={`block text-sm font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Select Role
               </label>
-                <div className="relative">
+                <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-pink-400' : 'text-gray-400 group-focus-within:text-pink-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
@@ -176,18 +202,20 @@ const LoginPage: React.FC = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleInputChange}
-                    className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 appearance-none ${
-                      isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                    className={`w-full pl-12 pr-10 py-4 border-2 rounded-2xl focus:ring-4 transition-all duration-300 appearance-none outline-none cursor-pointer ${
+                      isDarkMode 
+                        ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-pink-500 focus:ring-pink-500/20' 
+                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:bg-white focus:border-pink-500 focus:ring-pink-500/20'
                 }`}
               >
                 {roles.map((role) => (
-                  <option key={role.value} value={role.value}>
-                        {role.label}
+                  <option key={role.value} value={role.value} className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+                        {role.icon} {role.label}
                   </option>
                 ))}
               </select>
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-pink-400' : 'text-gray-400 group-focus-within:text-pink-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -196,16 +224,20 @@ const LoginPage: React.FC = () => {
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center">
+              <label className="flex items-center group cursor-pointer">
                 <input
                   type="checkbox"
-                    className="h-5 w-5 text-primary-600 focus:ring-4 focus:ring-primary-500/20 border-gray-300 rounded-lg transition-colors"
+                    className={`h-5 w-5 rounded-lg border-2 transition-all duration-300 cursor-pointer ${
+                      isDarkMode 
+                        ? 'border-white/20 bg-white/5 checked:bg-gradient-to-br checked:from-blue-500 checked:via-purple-500 checked:to-pink-500 checked:border-transparent focus:ring-4 focus:ring-blue-500/20' 
+                        : 'border-gray-300 bg-gray-50 checked:bg-gradient-to-br checked:from-blue-600 checked:via-purple-600 checked:to-pink-600 checked:border-transparent focus:ring-4 focus:ring-blue-500/20'
+                    }`}
                 />
-                  <span className={`ml-3 text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Remember me</span>
+                  <span className={`ml-3 text-sm font-medium transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-600 group-hover:text-gray-900'}`}>Remember me</span>
               </label>
               <Link
                 to="/forgot-password"
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200 hover:underline"
+                  className={`text-sm font-semibold transition-colors duration-300 hover:underline ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
               >
                 Forgot password?
               </Link>
@@ -215,24 +247,29 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-primary-600 hover:to-primary-700 focus:ring-4 focus:ring-primary-500/20 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                className={`group w-full ${isDarkMode ? 'bg-gradient-to-br from-blue-500/90 via-purple-500/90 to-pink-500/90 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500' : 'bg-gradient-to-br from-blue-500/90 via-purple-500/90 to-pink-500/90 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500'} text-white py-4 px-6 rounded-2xl font-bold text-lg focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center gap-2`}
             >
               {isLoading ? (
-                <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                  Signing in...
-                </div>
+                <>
+                    <div className="animate-spin rounded-full h-6 w-6 border-3 border-white border-t-transparent"></div>
+                  <span>Signing in...</span>
+                </>
               ) : (
-                'Sign In'
+                <>
+                  <span>Sign In</span>
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </>
               )}
             </button>
           </form>
 
           {/* Sign Up Link */}
             <div className="mt-8 text-center">
-            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Don't have an account?{' '}
-                <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-200 hover:underline">
+                <Link to="/signup" className={`font-bold transition-colors duration-300 hover:underline ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
                 Sign up
               </Link>
             </p>
@@ -242,14 +279,14 @@ const LoginPage: React.FC = () => {
         </div>
 
       {/* Right Side - Branding & Illustration */}
-      <div className={`hidden lg:flex flex-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} items-center justify-center p-8 lg:p-12`}>
+      <div className={`hidden lg:flex flex-1 ${isDarkMode ? 'bg-gradient-to-br from-[#0A0E27] via-[#0F1535] to-[#0A0E27]' : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50'} items-center justify-center p-12 relative z-10`}>
         <div className="text-center max-w-lg">
           {/* Dark Mode Toggle */}
           <div className="absolute top-8 right-8">
             <button
               onClick={toggleDarkMode}
-              className={`p-3 rounded-xl transition-all duration-200 hover:scale-105 ${
-                isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`p-4 rounded-2xl transition-all duration-300 hover:scale-110 ${
+                isDarkMode ? 'bg-white/10 text-yellow-400 hover:bg-white/20' : 'bg-white/80 text-gray-700 hover:bg-white shadow-lg'
               }`}
             >
               {isDarkMode ? (
@@ -265,54 +302,67 @@ const LoginPage: React.FC = () => {
           </div>
 
           {/* Brand Logo */}
-          <div className={`w-32 h-32 mx-auto mb-8 rounded-3xl shadow-2xl ${isDarkMode ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-blue-600 to-purple-600'} flex items-center justify-center`}>
+          <div className={`w-32 h-32 mx-auto mb-8 rounded-3xl shadow-2xl ${isDarkMode ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500' : 'bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600'} flex items-center justify-center transform hover:scale-110 transition-transform duration-500`}>
             <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
 
           {/* Brand Name */}
-          <h1 className={`text-5xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-blue-600'}`}>
+          <h1 className={`text-5xl sm:text-6xl font-extrabold mb-4 ${isDarkMode ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`}>
             VedanTech
           </h1>
 
           {/* Tagline */}
-          <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+          <h2 className={`text-2xl sm:text-3xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             School Management System
           </h2>
 
           {/* Description */}
-          <p className={`text-lg mb-8 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className={`text-lg mb-10 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Empowering educational institutions with modern technology solutions for seamless administration, student management, and academic excellence.
           </p>
 
-          {/* Illustration */}
-          <div className="relative">
-            <div className={`w-64 h-48 mx-auto rounded-2xl ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'} flex items-center justify-center`}>
-              <svg className="w-32 h-32 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z" />
-              </svg>
-            </div>
-          </div>
-
           {/* Features */}
-          <div className="grid grid-cols-2 gap-4 mt-8">
-            <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Easy to Use</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className={`group p-6 rounded-2xl transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white/80 border border-gray-200 hover:bg-white shadow-lg hover:shadow-xl'}`}>
+              <div className="flex flex-col items-center space-y-3">
+                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+                  <svg className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Easy to Use</span>
               </div>
             </div>
-            <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Fast & Secure</span>
+            <div className={`group p-6 rounded-2xl transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white/80 border border-gray-200 hover:bg-white shadow-lg hover:shadow-xl'}`}>
+              <div className="flex flex-col items-center space-y-3">
+                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
+                  <svg className={`w-6 h-6 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Fast & Secure</span>
+              </div>
+            </div>
+            <div className={`group p-6 rounded-2xl transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white/80 border border-gray-200 hover:bg-white shadow-lg hover:shadow-xl'}`}>
+              <div className="flex flex-col items-center space-y-3">
+                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-pink-500/20' : 'bg-pink-100'}`}>
+                  <svg className={`w-6 h-6 ${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>24/7 Support</span>
+              </div>
+            </div>
+            <div className={`group p-6 rounded-2xl transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-white/80 border border-gray-200 hover:bg-white shadow-lg hover:shadow-xl'}`}>
+              <div className="flex flex-col items-center space-y-3">
+                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+                  <svg className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                </div>
+                <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cloud Based</span>
               </div>
             </div>
           </div>

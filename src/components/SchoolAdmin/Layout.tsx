@@ -18,29 +18,29 @@ const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40">
-      <SchoolAdminHeader 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        title={title}
-        subtitle={subtitle}
-      />
-      </div>
-
-      <div className="flex">
-        {/* Sticky Sidebar */}
-        <div className="sticky top-0 h-screen">
-        <SchoolAdminSidebar 
+    <div className={`h-screen flex flex-col ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 z-40">
+        <SchoolAdminHeader 
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          title={title}
+          subtitle={subtitle}
         />
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Fixed Sidebar */}
+        <div className="flex-shrink-0">
+          <SchoolAdminSidebar 
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
         </div>
 
         {/* Scrollable Main Content */}
-        <div className="flex-1 min-h-screen overflow-y-auto">
-          <div className="p-4 lg:p-8">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 lg:p-8 min-h-full">
             {children}
           </div>
         </div>
