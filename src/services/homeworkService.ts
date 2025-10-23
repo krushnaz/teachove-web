@@ -125,6 +125,28 @@ export const homeworkService = {
     if (Array.isArray(data?.homeworks)) return data.homeworks as HomeworkItem[];
     if (Array.isArray(data)) return data as HomeworkItem[];
     return [];
+  },
+
+  // Student homework methods
+  async getStudentHomeworkByDate(schoolId: string, dateISO: string, classId: string): Promise<HomeworkItem[]> {
+    let endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.GET_BY_CLASS_DATE
+      .replace(':schoolId', schoolId)
+      .replace(':date', dateISO);
+    
+    endpoint += `?classId=${classId}`;
+    
+    const response = await apiClient.get(endpoint);
+    const data = response.data;
+    if (Array.isArray(data?.homeworks)) return data.homeworks as HomeworkItem[];
+    if (Array.isArray(data)) return data as HomeworkItem[];
+    return [];
+  },
+
+  async getStudentHomeworkDates(schoolId: string, classId: string): Promise<string[]> {
+    let endpoint = API_CONFIG.ENDPOINTS.HOMEWORKS.GET_HOMEWORK_DATES.replace(':schoolId', schoolId);
+    endpoint += `?classId=${classId}`;
+    const response = await apiClient.get(endpoint);
+    return response.data?.dates || response.data || [];
   }
 };
 

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'school' | 'teacher';
+  requiredRole?: 'school' | 'teacher' | 'student';
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
@@ -35,7 +35,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
       return <Navigate to="/school-admin" replace />;
     } else if (user?.role === 'teacher') {
       return <Navigate to="/teacher-admin" replace />;
-    } else {
+    } 
+    else if (user?.role === 'student') {
+      return <Navigate to="/student-dashboard" replace />;
+    }
+    else {
       return <Navigate to="/login" replace />;
     }
   }

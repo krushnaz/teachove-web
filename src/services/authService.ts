@@ -1,11 +1,60 @@
 import { API_CONFIG } from '../config/api';
-import { HTTP_STATUS, LoginRequest, LoginResponse, ApiResponse } from '../models';
+import { HTTP_STATUS, LoginRequest, ApiResponse } from '../models';
 import { apiHelper } from '../utils/apiHelper';
+
+// Extended LoginResponse interface for student login
+interface ExtendedLoginResponse {
+  success: boolean;
+  message: string;
+  user: {
+    studentId?: string;
+    teacherId?: string;
+    role: string;
+    schoolId: string;
+    schoolName: string;
+    phoneNo: string;
+    email: string;
+    name?: string;
+    profilePic?: string;
+    admissionYear?: string;
+    rollNo?: string;
+    classId?: string;
+    className?: string;
+    currentAcademicYear: string;
+    createdAt?: any;
+    updatedAt?: any;
+  };
+  schoolDetails?: {
+    schoolName: string;
+    logo: string;
+    type: string;
+    address: {
+      line1: string;
+      city: string;
+      state: string;
+      pincode: string;
+    };
+    city: string;
+    state: string;
+    pincode: string;
+    phoneNo: string;
+    currentAcademicYear: string;
+  };
+  classDetails?: {
+    className: string;
+    section: string;
+  };
+  classTeacher?: string;
+  timestamp: string;
+}
 
 // Local storage keys
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 const TEACHER_ID_KEY = 'teacher_id';
+const SCHOOL_DETAILS_KEY = 'school_details';
+const CLASS_DETAILS_KEY = 'class_details';
+const CLASS_TEACHER_KEY = 'class_teacher';
 
 // Auth Service Class
 class AuthService {
@@ -61,6 +110,53 @@ class AuthService {
     localStorage.removeItem(TEACHER_ID_KEY);
   }
 
+  // Get school details from localStorage
+  getSchoolDetails(): any | null {
+    const schoolStr = localStorage.getItem(SCHOOL_DETAILS_KEY);
+    return schoolStr ? JSON.parse(schoolStr) : null;
+  }
+
+  // Set school details to localStorage
+  setSchoolDetails(schoolDetails: any): void {
+    localStorage.setItem(SCHOOL_DETAILS_KEY, JSON.stringify(schoolDetails));
+  }
+
+  // Remove school details from localStorage
+  removeSchoolDetails(): void {
+    localStorage.removeItem(SCHOOL_DETAILS_KEY);
+  }
+
+  // Get class details from localStorage
+  getClassDetails(): any | null {
+    const classStr = localStorage.getItem(CLASS_DETAILS_KEY);
+    return classStr ? JSON.parse(classStr) : null;
+  }
+
+  // Set class details to localStorage
+  setClassDetails(classDetails: any): void {
+    localStorage.setItem(CLASS_DETAILS_KEY, JSON.stringify(classDetails));
+  }
+
+  // Remove class details from localStorage
+  removeClassDetails(): void {
+    localStorage.removeItem(CLASS_DETAILS_KEY);
+  }
+
+  // Get class teacher from localStorage
+  getClassTeacher(): string | null {
+    return localStorage.getItem(CLASS_TEACHER_KEY);
+  }
+
+  // Set class teacher to localStorage
+  setClassTeacher(classTeacher: string): void {
+    localStorage.setItem(CLASS_TEACHER_KEY, classTeacher);
+  }
+
+  // Remove class teacher from localStorage
+  removeClassTeacher(): void {
+    localStorage.removeItem(CLASS_TEACHER_KEY);
+  }
+
   // Check if user is authenticated
   isAuthenticated(): boolean {
     return !!this.getToken() && !!this.getUser();
@@ -87,7 +183,7 @@ class AuthService {
   }
 
   // Login method
-  async login(phoneNo: string, password: string, role: string): Promise<LoginResponse> {
+  async login(phoneNo: string, password: string, role: string): Promise<ExtendedLoginResponse> {
     try {
       const credentials = {
         phoneNo,
@@ -95,7 +191,7 @@ class AuthService {
         role
       };
 
-      const response = await this.makeRequest<LoginResponse>(
+      const response = await this.makeRequest<ExtendedLoginResponse>(
         '/auth/login',
         {
           method: 'POST',
@@ -123,6 +219,22 @@ class AuthService {
         this.setTeacherId(response.user.teacherId);
         console.log('Stored teacherId:', response.user.teacherId);
       }
+
+      // Store additional details if they exist
+      if (response.schoolDetails) {
+        this.setSchoolDetails(response.schoolDetails);
+        console.log('Stored school details:', response.schoolDetails);
+      }
+
+      if (response.classDetails) {
+        this.setClassDetails(response.classDetails);
+        console.log('Stored class details:', response.classDetails);
+      }
+
+      if (response.classTeacher) {
+        this.setClassTeacher(response.classTeacher);
+        console.log('Stored class teacher:', response.classTeacher);
+      }
       
       console.log('Login successful:', response.user);
       console.log('Stored schoolId:', response.user.schoolId);
@@ -149,6 +261,9 @@ class AuthService {
       this.removeToken();
       this.removeUser();
       this.removeTeacherId();
+      this.removeSchoolDetails();
+      this.removeClassDetails();
+      this.removeClassTeacher();
     }
   }
 

@@ -60,6 +60,8 @@ export const API_CONFIG = {
       GET_BY_DATE: '/student-attendance/:schoolId/studentAttendance/date/:date',
       GET_MARKED_DATES: '/student-attendance/:schoolId/studentAttendance/dates',
       DOWNLOAD_REPORT: '/student-attendance/studentAttendance/report',
+      // Note: API expects schoolId first, then studentId
+      GET_BY_STUDENT_MONTH: '/student-attendance/attendance/student/:schoolId/:studentId/by-month',
     },
     CLASSROOM: {
       GET_CLASSES: '/classrooms/:schoolId/academicYears/:yearId/classes',
@@ -148,6 +150,9 @@ export const API_CONFIG = {
       GET_DATES: '/homeworks/:schoolId/homeworks/dates',
       UPDATE: '/homeworks/:schoolId/homeworks/:homeworkId',
       DELETE: '/homeworks/:schoolId/homeworks/:homeworkId',
+      // Student homework endpoints
+      GET_BY_CLASS_DATE: '/homeworks/homework/class/:schoolId/:date',
+      GET_HOMEWORK_DATES: '/homeworks/homework/dates/:schoolId',
     },
     TEACHER_LEAVES: {
       CREATE: 'teacher-leaves/:schoolId/leaves',

@@ -49,6 +49,24 @@ interface DownloadReportRequest {
   teacherId: string;
 }
 
+interface AttendanceByMonthRecord {
+  date: string;
+  isPresent: boolean;
+  leaveId: string;
+}
+
+interface AttendanceByMonthResponse {
+  success: boolean;
+  studentId: string;
+  month: number;
+  year: number;
+  totalDays: number;
+  presentDays: number;
+  absentDays: number;
+  onLeaveDays: number;
+  attendance: AttendanceByMonthRecord[];
+}
+
 class StudentAttendanceService {
   private baseURL: string;
 
@@ -128,7 +146,21 @@ class StudentAttendanceService {
       throw error;
     }
   }
+
+  // Get attendance by student and month
+  async getAttendanceByMonth(schoolId: string, studentId: string, month: number, year: number): Promise<AttendanceByMonthResponse> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENT_ATTENDANCE.GET_BY_STUDENT_MONTH
+        .replace(':schoolId', schoolId)
+        .replace(':studentId', studentId);
+      const response = await apiHelper.get(`${endpoint}?month=${month}&year=${year}`);
+      return response as AttendanceByMonthResponse;
+    } catch (error) {
+      console.error('Error fetching attendance by month:', error);
+      throw error;
+    }
+  }
 }
 
 export const studentAttendanceService = new StudentAttendanceService();
-export type { AttendanceRecord, MarkAttendanceRequest, MarkAttendanceResponse, AttendanceData, MarkedDatesResponse, DownloadReportRequest }; 
+export type { AttendanceRecord, MarkAttendanceRequest, MarkAttendanceResponse, AttendanceData, MarkedDatesResponse, DownloadReportRequest, AttendanceByMonthRecord, AttendanceByMonthResponse }; 

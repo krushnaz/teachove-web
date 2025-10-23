@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { School, UserCog } from "lucide-react"; // or any icons you prefer
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +14,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -45,17 +46,32 @@ const LoginPage: React.FC = () => {
   };
 
   const roles = [
-    { value: 'school', label: 'School', icon: '🏫' },
-    { value: 'teacher', label: 'Teacher', icon: '👨‍🏫' }
+    { value: 'school', label: 'School', icon: School },
+    { value: 'teacher', label: 'Teacher', icon: UserCog },
+    { value: 'student', label: 'Student', icon: UserCog }
+
   ];
 
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const from = location.state?.from?.pathname;
+      if (from) {
+        navigate(from, { replace: true });
+        return;
+      }
+      // No from path: route by role
+      if (user?.role === 'school') {
+        navigate('/school-admin', { replace: true });
+      } else if (user?.role === 'teacher') {
+        navigate('/teacher-admin', { replace: true });
+      } else if (user?.role === 'student') {
+        navigate('/student-dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigate, location, user]);
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-[#0A0E27]' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'} flex relative overflow-hidden`}>
@@ -197,23 +213,28 @@ const LoginPage: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                    className={`w-full pl-12 pr-10 py-4 border-2 rounded-2xl focus:ring-4 transition-all duration-300 appearance-none outline-none cursor-pointer ${
-                      isDarkMode 
-                        ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-pink-500 focus:ring-pink-500/20' 
-                        : 'bg-gray-50 border-gray-200 text-gray-900 focus:bg-white focus:border-pink-500 focus:ring-pink-500/20'
-                }`}
-              >
-                {roles.map((role) => (
-                  <option key={role.value} value={role.value} className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
-                        {role.icon} {role.label}
-                  </option>
-                ))}
-              </select>
+<select
+  id="role"
+  name="role"
+  value={formData.role}
+  onChange={handleInputChange}
+  className={`w-full pl-12 pr-10 py-4 border-2 rounded-2xl focus:ring-4 transition-all duration-300 appearance-none outline-none cursor-pointer ${
+    isDarkMode 
+      ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 focus:border-pink-500 focus:ring-pink-500/20' 
+      : 'bg-gray-50 border-gray-200 text-gray-900 focus:bg-white focus:border-pink-500 focus:ring-pink-500/20'
+  }`}
+>
+  {roles.map((role) => (
+    <option 
+      key={role.value} 
+      value={role.value} 
+      className={isDarkMode ? 'bg-gray-800' : 'bg-white'}
+    >
+      {role.label}
+    </option>
+  ))}
+</select>
+
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                     <svg className={`w-5 h-5 transition-colors ${isDarkMode ? 'text-gray-400 group-focus-within:text-pink-400' : 'text-gray-400 group-focus-within:text-pink-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

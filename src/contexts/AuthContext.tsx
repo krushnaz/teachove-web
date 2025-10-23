@@ -3,18 +3,61 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services';
 
 interface User {
+  studentId?: string;
+  teacherId?: string;
   role: string;
   schoolId: string;
   schoolName: string;
   phoneNo: string;
   email: string;
-  currentAcademicYear: string;
+  name?: string;
+  profilePic?: string;
+  admissionYear?: string;
+  rollNo?: string;
   classId?: string;
   className?: string;
+  currentAcademicYear: string;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+interface SchoolDetails {
+  schoolName: string;
+  logo: string;
+  type: string;
+  address: {
+    line1: string;
+    city: string;
+    state: string;
+    pincode: string;
+  };
+  city: string;
+  state: string;
+  pincode: string;
+  phoneNo: string;
+  currentAcademicYear: string;
+}
+
+interface ClassDetails {
+  className: string;
+  section: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  user: User;
+  schoolDetails?: SchoolDetails;
+  classDetails?: ClassDetails;
+  classTeacher?: string;
+  timestamp: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  schoolDetails: SchoolDetails | null;
+  classDetails: ClassDetails | null;
+  classTeacher: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (phoneNo: string, password: string, role: string) => Promise<void>;
@@ -30,6 +73,9 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [schoolDetails, setSchoolDetails] = useState<SchoolDetails | null>(null);
+  const [classDetails, setClassDetails] = useState<ClassDetails | null>(null);
+  const [classTeacher, setClassTeacher] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -37,18 +83,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuth = () => {
     try {
       const storedUser = authService.getUser();
+      const storedSchoolDetails = authService.getSchoolDetails();
+      const storedClassDetails = authService.getClassDetails();
+      const storedClassTeacher = authService.getClassTeacher();
       const token = authService.getToken();
       
       if (storedUser && token) {
         setUser(storedUser);
+        setSchoolDetails(storedSchoolDetails);
+        setClassDetails(storedClassDetails);
+        setClassTeacher(storedClassTeacher);
         console.log('User session restored:', storedUser);
       } else {
         setUser(null);
+        setSchoolDetails(null);
+        setClassDetails(null);
+        setClassTeacher(null);
         console.log('No valid session found');
       }
     } catch (error) {
       console.error('Error checking auth:', error);
       setUser(null);
+      setSchoolDetails(null);
+      setClassDetails(null);
+      setClassTeacher(null);
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +128,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           navigate('/school-admin');
         } else if (user.role === 'teacher') {
           navigate('/teacher-admin');
+        } else if (user.role === 'student') {
+          navigate('/student-dashboard');
         }
       } else {
         console.log('User authenticated but already on a valid path:', currentPath);
@@ -84,7 +144,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.success) {
         setUser(response.user);
+        setSchoolDetails(response.schoolDetails || null);
+        setClassDetails(response.classDetails || null);
+        setClassTeacher(response.classTeacher || null);
         console.log('Login successful, user set:', response.user);
+        console.log('School details:', response.schoolDetails);
+        console.log('Class details:', response.classDetails);
       } else {
         // Throw error with the API response message
         throw new Error(response.message || 'Login failed');
@@ -107,18 +172,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
       setUser(null);
+      setSchoolDetails(null);
+      setClassDetails(null);
+      setClassTeacher(null);
       navigate('/login');
       console.log('User logged out');
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout API fails, clear local session
       setUser(null);
+      setSchoolDetails(null);
+      setClassDetails(null);
+      setClassTeacher(null);
       navigate('/login');
     }
   };
 
   const value: AuthContextType = {
     user,
+    schoolDetails,
+    classDetails,
+    classTeacher,
     isAuthenticated: !!user,
     isLoading,
     login,
