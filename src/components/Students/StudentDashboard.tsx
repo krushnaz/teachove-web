@@ -188,10 +188,10 @@ const StudentDashboard = () => {
               </div>
               <div>
                 <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {stat.title}
+                {stat.title}
                 </p>
                 <p className={`text-2xl font-bold ${stat.textColor}`}>
-                  {stat.value}
+                {stat.value}
                 </p>
               </div>
             </div>

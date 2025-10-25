@@ -47,6 +47,14 @@ import StudentLayout from './components/Students/StudentLayout';
 import StudentDashboard from './components/Students/StudentDashboard';
 import { StudentAttendance as StudentAttendanceView } from './components/Students/Attendance';
 import { StudentHomework } from './components/Students/Homework';
+import { StudentTimetable } from './components/Students/Timetable';
+import { StudentResults } from './components/Students/Results';
+import { StudentEvents } from './components/Students/Events';
+import { StudentAnnouncements } from './components/Students/Announcements';
+import { StudentExamTimetable } from './components/Students/ExamTimetable';
+import { StudentProfile } from './components/Students/Profile';
+import { StudentFees } from './components/Students/Fees';
+import { StudentLeaves } from './components/Students/Leaves';
 
 function App() {
   return (
@@ -123,8 +131,15 @@ function App() {
                         <Route index element={<StudentDashboard />} />
                         <Route path="attendance" element={<StudentAttendanceView />} />
                         <Route path="homework" element={<StudentHomework />} />
+                        <Route path="timetable" element={<StudentTimetable />} />
+                        <Route path="results" element={<StudentResults />} />
+                        <Route path="events" element={<StudentEvents />} />
+                        <Route path="announcements" element={<StudentAnnouncements />} />
+                        <Route path="exam-timetable" element={<StudentExamTimetable />} />
+                        <Route path="profile" element={<StudentProfile />} />
+                        <Route path="fees" element={<StudentFees />} />
+                        <Route path="leaves" element={<StudentLeaves />} />
                         {/* Add more student routes below */}
-                        {/* <Route path="events" element={<StudentEvents />} /> */}
                       </Routes>
                     </StudentLayout>
                   </ProtectedRoute>

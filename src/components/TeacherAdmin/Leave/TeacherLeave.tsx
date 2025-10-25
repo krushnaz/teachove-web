@@ -5,6 +5,7 @@ import { teacherLeaveService } from '../../../services/teacherLeaveService';
 import { authService } from '../../../services/authService';
 import { Card, CardHeader, CardContent, Button, Tabs, Tab, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Tooltip, Skeleton, CircularProgress, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper } from '@mui/material';
 import { Add, Edit, CloudUpload, Article } from '@mui/icons-material';
+import StudentLeavesTab from './StudentLeavesTab';
 
 type TabKey = 'teacher' | 'student';
 
@@ -205,19 +206,7 @@ const TeacherLeave: React.FC = () => {
             </div>
           )}
 
-          {tab === 'student' && (
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              <p>Student leave requests will appear here.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i} variant="outlined" className="dark:bg-gray-800 dark:border-gray-700">
-                    <CardHeader title={`Student ${i + 1}`} subheader="Reason: Family event" />
-                    <CardContent>From: 2025-09-12 • To: 2025-09-13 • Status: Pending</CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
+          {tab === 'student' && <StudentLeavesTab />}
         </CardContent>
       </Card>
 

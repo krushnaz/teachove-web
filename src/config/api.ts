@@ -26,6 +26,7 @@ export const API_CONFIG = {
       DETAILS: '/students/:studentId',
       BY_SCHOOL: '/students/school/:schoolId',
       BY_CLASS: '/students/:schoolId/class/:classId',
+      GET_WITH_CLASS: '/students/getStudentWithClass/:studentId',
     },
     TEACHERS: {
       LIST: '/teachers',
@@ -162,6 +163,15 @@ export const API_CONFIG = {
       GET_BY_TEACHER: 'teacher-leaves/:schoolId/leaves/teacher/:teacherId',
       GET_BY_ID: 'teacher-leaves/:schoolId/leaves/:leaveId',
       UPDATE_STATUS: 'teacher-leaves/:schoolId/leaves/:leaveId/status',
+    },
+    STUDENT_LEAVES: {
+      CREATE: '/student-leaves/:schoolId/leaves',
+      GET_BY_STUDENT: '/student-leaves/:yearId/:schoolId/leaves/student/:studentId',
+      GET_BY_CLASS: '/student-leaves/:schoolId/class/:classId/leaves',
+      UPDATE: '/student-leaves/:schoolId/leaves/:leaveId',
+      DELETE: '/student-leaves/:schoolId/leaves/:leaveId',
+      GET_BY_ID: '/student-leaves/:schoolId/leaves/:leaveId',
+      UPDATE_STATUS: '/student-leaves/:schoolId/leaves/:leaveId/status',
     },
     RESULTS: {
       GET_BY_SCHOOL: "/results/school/:schoolId",
