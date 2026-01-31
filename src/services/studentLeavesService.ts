@@ -107,10 +107,9 @@ class StudentLeavesService {
   /**
    * Get all leaves for a student
    */
-  async getLeavesByStudent(yearId: string, schoolId: string, studentId: string): Promise<StudentLeave[]> {
+  async getLeavesByStudent(schoolId: string, studentId: string): Promise<StudentLeave[]> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.STUDENT_LEAVES.GET_BY_STUDENT
-        .replace(':yearId', yearId)
         .replace(':schoolId', schoolId)
         .replace(':studentId', studentId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;

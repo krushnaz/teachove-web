@@ -144,10 +144,11 @@ const Homework: React.FC = () => {
   useEffect(() => {
     const run = async () => {
       if (!user?.schoolId) return;
+      const schoolId = user.schoolId; // TypeScript now knows this is defined
       try {
         setLoadingHomework(true);
         const teacherId = authService.getTeacherId();
-        const items = await homeworkService.getHomeworkByDate(user.schoolId, selectedKey, teacherId || undefined);
+        const items = await homeworkService.getHomeworkByDate(schoolId, selectedKey, teacherId || undefined);
         
         // Normalize API items to local HomeworkItem shape
         const mapped: HomeworkItem[] = items.map(i => ({
@@ -160,7 +161,7 @@ const Homework: React.FC = () => {
           isActive: i.isActive,
           createdAt: i.createdAt,
           classId: i.classId || '',
-          schoolId: user.schoolId,
+          schoolId: schoolId,
           className: i.className || '', // Use className directly from API response
         }));
         
@@ -327,16 +328,17 @@ const Homework: React.FC = () => {
 
   const handleRefresh = async () => {
     if (!user?.schoolId) return;
+    const schoolId = user.schoolId; // TypeScript now knows this is defined
     setRefreshing(true);
     try {
       const teacherId = authService.getTeacherId();
       
       // Refresh homework dates for calendar indicators
-      const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
+      const dates = await homeworkService.getHomeworkDates(schoolId, teacherId || undefined);
       setMarkedDates(Array.isArray(dates) ? dates : []);
       
       // Refresh homework for selected date
-      const items = await homeworkService.getHomeworkByDate(user.schoolId, selectedKey, teacherId || undefined);
+      const items = await homeworkService.getHomeworkByDate(schoolId, selectedKey, teacherId || undefined);
       
       // Normalize API items to local HomeworkItem shape
       const mapped: HomeworkItem[] = items.map(i => ({
@@ -349,7 +351,7 @@ const Homework: React.FC = () => {
         isActive: i.isActive,
         createdAt: i.createdAt,
         classId: i.classId || '',
-        schoolId: user.schoolId,
+        schoolId: schoolId,
         className: i.className || '',
       }));
       

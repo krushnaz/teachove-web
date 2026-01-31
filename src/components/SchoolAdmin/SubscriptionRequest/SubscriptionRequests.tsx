@@ -168,12 +168,12 @@ const SubscriptionRequests: React.FC = () => {
     return {
       'TeachoVE only': {
         description: 'Access to TeachoVE School Management System only',
-        cost: subscriptionCosts.teachove.amount,
+        cost: subscriptionCosts?.teachove?.amount ?? 0,
         features: ['School Management', 'Student Records', 'Teacher Management', 'Attendance Tracking', 'Exam Management', 'Fee Management']
       },
       'TeachoVE + StudoVE': {
         description: 'Access to both TeachoVE (free) and StudoVE Student/Parent App',
-        cost: subscriptionCosts.both.amount,
+        cost: subscriptionCosts?.both?.amount ?? 99,
         features: ['All TeachoVE Features', 'Student Mobile App', 'Parent Mobile App', 'Real-time Notifications', 'Online Fee Payment', 'Progress Tracking']
       }
     };

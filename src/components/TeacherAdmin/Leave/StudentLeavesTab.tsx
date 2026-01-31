@@ -490,4 +490,3 @@ const StudentLeavesTab: React.FC = () => {
 };
 
 export default StudentLeavesTab;
-

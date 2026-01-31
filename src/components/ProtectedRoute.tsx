@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'school' | 'teacher' | 'student';
+  requiredRole?: 'school' | 'teacher' | 'student' | 'master_admin';
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
@@ -23,8 +23,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     );
   }
 
-  // If not authenticated, redirect to login
+  // If not authenticated, redirect to appropriate login page
   if (!isAuthenticated) {
+    // If trying to access master admin route, redirect to master admin login
+    if (location.pathname.startsWith('/master-admin')) {
+      return <Navigate to="/master-admin" state={{ from: location }} replace />;
+    }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -35,11 +39,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
       return <Navigate to="/school-admin" replace />;
     } else if (user?.role === 'teacher') {
       return <Navigate to="/teacher-admin" replace />;
-    } 
-    else if (user?.role === 'student') {
+    } else if (user?.role === 'student') {
       return <Navigate to="/student-dashboard" replace />;
-    }
-    else {
+    } else if (user?.role === 'master_admin') {
+      return <Navigate to="/master-admin/dashboard" replace />;
+    } else {
       return <Navigate to="/login" replace />;
     }
   }

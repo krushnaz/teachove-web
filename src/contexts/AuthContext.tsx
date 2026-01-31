@@ -6,9 +6,9 @@ interface User {
   studentId?: string;
   teacherId?: string;
   role: string;
-  schoolId: string;
-  schoolName: string;
-  phoneNo: string;
+  schoolId?: string;
+  schoolName?: string;
+  phoneNo?: string;
   email: string;
   name?: string;
   profilePic?: string;
@@ -16,9 +16,10 @@ interface User {
   rollNo?: string;
   classId?: string;
   className?: string;
-  currentAcademicYear: string;
+  currentAcademicYear?: string;
   createdAt?: any;
   updatedAt?: any;
+  userId?: string;
 }
 
 interface SchoolDetails {
@@ -61,6 +62,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (phoneNo: string, password: string, role: string) => Promise<void>;
+  loginMasterAdmin: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => void;
 }
@@ -130,6 +132,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           navigate('/teacher-admin');
         } else if (user.role === 'student') {
           navigate('/student-dashboard');
+        } else if (user.role === 'master_admin') {
+          navigate('/master-admin/dashboard');
         }
       } else {
         console.log('User authenticated but already on a valid path:', currentPath);
@@ -168,23 +172,58 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const loginMasterAdmin = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.loginMasterAdmin(email, password);
+      
+      if (response.success) {
+        setUser(response.user);
+        setSchoolDetails(null);
+        setClassDetails(null);
+        setClassTeacher(null);
+        console.log('Master admin login successful, user set:', response.user);
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
+    } catch (error: any) {
+      console.error('Master admin login error:', error);
+      throw new Error(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
+      const currentUser = user;
       await authService.logout();
       setUser(null);
       setSchoolDetails(null);
       setClassDetails(null);
       setClassTeacher(null);
-      navigate('/login');
+      
+      // Redirect to appropriate login page based on role
+      if (currentUser?.role === 'master_admin') {
+        navigate('/master-admin');
+      } else {
+        navigate('/login');
+      }
       console.log('User logged out');
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout API fails, clear local session
+      const currentUser = user;
       setUser(null);
       setSchoolDetails(null);
       setClassDetails(null);
       setClassTeacher(null);
-      navigate('/login');
+      
+      if (currentUser?.role === 'master_admin') {
+        navigate('/master-admin');
+      } else {
+        navigate('/login');
+      }
     }
   };
 
@@ -196,6 +235,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginMasterAdmin,
     logout,
     checkAuth,
   };

@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:5000/api',
+  BASE_URL: 'http://13.232.157.239:5000/',
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
@@ -65,10 +65,10 @@ export const API_CONFIG = {
       GET_BY_STUDENT_MONTH: '/student-attendance/attendance/student/:schoolId/:studentId/by-month',
     },
     CLASSROOM: {
-      GET_CLASSES: '/classrooms/:schoolId/academicYears/:yearId/classes',
-      CREATE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes',
-      UPDATE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes/:classId',
-      DELETE_CLASS: '/classrooms/:schoolId/academicYears/:yearId/classes/:classId',
+      GET_CLASSES: '/classrooms/:schoolId/classes',
+      CREATE_CLASS: '/classrooms/:schoolId/classes',
+      UPDATE_CLASS: '/classrooms/:schoolId/classes/:classId',
+      DELETE_CLASS: '/classrooms/:schoolId/classes/:classId',
       GET_CLASS_BY_ID: '/classrooms/classes/:schoolId/:classId',
     },
     ATTENDANCE: {
@@ -93,16 +93,16 @@ export const API_CONFIG = {
       GET_BY_CLASS: '/exam-timetables/:schoolId/class/:classId/exam-timetable',
     },
     STUDENT_PAYMENTS: {
-      SUMMARY_BY_SCHOOL: '/student-payments/school/:schoolId/:yearId/summary',
+      SUMMARY_BY_SCHOOL: '/student-payments/school/:schoolId/summary',
       DOWNLOAD_CLASS_REPORT: '/student-payments/reports/class-wise',
       DOWNLOAD_STUDENT_REPORT: '/student-payments/reports/student-receipt',
-      ADD_PAYMENT: '/student-payments/:schoolId/:yearId/payments',
-      GET_STUDENT_PAYMENTS: '/student-payments/:schoolId/:yearId/students/:studentId',
-      DELETE_PAYMENTS: '/student-payments/:schoolId/:yearId/students/:studentId/payments',
-      UPDATE_PAYMENT: '/student-payments/:schoolId/:yearId/students/:studentId/payments/:paymentId',
-      GET_PAYMENT: '/student-payments/:schoolId/:yearId/students/:studentId/payments/:paymentId',
+      ADD_PAYMENT: '/student-payments/:schoolId/payments',
+      GET_STUDENT_PAYMENTS: '/student-payments/:schoolId/students/:studentId',
+      DELETE_PAYMENTS: '/student-payments/:schoolId/students/:studentId/payments',
+      UPDATE_PAYMENT: '/student-payments/:schoolId/students/:studentId/payments/:paymentId',
+      GET_PAYMENT: '/student-payments/:schoolId/students/:studentId/payments/:paymentId',
       ALL_SCHOOL_PAYMENTS: '/student-payments/school/:schoolId/all-payments',
-      STATISTICS: '/student-payments/school/:schoolId/:yearId/statistics',
+      STATISTICS: '/student-payments/school/:schoolId/statistics',
     },
     ANNOUNCEMENTS: {
       GET_BY_SCHOOL: '/announcements/:schoolId/announcements',
@@ -166,7 +166,7 @@ export const API_CONFIG = {
     },
     STUDENT_LEAVES: {
       CREATE: '/student-leaves/:schoolId/leaves',
-      GET_BY_STUDENT: '/student-leaves/:yearId/:schoolId/leaves/student/:studentId',
+      GET_BY_STUDENT: '/student-leaves/:schoolId/leaves/student/:studentId',
       GET_BY_CLASS: '/student-leaves/:schoolId/class/:classId/leaves',
       UPDATE: '/student-leaves/:schoolId/leaves/:leaveId',
       DELETE: '/student-leaves/:schoolId/leaves/:leaveId',

@@ -1,5 +1,5 @@
 import { API_CONFIG } from '../config/api';
-import { HTTP_STATUS, LoginRequest, ApiResponse } from '../models';
+import { ApiResponse } from '../models';
 import { apiHelper } from '../utils/apiHelper';
 
 // Extended LoginResponse interface for student login
@@ -243,6 +243,70 @@ class AuthService {
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
+    }
+  }
+
+  // Master Admin Login method
+  async loginMasterAdmin(email: string, password: string): Promise<{ success: boolean; message: string; user: any }> {
+    try {
+      const credentials = {
+        email,
+        password
+      };
+
+      const url = `${this.baseURL}/masterAdminAuth/login`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      // Parse response body regardless of status code
+      const responseData = await response.json();
+
+      // Check if login was successful (status 200 and has user data)
+      if (response.ok && responseData.user) {
+        // Store user data on successful login
+        const userData = {
+          ...responseData.user,
+          role: 'master_admin',
+          email: responseData.user.email || email
+        };
+
+        this.setUser(userData);
+        
+        // Store a token identifier (using email as identifier for master admin)
+        this.setToken(userData.email || 'master_admin');
+        
+        console.log('Master admin login successful:', userData);
+
+        return {
+          success: true,
+          message: responseData.message || 'Login successful',
+          user: userData
+        };
+      } else {
+        // Login failed - extract error message from response
+        const errorMessage = responseData.message || 'Login failed. Please try again.';
+        const loginError: any = new Error(errorMessage);
+        loginError.response = { message: errorMessage };
+        throw loginError;
+      }
+    } catch (error: any) {
+      console.error('Master admin login failed:', error);
+      
+      // If error already has a message, re-throw it
+      if (error.message && error.response) {
+        throw error;
+      }
+      
+      // Otherwise, create a new error with a generic message
+      const loginError: any = new Error(error.message || 'Login failed. Please try again.');
+      loginError.response = { message: loginError.message };
+      throw loginError;
     }
   }
 

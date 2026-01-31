@@ -55,6 +55,17 @@ import { StudentExamTimetable } from './components/Students/ExamTimetable';
 import { StudentProfile } from './components/Students/Profile';
 import { StudentFees } from './components/Students/Fees';
 import { StudentLeaves } from './components/Students/Leaves';
+import { MasterAdminLogin, MasterAdminDashboard } from './components/MasterAdmin';
+import MasterAdminLayout from './components/MasterAdmin/Layout';
+import { Schools } from './components/MasterAdmin/Schools';
+import SchoolProfile from './components/MasterAdmin/Schools/SchoolProfile';
+import SubscriptionRequests from './components/MasterAdmin/Subscriptions/SubscriptionRequests';
+import SubscriptionPlans from './components/MasterAdmin/SubscriptionPlans/SubscriptionPlans';
+import { VEBooks } from './components/MasterAdmin/VEBooks';
+import { MasterAdminQuestionPapers } from './components/MasterAdmin/QuestionPapers';
+import { ManageMigration } from './components/MasterAdmin/Migration';
+import AcademicYears from './components/MasterAdmin/AcademicYears/AcademicYears';
+import PageNotFound from './components/PageNotFound';
 
 function App() {
   return (
@@ -68,6 +79,9 @@ function App() {
 
               {/* 🔐 Login */}
               <Route path="/login" element={<LoginPage />} />
+
+              {/* 🛡️ Master Admin Login */}
+              <Route path="/master-admin" element={<MasterAdminLogin />} />
 
               {/* 🏫 School Admin Dashboard Routes */}
               <Route
@@ -146,6 +160,104 @@ function App() {
                 }
               />
 
+              {/* 🛡️ Master Admin Dashboard Routes */}
+              <Route
+                path="/master-admin/dashboard"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Master Admin other routes */}
+              <Route
+                path="/master-admin/add-schools"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Schools Management">
+                      <Schools />
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/schools/:schoolId"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <SchoolProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/subscription-request"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <SubscriptionRequests />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/subscription-plans"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <SubscriptionPlans />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/vedant-books"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Vedant Education Books">
+                      <VEBooks />
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/question-papers"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Question Papers">
+                      <MasterAdminQuestionPapers />
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/admin-access"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Admin Access">
+                      <div className="text-center py-12">
+                        <p className="text-gray-500 dark:text-gray-400">Admin Access page coming soon...</p>
+                      </div>
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/migration"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Manage Migration">
+                      <ManageMigration />
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/academic-years"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Academic Years">
+                      <AcademicYears />
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+
               {/* ⚙️ Legacy ERP Dashboard */}
               <Route
                 path="/erp/*"
@@ -161,6 +273,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* 404 - Page Not Found - Catch all unmatched routes */}
+              <Route path="*" element={<PageNotFound />} />
             </Routes>
           </TeacherProfileProvider>
         </AuthProvider>

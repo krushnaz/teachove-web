@@ -291,5 +291,3 @@ const TeacherLeave: React.FC = () => {
 };
 
 export default TeacherLeave;
-
-

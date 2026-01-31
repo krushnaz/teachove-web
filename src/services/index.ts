@@ -18,3 +18,6 @@ export { teacherProfileService } from './teacherProfileService';
 export { resultService } from './resultService';
 export { homeworkService } from './homeworkService';
 export { classScheduleService } from './classScheduleService';
+export { masterAdminService } from './masterAdminService';
+export { masterAdminSchoolService } from './masterAdminSchoolService';
+export { masterAdminSubscriptionService } from './masterAdminSubscriptionService';

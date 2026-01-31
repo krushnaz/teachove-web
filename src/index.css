@@ -33,3 +33,79 @@ code {
 .animate-scroll:hover {
   animation-play-state: paused;
 }
+
+/* Premium Floating Animations for Suite Section */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes float-gentle-delayed {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes float-card {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-6px) translateX(2px);
+  }
+  75% {
+    transform: translateY(4px) translateX(-2px);
+  }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 5s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-gentle-delayed 6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-float-subtle {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
+.animate-float-card {
+  animation: float-card 5.5s ease-in-out infinite;
+}
+
+.animate-float-card-delayed {
+  animation: float-card 4.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-float-card-delayed-2 {
+  animation: float-card 5s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+/* Hover effects for premium cards */
+.hover-scale-gentle {
+  transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+}
+
+.hover-scale-gentle:hover {
+  transform: scale(1.02);
+}

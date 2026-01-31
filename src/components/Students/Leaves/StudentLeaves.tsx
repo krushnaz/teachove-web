@@ -36,7 +36,7 @@ const StudentLeaves: React.FC = () => {
   }, [user?.studentId]);
 
   const fetchLeaves = async () => {
-    if (!user?.studentId || !user?.schoolId || !schoolDetails?.currentAcademicYear) {
+    if (!user?.studentId || !user?.schoolId) {
       setError('Missing required information');
       setLoading(false);
       return;
@@ -47,7 +47,6 @@ const StudentLeaves: React.FC = () => {
       setError(null);
       
       const data = await studentLeavesService.getLeavesByStudent(
-        schoolDetails.currentAcademicYear,
         user.schoolId,
         user.studentId
       );

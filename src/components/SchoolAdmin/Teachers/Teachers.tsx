@@ -29,9 +29,11 @@ const Teachers: React.FC = () => {
   }, profilePicFile?: File) => {
     if (!user?.schoolId) return;
     
+    const schoolId = user.schoolId; // TypeScript now knows this is defined
+    
     try {
       const teacherData = {
-        schoolId: user.schoolId,
+        schoolId: schoolId,
         teacherName: teacher.teacherName,
         email: teacher.email,
         phoneNo: teacher.phoneNo,
@@ -55,7 +57,7 @@ const Teachers: React.FC = () => {
           classesAssigned: [],
           schoolName: schoolName,
           role: 'Teacher',
-          schoolId: user.schoolId,
+          schoolId: schoolId,
         },
         ...prev,
       ]);

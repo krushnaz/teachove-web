@@ -5,6 +5,7 @@ import { announcementService, Announcement } from '../../../services/announcemen
 import { teacherService } from '../../../services/teacherService';
 import { classroomService } from '../../../services/classroomService';
 
+// --- Types ---
 interface AnnouncementForm {
   title: string;
   selectedAudience: string;
@@ -16,7 +17,7 @@ interface AnnouncementForm {
 interface Teacher {
   teacherId: string;
   name: string;
-  teacherName?: string; // Add this field
+  teacherName?: string;
   email: string;
   role: string;
   schoolId: string;
@@ -29,18 +30,47 @@ interface Classroom {
   schoolId?: string;
 }
 
+// --- Helper Components ---
+
+const ShimmerBlock = ({ className }: { className: string }) => (
+  <div className={`relative overflow-hidden bg-gray-200 dark:bg-gray-700/50 ${className}`}>
+    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-gray-600/40 to-transparent" />
+  </div>
+);
+
+const StatusBadge = ({ type, text }: { type: string; text: string }) => {
+  const colors: Record<string, string> = {
+    all: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+    teachers: 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
+    classes: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+  };
+  const colorClass = colors[type.toLowerCase()] || 'bg-gray-50 text-gray-700 border-gray-100 dark:bg-gray-800 dark:text-gray-300';
+
+  return (
+    <span className={`px-2.5 py-1 text-[11px] uppercase tracking-wider font-bold rounded-full border ${colorClass}`}>
+      {text}
+    </span>
+  );
+};
+
 const Announcements: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode } = useDarkMode();
+  
+  // State
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // UI State
   const [isPostSidebarOpen, setIsPostSidebarOpen] = useState(false);
   const [isEditSidebarOpen, setIsEditSidebarOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
+  
+  // Data Selection State
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,13 +83,9 @@ const Announcements: React.FC = () => {
     file: undefined
   });
 
-  const audienceOptions = [
-    'all',
-    'teachers',
-    'classes'
-  ];
+  const audienceOptions = ['all', 'teachers', 'classes'];
 
-  // Fetch announcements, teachers, and classrooms from API
+  // --- Effects ---
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.schoolId) return;
@@ -72,7 +98,6 @@ const Announcements: React.FC = () => {
           classroomService.getClassesBySchoolId(user.schoolId)
         ]);
         
-        // Sort announcements by date (latest first)
         const sortedAnnouncements = announcementsData.sort((a, b) => 
           new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
         );
@@ -82,7 +107,6 @@ const Announcements: React.FC = () => {
         setClassrooms(classroomsData);
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Keep empty arrays on error
         setAnnouncements([]);
         setTeachers([]);
         setClassrooms([]);
@@ -94,39 +118,23 @@ const Announcements: React.FC = () => {
     fetchData();
   }, [user?.schoolId]);
 
-  // Toast notification function
+  // --- Logic Helpers ---
   const showToast = (message: string, type: 'success' | 'error' | 'loading' = 'success') => {
     const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
-      type === 'success' ? 'bg-green-500 text-white' :
-      type === 'error' ? 'bg-red-500 text-white' :
-      'bg-blue-500 text-white'
-    }`;
+    const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-blue-600';
+    toast.className = `fixed top-6 right-6 z-[100] px-6 py-4 rounded-lg border shadow-lg text-white font-medium flex items-center gap-3 transition-all duration-500 transform translate-x-full ${bgColor}`;
     
-    if (type === 'loading') {
-      toast.innerHTML = `
-        <div class="flex items-center gap-2">
-          <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-          <span>${message}</span>
-        </div>
-      `;
-    } else {
-      toast.innerHTML = message;
-    }
+    let icon = '';
+    if (type === 'loading') icon = '<div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>';
     
+    toast.innerHTML = `${icon}<span>${message}</span>`;
     document.body.appendChild(toast);
     
-    // Animate in
-    setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+    requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
     
-    // Auto remove after 3 seconds (or 5 seconds for loading)
     setTimeout(() => {
-      toast.classList.add('translate-x-full');
-      setTimeout(() => {
-        if (document.body.contains(toast)) {
-          document.body.removeChild(toast);
-        }
-      }, 300);
+      toast.classList.add('translate-x-full', 'opacity-0');
+      setTimeout(() => document.body.contains(toast) && document.body.removeChild(toast), 500);
     }, type === 'loading' ? 5000 : 3000);
   };
 
@@ -139,62 +147,84 @@ const Announcements: React.FC = () => {
     });
   }, [announcements, searchTerm, audienceFilter]);
 
-  const handlePostAnnouncement = () => {
-    setIsPostSidebarOpen(true);
-    setFormData({
-      title: '',
-      selectedAudience: '',
-      selectedRecipients: [],
-      message: '',
-      file: undefined
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
-  const handleEditAnnouncement = (announcement: Announcement) => {
-    setSelectedAnnouncement(announcement);
+  const getFileNameFromUrl = (fileUrl: string): string => {
+    try {
+      const url = new URL(fileUrl);
+      return decodeURIComponent(url.pathname.split('/').pop() || 'file');
+    } catch {
+      return 'file';
+    }
+  };
+
+  const getFileExtension = (fileName: string): string => {
+    return fileName.split('.').pop()?.toLowerCase() || '';
+  };
+
+  const isImageFile = (fileName: string): boolean => {
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    return imageExtensions.includes(getFileExtension(fileName));
+  };
+
+  const isPdfFile = (fileName: string): boolean => {
+    return getFileExtension(fileName) === 'pdf';
+  };
+
+  const getRecipientDisplayName = (recipientId: string, audience: string) => {
+    if (!recipientId) return 'Unknown';
+    if (audience === 'teachers') {
+      const t = teachers.find(x => x.teacherId === recipientId);
+      return t ? (t.teacherName || t.name) : recipientId;
+    } 
+    if (audience === 'classes') {
+      const c = classrooms.find(x => x.classId === recipientId);
+      return c ? `${c.className} ${c.section}` : recipientId;
+    }
+    return recipientId;
+  };
+
+  // --- Handlers ---
+  const handlePostAnnouncement = () => {
+    setIsPostSidebarOpen(true);
+    setFormData({ title: '', selectedAudience: '', selectedRecipients: [], message: '', file: undefined });
+  };
+
+  const handleEditAnnouncement = (ann: Announcement) => {
+    setSelectedAnnouncement(ann);
     setFormData({
-      title: announcement.title,
-      selectedAudience: announcement.selectedAudience,
-      selectedRecipients: Array.isArray(announcement.selectedRecipients) ? announcement.selectedRecipients : [],
-      message: announcement.message,
+      title: ann.title,
+      selectedAudience: ann.selectedAudience,
+      selectedRecipients: Array.isArray(ann.selectedRecipients) ? ann.selectedRecipients : [],
+      message: ann.message,
       file: undefined
     });
     setIsEditSidebarOpen(true);
   };
 
-  const handleViewAnnouncement = (announcement: Announcement) => {
-    setSelectedAnnouncement(announcement);
-    setIsViewDialogOpen(true);
-  };
-
-  const handleDeleteAnnouncement = (announcement: Announcement) => {
-    setSelectedAnnouncement(announcement);
+  // Missing Handler 1: Delete
+  const handleDeleteAnnouncement = (ann: Announcement) => {
+    setSelectedAnnouncement(ann);
     setIsDeleteDialogOpen(true);
   };
 
+  // Missing Handler 2: View
+  const handleViewAnnouncement = (ann: Announcement) => {
+    setSelectedAnnouncement(ann);
+    setIsViewDialogOpen(true);
+  };
+
+  // Missing Handler 3: File Preview
   const handleFilePreview = (fileUrl: string) => {
     setSelectedFile(fileUrl);
     setIsFilePreviewOpen(true);
-  };
-
-  const handleFileDownload = (fileUrl: string, fileName?: string) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName || 'announcement-file';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleRecipientToggle = (recipientId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedRecipients: Array.isArray(prev.selectedRecipients) 
-        ? (prev.selectedRecipients.includes(recipientId)
-            ? prev.selectedRecipients.filter(id => id !== recipientId)
-            : [...prev.selectedRecipients, recipientId])
-        : [recipientId]
-    }));
   };
 
   const handleSaveAnnouncement = async () => {
@@ -203,289 +233,142 @@ const Announcements: React.FC = () => {
       return;
     }
 
-    // If no audience is selected or no recipients for specific audience, treat as "all"
     let finalAudience = formData.selectedAudience;
     let finalRecipients = Array.isArray(formData.selectedRecipients) ? formData.selectedRecipients : [];
 
-    if (!formData.selectedAudience || 
-        (formData.selectedAudience !== 'all' && finalRecipients.length === 0)) {
+    if (!formData.selectedAudience || (formData.selectedAudience !== 'all' && finalRecipients.length === 0)) {
       finalAudience = 'all';
       finalRecipients = [];
     }
 
     try {
-      showToast('Saving announcement...', 'loading');
-      
-      if (selectedAnnouncement) {
-        // Edit existing announcement
-        await announcementService.updateAnnouncement(
-          user.schoolId,
-          selectedAnnouncement.announcementId!,
-          {
-            title: formData.title,
-            selectedAudience: finalAudience,
-            selectedRecipients: finalRecipients,
-            message: formData.message,
-            file: formData.file
-          }
-        );
+        showToast('Saving announcement...', 'loading');
         
-        // Update the announcement in the local state
-        setAnnouncements(prev => {
-          const updated = prev.map(ann => 
-            ann.announcementId === selectedAnnouncement.announcementId 
-              ? {
-                  ...ann,
-                  title: formData.title,
-                  selectedAudience: finalAudience,
-                  selectedRecipients: finalRecipients,
-                  message: formData.message,
-                  // Update file if a new one was uploaded
-                  file: formData.file ? 'updated' : ann.file,
-                  createdDate: new Date().toISOString()
+        if (selectedAnnouncement) {
+            await announcementService.updateAnnouncement(
+                user.schoolId,
+                selectedAnnouncement.announcementId!,
+                {
+                    title: formData.title,
+                    selectedAudience: finalAudience,
+                    selectedRecipients: finalRecipients,
+                    message: formData.message,
+                    file: formData.file
                 }
-              : ann
-          );
-          // Sort by date (latest first)
-          return updated.sort((a, b) => 
-            new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
-          );
-        });
-        
-        showToast('Announcement updated successfully!', 'success');
-      } else {
-        // Add new announcement
-        const newAnnouncement = await announcementService.createAnnouncement({
-          title: formData.title,
-          selectedAudience: finalAudience,
-          selectedRecipients: finalRecipients,
-          message: formData.message,
-          file: formData.file,
-          schoolId: user.schoolId,
-          createdBy: 'SchoolAdmin'
-        });
-        
-        setAnnouncements(prev => {
-          const updated = [newAnnouncement, ...prev];
-          // Sort by date (latest first)
-          return updated.sort((a, b) => 
-            new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
-          );
-        });
-        
-        showToast('Announcement posted successfully!', 'success');
-      }
-
-      setIsPostSidebarOpen(false);
-      setIsEditSidebarOpen(false);
-      setSelectedAnnouncement(null);
-      setFormData({
-        title: '',
-        selectedAudience: '',
-        selectedRecipients: [],
-        message: '',
-        file: undefined
-      });
-    } catch (error) {
-      console.error('Error saving announcement:', error);
-      showToast('Failed to save announcement. Please try again.', 'error');
+            );
+             setAnnouncements(prev => {
+                const updated = prev.map(ann => 
+                  ann.announcementId === selectedAnnouncement.announcementId 
+                    ? {
+                        ...ann,
+                        title: formData.title,
+                        selectedAudience: finalAudience,
+                        selectedRecipients: finalRecipients,
+                        message: formData.message,
+                        file: formData.file ? 'updated' : ann.file,
+                        createdDate: new Date().toISOString()
+                      }
+                    : ann
+                );
+                return updated.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+              });
+            showToast('Updated successfully', 'success');
+        } else {
+             const newAnnouncement = await announcementService.createAnnouncement({
+                title: formData.title,
+                selectedAudience: finalAudience,
+                selectedRecipients: finalRecipients,
+                message: formData.message,
+                file: formData.file,
+                schoolId: user.schoolId,
+                createdBy: 'SchoolAdmin'
+              });
+              setAnnouncements(prev => [newAnnouncement, ...prev]);
+              showToast('Posted successfully', 'success');
+        }
+        setIsPostSidebarOpen(false);
+        setIsEditSidebarOpen(false);
+        setSelectedAnnouncement(null);
+    } catch(e) {
+        console.error(e);
+        showToast('Error saving', 'error');
     }
   };
-
+  
   const confirmDelete = async () => {
     if (!selectedAnnouncement || !user?.schoolId) return;
-    
     try {
-      showToast('Deleting announcement...', 'loading');
-      
-      await announcementService.deleteAnnouncement(user.schoolId, selectedAnnouncement.announcementId!);
-      setAnnouncements(prev => prev.filter(ann => ann.announcementId !== selectedAnnouncement.announcementId));
-      setIsDeleteDialogOpen(false);
-      setSelectedAnnouncement(null);
-      
-      showToast('Announcement deleted successfully!', 'success');
-    } catch (error) {
-      console.error('Error deleting announcement:', error);
-      showToast('Failed to delete announcement. Please try again.', 'error');
+        showToast('Deleting...', 'loading');
+        await announcementService.deleteAnnouncement(user.schoolId, selectedAnnouncement.announcementId!);
+        setAnnouncements(prev => prev.filter(ann => ann.announcementId !== selectedAnnouncement.announcementId));
+        setIsDeleteDialogOpen(false);
+        setSelectedAnnouncement(null);
+        showToast('Deleted successfully', 'success');
+    } catch (e) {
+        showToast('Error deleting', 'error');
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleFileDownload = (url: string, name: string) => {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
   };
 
-  const getAudienceColor = (audience: string) => {
-    const colors = {
-      'all': 'bg-blue-100 text-blue-800',
-      'teachers': 'bg-purple-100 text-purple-800',
-      'classes': 'bg-green-100 text-green-800',
-      'students': 'bg-pink-100 text-pink-800',
-      'staff': 'bg-gray-100 text-gray-800'
-    };
-    return colors[audience.toLowerCase() as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const handleRecipientToggle = (id: string) => {
+    setFormData(prev => ({
+        ...prev,
+        selectedRecipients: prev.selectedRecipients.includes(id) 
+            ? prev.selectedRecipients.filter(x => x !== id) 
+            : [...prev.selectedRecipients, id]
+    }));
   };
 
-  const getRecipientDisplayName = (recipientId: string, audience: string) => {
-    if (!recipientId || !audience) return 'Unknown';
-    
-    if (audience.toLowerCase() === 'teachers') {
-      const teacher = teachers.find(t => t.teacherId === recipientId);
-      // Use teacherName if available, otherwise fall back to name
-      return teacher ? (teacher.teacherName || teacher.name) : recipientId;
-    } else if (audience.toLowerCase() === 'classes') {
-      const classroom = classrooms.find(c => c.classId === recipientId);
-              return classroom ? `${classroom.className} ${classroom.section}` : recipientId;
-    }
-    return recipientId;
-  };
-
-  // Helper function to safely get recipients array
-  const getSafeRecipients = (announcement: Announcement | null): string[] => {
-    if (!announcement || !announcement.selectedRecipients) return [];
-    return Array.isArray(announcement.selectedRecipients) ? announcement.selectedRecipients : [];
-  };
-
-  // Helper function to get file name from URL
-  const getFileNameFromUrl = (fileUrl: string): string => {
-    try {
-      const url = new URL(fileUrl);
-      const pathParts = url.pathname.split('/');
-      const fileName = pathParts[pathParts.length - 1];
-      return decodeURIComponent(fileName);
-    } catch {
-      return 'announcement-file';
-    }
-  };
-
-  // Helper function to get file extension
-  const getFileExtension = (fileName: string): string => {
-    return fileName.split('.').pop()?.toLowerCase() || '';
-  };
-
-  // Helper function to check if file is image
-  const isImageFile = (fileName: string): boolean => {
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-    return imageExtensions.includes(getFileExtension(fileName));
-  };
-
-  // Helper function to check if file is PDF
-  const isPdfFile = (fileName: string): boolean => {
-    return getFileExtension(fileName) === 'pdf';
-  };
-
-  // Show loading state when schoolId is not available
-  if (!user?.schoolId) {
-    return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-        <div className="p-6">
-          <div className="text-center">
-            <p className="text-lg">Loading user information...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // --- Render Loading State ---
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-        <div className="p-6">
-          {/* Header Shimmer */}
-          <div className="mb-8">
-            <div className="h-10 bg-gray-300 rounded-lg w-1/3 mb-4 animate-pulse"></div>
-            <div className="h-6 bg-gray-300 rounded w-1/2 animate-pulse"></div>
+      <div className={`min-h-screen p-6 lg:p-8 ${isDarkMode ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
+        <div className="max-w-screen-2xl mx-auto space-y-8">
+          <div className="flex justify-between items-end">
+            <div className="space-y-2">
+               <ShimmerBlock className="h-10 w-48 rounded-xl" />
+               <ShimmerBlock className="h-4 w-64 rounded-lg" />
+            </div>
+            <ShimmerBlock className="h-12 w-40 rounded-xl" />
           </div>
 
-          {/* Button Shimmer */}
-          <div className="flex justify-end mb-8">
-            <div className="h-12 w-48 bg-gray-300 rounded-lg animate-pulse"></div>
-          </div>
-
-          {/* Stats Cards Shimmer */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-3 flex-1">
-                    <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
-                    <div className="h-8 bg-gray-300 rounded w-1/2 animate-pulse"></div>
-                  </div>
-                  <div className="w-12 h-12 bg-gray-300 rounded-full animate-pulse"></div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+             {[1, 2, 3, 4].map(i => (
+               <div key={i} className={`h-32 rounded-lg border p-6 ${isDarkMode ? 'border-gray-800 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                 <div className="flex justify-between">
+                    <div className="space-y-3 w-full">
+                        <ShimmerBlock className="h-4 w-20 rounded" />
+                        <ShimmerBlock className="h-8 w-12 rounded" />
+                    </div>
+                    <ShimmerBlock className="h-12 w-12 rounded-full" />
+                 </div>
+               </div>
             ))}
           </div>
 
-          {/* Filters Shimmer */}
-          <div className={`p-6 rounded-xl shadow-lg mb-8 ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="h-10 bg-gray-300 rounded-lg animate-pulse"></div>
-              </div>
-              <div className="sm:w-48">
-                <div className="h-10 bg-gray-300 rounded-lg animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Table Shimmer */}
-          <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            {/* Table Header Shimmer */}
-            <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="h-6 bg-gray-300 rounded w-1/3 animate-pulse"></div>
-            </div>
-            
-            {/* Table Rows Shimmer */}
-            <div className="divide-y divide-gray-200">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-3">
-                      {/* Title and Badge Shimmer */}
-                      <div className="flex items-center gap-3">
-                        <div className="h-6 bg-gray-300 rounded w-1/3 animate-pulse"></div>
-                        <div className="h-6 bg-gray-300 rounded-full w-24 animate-pulse"></div>
-                      </div>
-                      
-                      {/* Message Shimmer */}
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-300 rounded w-full animate-pulse"></div>
-                        <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse"></div>
-                      </div>
-                      
-                      {/* Meta Info Shimmer */}
-                      <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
-                          <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+          <div className="space-y-4">
+             {[1, 2, 3, 4].map(i => (
+                 <div key={i} className={`h-40 rounded-xl border p-6 ${isDarkMode ? 'border-gray-800 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                    <div className="flex gap-4">
+                        <div className="flex-1 space-y-4">
+                            <div className="flex gap-3">
+                                <ShimmerBlock className="h-6 w-1/3 rounded-lg" />
+                                <ShimmerBlock className="h-6 w-20 rounded-full" />
+                            </div>
+                            <ShimmerBlock className="h-4 w-3/4 rounded" />
+                            <ShimmerBlock className="h-4 w-1/2 rounded" />
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
-                          <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
-                          <div className="h-4 bg-gray-300 rounded w-16 animate-pulse"></div>
-                        </div>
-                      </div>
                     </div>
-                    
-                    {/* Action Buttons Shimmer */}
-                    <div className="flex items-center gap-2 ml-4">
-                      {[1, 2, 3].map(btn => (
-                        <div key={btn} className="w-10 h-10 bg-gray-300 rounded-lg animate-pulse"></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                 </div>
+             ))}
           </div>
         </div>
       </div>
@@ -493,812 +376,412 @@ const Announcements: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-[#F8FAFC] text-gray-900'}`}>
+      <div className="p-6 lg:p-8 max-w-screen-2xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10">
           <div>
-            <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
               Announcements
             </h1>
-            <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Manage and share important information with your school community
+            <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Broadcast updates to your school community.
             </p>
           </div>
           <button
             onClick={handlePostAnnouncement}
-            className={`mt-4 sm:mt-0 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 flex items-center gap-2`}
+            className="group relative px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 overflow-hidden"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Post Announcement
+            <span className="relative z-10 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                </svg>
+                Create New
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1s_infinite]" />
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Total Announcements
-                </p>
-                <p className="text-2xl font-bold text-blue-600">{announcements.length}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  This Month
-                </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {announcements.filter(a => new Date(a.createdDate).getMonth() === new Date().getMonth()).length}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {[
+            { label: 'Total Posted', value: announcements.length, icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+            { label: 'This Month', value: announcements.filter(a => new Date(a.createdDate).getMonth() === new Date().getMonth()).length, icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+            { label: 'To Students', value: announcements.filter(a => ['all', 'classes'].includes(a.selectedAudience)).length, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-900/20' },
+            { label: 'To Teachers', value: announcements.filter(a => a.selectedAudience === 'teachers').length, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+          ].map((stat, idx) => (
+            <div key={idx} className={`p-6 rounded-lg border transition-all duration-300 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{stat.label}</p>
+                  <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
+                </div>
+                <div className={`p-3 rounded-xl ${stat.bg}`}>
+                  <svg className={`w-6 h-6 ${stat.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Students
-                </p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {announcements.filter(a => a.selectedAudience.toLowerCase() === 'all' || a.selectedAudience.toLowerCase() === 'classes').length}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Teachers
-                </p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {announcements.filter(a => a.selectedAudience.toLowerCase() === 'teachers').length}
-                </p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-full">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Filters */}
-        <div className={`p-6 rounded-xl shadow-lg mb-8 ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+        {/* Search & Filters */}
+        <div className={`p-2 rounded-lg mb-8 border ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className={`w-5 h-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
               <input
                 type="text"
-                placeholder="Search announcements..."
+                placeholder="Search by title or content..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${
-                  isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border-none bg-transparent focus:ring-2 focus:ring-blue-500 placeholder-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
               />
             </div>
-            <div className="sm:w-48">
-              <select
-                value={audienceFilter}
-                onChange={(e) => setAudienceFilter(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${
-                  isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              >
-                <option value="all">All Audiences</option>
-                {audienceOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option === 'all' ? 'All' : option.charAt(0).toUpperCase() + option.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className={`w-px h-8 self-center hidden sm:block ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+            <select
+              value={audienceFilter}
+              onChange={(e) => setAudienceFilter(e.target.value)}
+              className={`sm:w-48 px-4 py-3 rounded-xl border-none bg-transparent focus:ring-2 focus:ring-blue-500 cursor-pointer ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+            >
+              <option value="all">All Audiences</option>
+              {audienceOptions.map(opt => (
+                <option key={opt} value={opt} className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>
+                  {opt === 'all' ? 'All' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Announcements List */}
-        <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-          <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Recent Announcements ({filteredAnnouncements.length})
-            </h2>
-          </div>
-          
+        {/* Main Content List */}
+        <div className="space-y-4">
           {filteredAnnouncements.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-24 h-24 mx-auto mb-4 text-gray-400">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                </svg>
-              </div>
-              <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                No announcements found
-              </h3>
-              <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {searchTerm || audienceFilter !== 'all' 
-                  ? 'Try adjusting your search or filters'
-                  : 'Get started by posting your first announcement'
-                }
-              </p>
+            <div className={`rounded-xl border border-dashed p-16 text-center ${isDarkMode ? 'border-gray-700' : 'border-gray-300 bg-gray-50'}`}>
+               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+               </div>
+               <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>No announcements found</h3>
+               <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Try clearing your filters or post a new one.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {filteredAnnouncements.map((announcement) => (
-                <div key={announcement.announcementId} className={`p-6 hover:bg-gray-50 transition-colors ${isDarkMode ? 'hover:bg-gray-700' : ''}`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            filteredAnnouncements.map((announcement) => (
+              <div 
+                key={announcement.announcementId} 
+                className={`group relative rounded-xl border p-6 transition-all duration-300 ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-gray-700 hover:border-gray-500' 
+                    : 'bg-white border-gray-200 hover:border-blue-400'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row gap-6">
+                  {/* Icon/Avatar Area */}
+                  <div className="hidden sm:flex flex-col items-center gap-2">
+                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center border ${
+                        announcement.selectedAudience === 'teachers' 
+                        ? 'bg-amber-100 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
+                        : announcement.selectedAudience === 'classes'
+                        ? 'bg-violet-100 text-violet-600 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800'
+                        : 'bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+                     }`}>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                        </svg>
+                     </div>
+                     <div className={`text-[10px] font-mono ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {new Date(announcement.createdDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                     </div>
+                  </div>
+
+                  {/* Content Area */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h3 className={`text-lg font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                           {announcement.title}
                         </h3>
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getAudienceColor(announcement.selectedAudience)}`}>
-                          {announcement.selectedAudience}
-                        </span>
+                        <StatusBadge type={announcement.selectedAudience} text={announcement.selectedAudience} />
                       </div>
                       
-                      <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} line-clamp-2`}>
-                        {announcement.message}
-                      </p>
-                      
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {formatDate(announcement.createdDate)}
-                        </span>
-                        
-                        {announcement.file && (
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
-                                isDarkMode 
-                                  ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' 
-                                  : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                              }`}
-                              onClick={() => handleFilePreview(announcement.file!)}
-                            >
-                              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                              </svg>
-                              <span className="text-xs text-blue-600 dark:text-blue-400">
-                                {getFileNameFromUrl(announcement.file).substring(0, 20)}
-                                {getFileNameFromUrl(announcement.file).length > 20 ? '...' : ''}
-                              </span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (announcement.file) {
-                                  handleFileDownload(announcement.file, getFileNameFromUrl(announcement.file));
-                                }
-                              }}
-                              className={`p-1 rounded transition-colors ${
-                                isDarkMode 
-                                  ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                                  : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                              }`}
-                              title="Download file"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                        
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          {announcement.createdBy}
-                        </span>
+                      {/* Action Menu */}
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+                         <button onClick={() => handleEditAnnouncement(announcement)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`} title="Edit">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                         </button>
+                         <button onClick={() => handleDeleteAnnouncement(announcement)} className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-red-900/30 text-gray-400 hover:text-red-400' : 'hover:bg-red-50 text-gray-500 hover:text-red-600'}`} title="Delete">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                         </button>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                      <button
-                        onClick={() => handleViewAnnouncement(announcement)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isDarkMode 
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                            : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                        }`}
-                        title="View"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </button>
-                      
-                      <button
-                        onClick={() => handleEditAnnouncement(announcement)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isDarkMode 
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                            : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                        }`}
-                        title="Edit"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      
-                      <button
-                        onClick={() => handleDeleteAnnouncement(announcement)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isDarkMode 
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                            : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-                        }`}
-                        title="Delete"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+
+                    <p className={`text-sm leading-relaxed mb-4 line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {announcement.message}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            </div>
+                            {announcement.createdBy}
+                        </div>
+
+                        {announcement.file && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilePreview(announcement.file!);
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                    isDarkMode 
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-blue-300' 
+                                    : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                                }`}
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                <span>Attachment</span>
+                            </button>
+                        )}
+
+                        <button 
+                            onClick={() => handleViewAnnouncement(announcement)}
+                            className="ml-auto text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                            View Details &rarr;
+                        </button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
-      </div>
 
-      {/* Post/Edit Announcement Sidebar */}
-      {(isPostSidebarOpen || isEditSidebarOpen) && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity" />
-          
-          <div className="absolute inset-y-0 right-0 pl-10 max-w-full flex">
-            <div className={`w-screen max-w-md ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-              <div className={`h-full flex flex-col py-6 shadow-xl ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                <div className={`px-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <div className="flex items-center justify-between">
-                    <h2 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {isEditSidebarOpen ? 'Edit Announcement' : 'Post New Announcement'}
-                    </h2>
-                    <button
-                      onClick={() => {
-                        setIsPostSidebarOpen(false);
-                        setIsEditSidebarOpen(false);
-                        setSelectedAnnouncement(null);
-                      }}
-                      className={`p-2 rounded-lg transition-colors ${
-                        isDarkMode 
-                          ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 px-6 py-6 overflow-y-auto">
-                  <form className="space-y-6">
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Title *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.title}
-                        onChange={(e) => setFormData({...formData, title: e.target.value})}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                        placeholder="Enter announcement title"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Audience *
-                      </label>
-                      <select
-                        value={formData.selectedAudience}
-                        onChange={(e) => setFormData({...formData, selectedAudience: e.target.value})}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                      >
-                        <option value="">Select audience</option>
-                        {audienceOptions.map(option => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {(formData.selectedAudience === 'teachers' || formData.selectedAudience === 'classes') && (
-                      <div>
-                        <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          Recipients *
-                        </label>
-                        
-                        {/* Selected Recipients Display */}
-                        {formData.selectedRecipients.length > 0 && (
-                          <div className="mb-3">
-                            <p className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Selected Recipients:
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 p-2 rounded-lg border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
-                              {formData.selectedRecipients.map(recipientId => (
-                                <span
-                                  key={recipientId}
-                                  className="flex items-center px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                >
-                                  {getRecipientDisplayName(recipientId, formData.selectedAudience)}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRecipientToggle(recipientId)}
-                                    className="ml-1 text-blue-800 dark:text-blue-200 hover:text-blue-900 dark:hover:text-blue-100"
-                                    title="Remove recipient"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
-                                </span>
-                              ))}
+        {/* --- Modals & Sidebars --- */}
+        
+        {/* Edit/Create Sidebar */}
+        {(isPostSidebarOpen || isEditSidebarOpen) && (
+            <div className="fixed inset-0 z-50 overflow-hidden">
+                <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={() => { setIsPostSidebarOpen(false); setIsEditSidebarOpen(false); }} />
+                <div className="absolute inset-y-0 right-0 flex max-w-full pl-10">
+                    <div className={`w-screen max-w-md transform transition-transform duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'} shadow-2xl flex flex-col`}>
+                        <div className="px-6 py-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                            <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                {isEditSidebarOpen ? 'Edit Announcement' : 'New Announcement'}
+                            </h2>
+                            <button onClick={() => { setIsPostSidebarOpen(false); setIsEditSidebarOpen(false); }} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            {/* Title */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Title</label>
+                                <input 
+                                    type="text" 
+                                    value={formData.title} 
+                                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white focus:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}
+                                    placeholder="e.g., Annual Sports Day"
+                                />
                             </div>
-                          </div>
-                        )}
+                            
+                            {/* Audience */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Target Audience</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {audienceOptions.map(opt => (
+                                        <button
+                                            key={opt}
+                                            onClick={() => setFormData({...formData, selectedAudience: opt, selectedRecipients: []})}
+                                            className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                                                formData.selectedAudience === opt 
+                                                ? 'bg-blue-600 text-white border-blue-600' 
+                                                : isDarkMode 
+                                                    ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' 
+                                                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {opt === 'all' ? 'Everyone' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                        {/* Available Recipients Selection */}
-                        <div>
-                          <p className={`text-xs mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Available {formData.selectedAudience}:
-                          </p>
-                          <div className="max-h-32 overflow-y-auto p-2 rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600">
-                            {formData.selectedAudience === 'teachers' ? (
-                              <div className="grid grid-cols-2 gap-2">
-                                {teachers.map(teacher => (
-                                  <button
-                                    key={teacher.teacherId}
-                                    type="button"
-                                    onClick={() => handleRecipientToggle(teacher.teacherId)}
-                                    className={`p-2 text-left rounded-lg border transition-colors ${
-                                      formData.selectedRecipients.includes(teacher.teacherId)
-                                        ? 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200'
-                                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                  >
-                                    <div className="text-xs font-medium">{teacher.teacherName || teacher.name}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">{teacher.email}</div>
-                                  </button>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="grid grid-cols-2 gap-2">
-                                {classrooms.map(classroom => (
-                                  <button
-                                    key={classroom.classId}
-                                    type="button"
-                                    onClick={() => handleRecipientToggle(classroom.classId)}
-                                    className={`p-2 text-left rounded-lg border transition-colors ${
-                                      formData.selectedRecipients.includes(classroom.classId)
-                                        ? 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200'
-                                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600'
-                                    }`}
-                                  >
-                                    <div className="text-xs font-medium">{classroom.className}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Section {classroom.section}</div>
-                                  </button>
-                                ))}
-                              </div>
+                            {/* Conditional Recipients Logic */}
+                            {(formData.selectedAudience === 'teachers' || formData.selectedAudience === 'classes') && (
+                                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Select {formData.selectedAudience}</p>
+                                    <div className="max-h-48 overflow-y-auto grid grid-cols-1 gap-2 custom-scrollbar">
+                                        {(formData.selectedAudience === 'teachers' ? teachers : classrooms).map((item: any) => {
+                                            const id = item.teacherId || item.classId;
+                                            const label = item.name || item.teacherName || `${item.className} ${item.section}`;
+                                            const isSelected = formData.selectedRecipients.includes(id);
+                                            return (
+                                                <button 
+                                                    key={id} 
+                                                    onClick={() => handleRecipientToggle(id)}
+                                                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                                                        isSelected 
+                                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' 
+                                                        : 'hover:bg-gray-200 dark:hover:bg-gray-700 dark:text-gray-300'
+                                                    }`}
+                                                >
+                                                    <span>{label}</span>
+                                                    {isSelected && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
                             )}
-                          </div>
-                        </div>
-                        
-                        <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Click on {formData.selectedAudience.toLowerCase()} to select/deselect them
-                        </p>
-                      </div>
-                    )}
 
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Message *
-                      </label>
-                      <textarea
-                        value={formData.message}
-                        onChange={(e) => setFormData({...formData, message: e.target.value})}
-                        rows={6}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                        placeholder="Enter your announcement message"
-                      />
+                            {/* Message */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Message</label>
+                                <textarea 
+                                    rows={6}
+                                    value={formData.message}
+                                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white focus:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}
+                                    placeholder="Write your announcement here..."
+                                />
+                            </div>
+
+                            {/* File Upload */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Attachment</label>
+                                <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                        <p className="mb-1 text-xs text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                                    </div>
+                                    <input type="file" className="hidden" onChange={(e) => setFormData({...formData, file: e.target.files?.[0]})} />
+                                </label>
+                                {(formData.file || (isEditSidebarOpen && selectedAnnouncement?.file)) && (
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-blue-500">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        {formData.file ? formData.file.name : 'Existing file attached'}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className={`p-6 border-t ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+                            <button 
+                                onClick={handleSaveAnnouncement}
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all"
+                            >
+                                {isEditSidebarOpen ? 'Save Changes' : 'Post Announcement'}
+                            </button>
+                        </div>
                     </div>
-
-                    <div>
-                      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Attachment {isEditSidebarOpen ? '(Optional - Leave empty to keep current file)' : '(Optional)'}
-                      </label>
-                      <input
-                        type="file"
-                        onChange={(e) => setFormData({...formData, file: e.target.files?.[0]})}
-                        className={`w-full px-4 py-2 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                      />
-                      {formData.file && (
-                        <div className={`mt-2 p-3 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-800 border-gray-600' 
-                            : 'bg-gray-50 border-gray-200'
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              {formData.file.name}
-                            </span>
-                            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              ({(formData.file.size / 1024 / 1024).toFixed(2)} MB)
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {isEditSidebarOpen && selectedAnnouncement?.file && !formData.file && (
-                        <div className={`mt-2 p-3 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-700 border-gray-600' 
-                            : 'bg-gray-50 border-gray-200'
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Current file: {getFileNameFromUrl(selectedAnnouncement.file)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </form>
                 </div>
-
-                <div className={`px-6 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <div className="flex justify-end space-x-3 pt-6">
-                    <button
-                      onClick={() => {
-                        setIsPostSidebarOpen(false);
-                        setIsEditSidebarOpen(false);
-                        setSelectedAnnouncement(null);
-                      }}
-                      className={`px-4 py-2 rounded-lg border ${
-                        isDarkMode 
-                          ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                      } transition-colors`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveAnnouncement}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      {isEditSidebarOpen ? 'Update' : 'Post'} Announcement
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* View Announcement Dialog */}
-      {isViewDialogOpen && selectedAnnouncement && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-            
-            <div className={`inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Announcement Details
-                  </h3>
-                  <button
-                    onClick={() => setIsViewDialogOpen(false)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isDarkMode 
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div className="px-6 py-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {selectedAnnouncement.title}
-                    </h4>
-                    <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${getAudienceColor(selectedAnnouncement.selectedAudience)}`}>
-                      {selectedAnnouncement.selectedAudience}
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
-                      {selectedAnnouncement.message}
-                    </p>
-                  </div>
-
-                  {getSafeRecipients(selectedAnnouncement).length > 0 && (
-                    <div>
-                      <h5 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Recipients:
-                      </h5>
-                      <div className="flex flex-wrap gap-2">
-                        {getSafeRecipients(selectedAnnouncement).map((recipientId, index) => (
-                          <span key={index} className={`px-2 py-1 text-xs rounded-full ${
-                            isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {getRecipientDisplayName(recipientId, selectedAnnouncement.selectedAudience)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedAnnouncement.file && (
-                    <div>
-                      <h5 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Attachment:
-                      </h5>
-                      <div className={`flex items-center gap-2 p-3 rounded-lg border ${
-                        isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'
-                      }`}>
-                        <div 
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={() => handleFilePreview(selectedAnnouncement.file!)}
-                        >
-                          <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                          </svg>
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                            {getFileNameFromUrl(selectedAnnouncement.file)}
-                          </span>
+        {/* View Dialog (Glassmorphism) */}
+        {isViewDialogOpen && selectedAnnouncement && (
+             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+                <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity" onClick={() => setIsViewDialogOpen(false)} />
+                <div className={`relative w-full max-w-2xl rounded-xl border overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} transform transition-all scale-100`}>
+                    <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-600 to-violet-600 opacity-10" />
+                    <div className="p-8 relative">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h2 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedAnnouncement.title}</h2>
+                                <div className="flex gap-2 items-center">
+                                    <StatusBadge type={selectedAnnouncement.selectedAudience} text={selectedAnnouncement.selectedAudience} />
+                                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>• {formatDate(selectedAnnouncement.createdDate)}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsViewDialogOpen(false)} className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                <svg className="w-5 h-5 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
                         </div>
-                        <button
-                          onClick={() => {
-                            if (selectedAnnouncement.file) {
-                              handleFileDownload(selectedAnnouncement.file, getFileNameFromUrl(selectedAnnouncement.file));
-                            }
-                          }}
-                          className={`ml-auto p-2 rounded-lg transition-colors ${
-                            isDarkMode 
-                              ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                              : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                          }`}
-                          title="Download file"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
+                        <div className={`prose max-w-none mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <p className="whitespace-pre-wrap leading-relaxed">{selectedAnnouncement.message}</p>
+                        </div>
+                        {selectedAnnouncement.file && (
+                            <div className={`flex items-center justify-between p-4 rounded-xl border ${isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Attached File</p>
+                                        <p className="text-gray-500">{getFileNameFromUrl(selectedAnnouncement.file)}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleFilePreview(selectedAnnouncement.file!)} className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">Preview</button>
+                                    <button onClick={() => handleFileDownload(selectedAnnouncement.file!, 'download')} className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">Download</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+             </div>
+        )}
+
+        {/* Delete Dialog */}
+        {isDeleteDialogOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDeleteDialogOpen(false)} />
+                <div className={`relative w-full max-w-sm p-6 rounded-xl border text-center ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center dark:bg-red-900/30 dark:text-red-400">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </div>
+                    <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Confirm Deletion</h3>
+                    <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Are you sure you want to delete this? This action cannot be undone.</p>
+                    <div className="flex gap-3 justify-center">
+                        <button onClick={() => setIsDeleteDialogOpen(false)} className="px-5 py-2 rounded-xl font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Cancel</button>
+                        <button onClick={confirmDelete} className="px-5 py-2 rounded-xl font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* File Preview Dialog */}
+        {isFilePreviewOpen && selectedFile && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={() => setIsFilePreviewOpen(false)} />
+                 <div className={`relative w-full max-w-5xl h-[80vh] rounded-xl border overflow-hidden flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{getFileNameFromUrl(selectedFile)}</h3>
+                        <button onClick={() => setIsFilePreviewOpen(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                             <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
-                      </div>
                     </div>
-                  )}
-
-                  <div className={`pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Created:</span>
-                        <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {formatDate(selectedAnnouncement.createdDate)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>By:</span>
-                        <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {selectedAnnouncement.createdBy}
-                        </span>
-                      </div>
+                    <div className="flex-1 bg-gray-100 dark:bg-black/50 p-4 overflow-auto flex items-center justify-center">
+                        {isImageFile(getFileNameFromUrl(selectedFile)) ? (
+                            <img src={selectedFile} alt="Preview" className="max-w-full max-h-full object-contain rounded border dark:border-gray-700" />
+                        ) : isPdfFile(getFileNameFromUrl(selectedFile)) ? (
+                            <iframe src={selectedFile} className="w-full h-full rounded border-0" title="PDF Preview" />
+                        ) : (
+                            <div className="text-center">
+                                <div className="mb-4 p-4 bg-gray-200 dark:bg-gray-800 rounded-full inline-block">
+                                     <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                </div>
+                                <p className={`text-lg mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview not available</p>
+                                <button onClick={() => handleFileDownload(selectedFile, getFileNameFromUrl(selectedFile))} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Download File</button>
+                            </div>
+                        )}
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`px-6 py-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setIsViewDialogOpen(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
+                 </div>
             </div>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Delete Confirmation Dialog */}
-      {isDeleteDialogOpen && selectedAnnouncement && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-            
-            <div className={`inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Delete Announcement
-                </h3>
-              </div>
-
-              <div className="px-6 py-6">
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Are you sure you want to delete "{selectedAnnouncement.title}"? This action cannot be undone.
-                </p>
-              </div>
-
-              <div className={`px-6 py-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setIsDeleteDialogOpen(false)}
-                    className={`px-4 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    } transition-colors`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={confirmDelete}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* File Preview Dialog */}
-      {isFilePreviewOpen && selectedFile && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-            
-            <div className={`inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-              <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    File Preview: {getFileNameFromUrl(selectedFile)}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleFileDownload(selectedFile, getFileNameFromUrl(selectedFile))}
-                      className={`p-2 rounded-lg transition-colors ${
-                        isDarkMode 
-                          ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                          : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                      }`}
-                      title="Download file"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setIsFilePreviewOpen(false)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        isDarkMode 
-                          ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-6 py-6">
-                <div className="w-full h-96 border rounded-lg overflow-hidden">
-                  {isImageFile(getFileNameFromUrl(selectedFile)) ? (
-                    <img 
-                      src={selectedFile} 
-                      alt="File preview" 
-                      className="w-full h-full object-contain"
-                    />
-                  ) : isPdfFile(getFileNameFromUrl(selectedFile)) ? (
-                    <iframe 
-                      src={selectedFile} 
-                      className="w-full h-full"
-                      title="PDF preview"
-                    />
-                  ) : (
-                    <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                      <div className="text-center">
-                        <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                        </svg>
-                        <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          File Preview Not Available
-                        </p>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          This file type cannot be previewed. Click download to view the file.
-                        </p>
-                        <button
-                          onClick={() => handleFileDownload(selectedFile, getFileNameFromUrl(selectedFile))}
-                          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          Download File
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default Announcements; 
+export default Announcements;
