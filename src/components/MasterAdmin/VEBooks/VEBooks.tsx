@@ -152,19 +152,19 @@ const VEBooks: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vedant Education Books</h1>
-          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div className="min-w-0 flex-1">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vedant Education Books</h1>
+          <p className={`mt-1 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Manage classes, subjects PDFs, cover pages, and merged books.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           <div className={`px-4 py-2 rounded-xl border ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span className={`text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
@@ -186,9 +186,9 @@ const VEBooks: React.FC = () => {
               setEditingClass(null);
               setClassModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white touch-manipulation min-h-[44px]"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5 flex-shrink-0" />
             Add Class
           </button>
         </div>
@@ -300,9 +300,9 @@ const VEBooks: React.FC = () => {
       ) : (
         <div className="space-y-4">
           <div className={`rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className={`px-5 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`px-4 sm:px-5 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 min-w-0">
                   <button
                     onClick={() => {
                       setSelectedClassId('');
@@ -310,20 +310,21 @@ const VEBooks: React.FC = () => {
                       setMergeBooks([]);
                       setBookSearch('');
                     }}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-2.5 rounded-lg transition-colors flex-shrink-0 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${
                       isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
                     }`}
                     title="Back to classes"
+                    aria-label="Back to classes"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <div>
-                    <h2 className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedClass?.className}</h2>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Class ID: {selectedClassId}</p>
+                  <div className="min-w-0">
+                    <h2 className={`font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedClass?.className}</h2>
+                    <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Class ID: {selectedClassId}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <div className="relative">
                     <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                     <input

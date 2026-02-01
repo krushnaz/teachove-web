@@ -61,24 +61,25 @@ const MasterAdminSidebar: React.FC<MasterAdminSidebarProps> = ({ sidebarOpen, se
         />
       )}
 
-      {/* Sidebar Container */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transform transition-transform duration-300 ease-out flex flex-col h-full shadow-2xl lg:shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      {/* Sidebar Container - full height on mobile, max 85vw width */}
+      <div className={`fixed lg:static inset-y-0 left-0 z-50 w-[min(18rem,85vw)] lg:w-72 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transform transition-transform duration-300 ease-out flex flex-col h-full shadow-2xl lg:shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         
         {/* Logo Area */}
-        <div className="h-24 flex items-center px-6">
+        <div className="h-16 sm:h-20 lg:h-24 flex items-center px-4 sm:px-6">
           <div className="flex items-center gap-3 w-full">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
               <Shield size={20} strokeWidth={2.5} />
             </div>
-            <div>
-              <h1 className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Teachove</h1>
+            <div className="min-w-0">
+              <h1 className="font-bold text-lg sm:text-xl tracking-tight text-gray-900 dark:text-white truncate">Teachove</h1>
               <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                 Master Admin
               </span>
             </div>
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden ml-auto text-gray-400 hover:text-gray-600"
+              className="lg:hidden ml-auto flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-gray-600 touch-manipulation"
+              aria-label="Close menu"
             >
               <X size={20} />
             </button>
@@ -86,13 +87,13 @@ const MasterAdminSidebar: React.FC<MasterAdminSidebarProps> = ({ sidebarOpen, se
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-4 pb-6 space-y-8 custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto px-3 sm:px-4 pb-6 space-y-6 sm:space-y-8 custom-scrollbar">
           {menuGroups.map((group, groupIdx) => (
             <div key={groupIdx}>
-              <h3 className="px-4 mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+              <h3 className="px-3 sm:px-4 mb-2 sm:mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                 {group.title}
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-0.5 sm:space-y-1">
                 {group.items.map((item) => {
                   const active = isActive(item.path);
                   return (
@@ -100,7 +101,7 @@ const MasterAdminSidebar: React.FC<MasterAdminSidebarProps> = ({ sidebarOpen, se
                       key={item.path}
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
-                      className={`relative group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm
+                      className={`relative group flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 font-medium text-sm touch-manipulation min-h-[44px]
                         ${active 
                           ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-white shadow-sm shadow-indigo-100 dark:shadow-none' 
                           : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'

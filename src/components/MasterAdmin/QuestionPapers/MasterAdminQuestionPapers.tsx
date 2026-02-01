@@ -98,10 +98,10 @@ const MasterAdminQuestionPapers: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
           {view !== 'classes' && (
             <button
               onClick={() => {
@@ -115,16 +115,17 @@ const MasterAdminQuestionPapers: React.FC = () => {
                   setSelectedClass(null);
                 }
               }}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2.5 rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${
                 isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
               }`}
               title="Back"
+              aria-label="Back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <div>
-            <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="min-w-0">
+            <h1 className={`text-2xl sm:text-3xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               {view === 'classes' && 'Question Papers'}
               {view === 'types' && `${selectedClass?.className} - Types`}
               {view === 'papers' && `${selectedClass?.className} - ${selectedType}`}
@@ -144,9 +145,9 @@ const MasterAdminQuestionPapers: React.FC = () => {
               setActivePaper(null);
               setPaperModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto touch-manipulation min-h-[44px]"
           >
-            <Upload className="w-5 h-5" />
+            <Upload className="w-5 h-5 flex-shrink-0" />
             Upload Paper
           </button>
         )}

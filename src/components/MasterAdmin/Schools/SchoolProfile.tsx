@@ -154,33 +154,33 @@ const SchoolProfile: React.FC = () => {
         {/* Back Button */}
         <button
           onClick={() => navigate('/master-admin/add-schools')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg transition-colors w-full sm:w-auto touch-manipulation min-h-[44px] ${
             isDarkMode
               ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
               : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
           }`}
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 flex-shrink-0" />
           Back to Schools
         </button>
 
         {/* School Header Card */}
-        <div className={`rounded-xl border p-6 ${
+        <div className={`rounded-xl border p-4 sm:p-6 ${
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {school.logo ? (
               <img
                 src={school.logo}
                 alt={school.schoolName}
-                className="w-24 h-24 rounded-xl object-cover border-2 border-gray-200 dark:border-gray-700"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border-2 border-gray-200 dark:border-gray-700 flex-shrink-0"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                 }}
               />
             ) : (
-              <div className={`w-24 h-24 rounded-xl flex items-center justify-center ${
+              <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-xl flex items-center justify-center flex-shrink-0 ${
                 school.isActive
                   ? 'bg-green-100 dark:bg-green-900/30'
                   : 'bg-gray-100 dark:bg-gray-700'
@@ -192,9 +192,9 @@ const SchoolProfile: React.FC = () => {
                 }`} />
               </div>
             )}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                <h1 className={`text-2xl sm:text-3xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {school.schoolName}
                 </h1>
                 {school.isActive ? (
@@ -209,7 +209,7 @@ const SchoolProfile: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-4">
                 <div className="flex items-center gap-2">
                   <Mail className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                   <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
@@ -295,10 +295,10 @@ const SchoolProfile: React.FC = () => {
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           {/* Tab Headers */}
-          <div className={`border-b ${
+          <div className={`border-b overflow-x-auto ${
             isDarkMode ? 'border-gray-700' : 'border-gray-200'
           }`}>
-            <div className="flex overflow-x-auto">
+            <div className="flex min-w-max">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -306,7 +306,7 @@ const SchoolProfile: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 font-medium transition-colors whitespace-nowrap touch-manipulation min-h-[48px] ${
                       isActive
                         ? isDarkMode
                           ? 'border-b-2 border-indigo-500 text-indigo-400 bg-indigo-900/20'
@@ -511,28 +511,28 @@ const TeachersTab: React.FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
         <h3 className={`text-lg font-semibold ${
           isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>
           Teachers ({teachers.length})
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleDownload}
             disabled={downloading || teachers.length === 0}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px] ${
               isDarkMode
                 ? 'bg-green-700 hover:bg-green-600 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4 flex-shrink-0" />
             {downloading ? 'Downloading...' : 'Download Excel'}
           </button>
           <button
             onClick={onRefresh}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px] ${
               isDarkMode
                 ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -543,26 +543,26 @@ const TeachersTab: React.FC<{
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto -mx-3 sm:mx-0">
+        <table className="w-full min-w-[500px]">
           <thead className={isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}>
             <tr>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Name
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase hidden sm:table-cell ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Email
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase hidden md:table-cell ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Phone
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase hidden lg:table-cell ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Subjects
@@ -576,16 +576,16 @@ const TeachersTab: React.FC<{
               <tr key={teacher.teacherId} className={`hover:${
                 isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
               }`}>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <td className={`px-3 sm:px-4 py-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {teacher.teacherName}
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 hidden sm:table-cell ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {teacher.email}
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 hidden md:table-cell ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {teacher.phoneNo}
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 hidden lg:table-cell ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {teacher.subjects?.join(', ') || '-'}
                 </td>
               </tr>
@@ -643,28 +643,28 @@ const StudentsTab: React.FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
         <h3 className={`text-lg font-semibold ${
           isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>
           Students ({students.length})
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleDownload}
             disabled={downloading || students.length === 0}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px] ${
               isDarkMode
                 ? 'bg-green-700 hover:bg-green-600 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4 flex-shrink-0" />
             {downloading ? 'Downloading...' : 'Download Excel'}
           </button>
           <button
             onClick={onRefresh}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px] ${
               isDarkMode
                 ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -675,31 +675,31 @@ const StudentsTab: React.FC<{
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto -mx-3 sm:mx-0">
+        <table className="w-full min-w-[500px]">
           <thead className={isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}>
             <tr>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Name
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase hidden sm:table-cell ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Roll No
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Class
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase hidden md:table-cell ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Email
               </th>
-              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${
+              <th className={`px-3 sm:px-4 py-3 text-left text-xs font-semibold uppercase hidden lg:table-cell ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>
                 Phone
@@ -713,22 +713,22 @@ const StudentsTab: React.FC<{
               <tr key={student.studentId} className={`hover:${
                 isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
               }`}>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <td className={`px-3 sm:px-4 py-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {student.name}
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 hidden sm:table-cell ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {student.rollNo || '-'}
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {student.className && student.section 
                     ? `${student.className}-${student.section}`
                     : student.className || '-'
                   }
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 hidden md:table-cell ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {student.email}
                 </td>
-                <td className={`px-4 py-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <td className={`px-3 sm:px-4 py-3 hidden lg:table-cell ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {student.phoneNo}
                 </td>
               </tr>

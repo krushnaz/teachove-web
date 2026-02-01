@@ -1,0 +1,63 @@
+module.exports = {
+        apps: [
+                {
+                        name: "teachove-backend",
+                        script: "index.js",
+                        cwd: "/home/ubuntu/teachove-backend",
+
+                        env: {
+                                NODE_ENV: "production",
+                                PORT: 5000,
+
+                                // 🔥 Firebase
+                                FIREBASE_PROJECT_ID: "schoolapp-20eb1",
+                                FIREBASE_CLIENT_EMAIL:
+                                        "firebase-adminsdk-bwjl8@schoolapp-20eb1.iam.gserviceaccount.com",
+                                FIREBASE_PRIVATE_KEY:
+                                        "-----BEGIN PRIVATE KEY-----\n" +
+                                        "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCoxeF+draYd2KK\n" +
+                                        "mAjFg1aVBfhxAcmL5gw+qA6GtfZ56r+23l9YoK2HYXsekonqwPhN+dP33yapDJut\n" +
+                                        "sklnmwiH4ic8Hn9LTetHMZ2BjaDQaAqMS1uESTwcRRHSP4dK1PAIG9F5M3XPJZsO\n" +
+                                        "FjQseqLUP3fhPYRrmZXGJoQEitEd0C5Uvqz4sLFypwutxR+b8Dxvagi/f1mfYDwY\n" +
+                                        "w9QOcVBFGpkz6hIHSo23fuqKiy0NvCuUuU5xWSl2P8lbrRWtMUAreQRcVrKH3UcZ\n" +
+                                        "AYo4D1MWwQvaO5pjKPyMURaupYFGW/9nllyCjwVeurSqHakDUOMOuxnR6V++uyrl\n" +
+                                        "Y149y1uXAgMBAAECggEALLuqLWVUt2upRDfQ110c5UncVEOXgouagj7z/rObHSxh\n" +
+                                        "3RvqpKiN5fyp7+wCPyUfizdk/eV5L0RmvO6s8xeN9so0AQTKU5DXBBs79pst3R8+\n" +
+                                        "cHoGyzTICGwsMZBiES0IY/XPmzLPDnUWuHCdKo7kuqIJ6bru7sAaCRerVTLgA2j7\n" +
+                                        "8kL60VnNSn41QY5VjtGWkl1Z3+NgRMg24uHk0x+a7Q1GBNKAxIBNaDEc3kqhU4rc\n" +
+                                        "CzAx4kF5qS58uNLs0ZXDwTu8kh2XYvWbccAS/V55Dol90trYkqCKa7GI8qrxIktN\n" +
+                                        "v+SIZmv1rnAZs7YQ0q6ouWUXzmXx7MQud84d2R61zQKBgQDp4JVPrq50StHkMCsi\n" +
+                                        "t6NwBXo6MCALZJlN4FiiZAou6vpUqGF3+U39yE1jWru8knrlwh/B3hAkhS7ddn0i\n" +
+                                        "DqcpiqxVWf6j9LqSNrbmnc0Ctp2oWiEuNzQ6w7dVmROm2a9UG0Fap1/E68fhQdil\n" +
+                                        "JfjjVTDPQ3acf0hku/7LqmsdnQKBgQC4vMZkhxv0Nvfbkr3Gyab3BWArn+ldiid5\n" +
+                                        "anatzsxoE1xBmJsFwdYRo+u1KYZU5b8QhBThQivgenwlgee0pxI+jWmNyQyOV4We\n" +
+                                        "nhQCsMsd+uW6fdTEJfxU1u8AgTFiNMhvJqiUfSkaydwL9zpfwAYDzmlQFUs9LS/V\n" +
+                                        "Ean97a/xwwKBgCd0a7v1jBiyRpZoSd6hfED5q5UFaWKCphotLsa2ecFQgsqlXUwQ\n" +
+                                        "EsgtcmDAfctiKrl39kOOYsrGbRGPW6zTLAAmFMyRUhP2xULFWDWviVZb2Fz+V3qk\n" +
+                                        "dXs0aUlXeak8MAfQUUYp1k4yOJYXtaSms0YmqQVOLERadKwJywIwzcFBAoGAUbZO\n" +
+                                        "GpEYcEEQCPMzNgZj78dU7nbhBhrhsvbAX8ik6TQHDoytpTJDubHDxHIFlO+6P1fs\n" +
+                                        "1GYsejIzT3PSRTnQ/BIYqjpPb3aPB8XsG/SPI0ei7YZS4h/bKLuZI6QBb+rg7Skw\n" +
+                                        "T928nLjEuBY2n7uT7YMTWfTRPtIJ4jjZ9BN6S3kCgYBx+bSwb34KeQjfN6cwhQdc\n" +
+                                        "rs6QHlITzJGE8lvgl88d1HdHC0qU0vvrdl82S5sVtOwqRSIOqlrLaKGtwLylUvZa\n" +
+                                        "4gboVZxlEZ/dyQqothULVqmGikv80TVIcg2Wrm/eKcqw+5dXjyiXcNVflBNhuPf+\n" +
+                                        "8wYHCrWhqSoe6Rx9wFdPuA==\n" +
+                                        "-----END PRIVATE KEY-----\n",
+
+                                FIREBASE_DB_URL:
+                                        "https://schoolapp-20eb1.firebaseio.com",
+                                FIREBASE_STORAGE_BUCKET:
+                                        "schoolapp-20eb1.firebasestorage.app",
+
+                                // 📧 Email
+                                EMAIL_USERNAME: "contactvedantech@gmail.com",
+                                EMAIL_PASSWORD: "wlkusrepkrtidmqe",
+
+                               // 💳 Razorpay PROD
+                                RAZORPAY_KEY_ID: "rzp_live_dXTu8RkGqKmuGE",
+                                RAZORPAY_KEY_SECRET: "zWqDzO10fdBpYDSkiYoBDgCJ",
+                                RAZORPAY_WEBHOOK_SECRET:
+                                        "91153e1ea7261c2ad81562bed1c604ba4b7c5d7312556536847c596f5140ba41",
+                        },
+                },
+        ],
+};

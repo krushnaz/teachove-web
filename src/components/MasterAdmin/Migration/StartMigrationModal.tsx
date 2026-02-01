@@ -38,24 +38,25 @@ const StartMigrationModal: React.FC<StartMigrationModalProps> = ({ isOpen, legac
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`relative w-full max-w-2xl rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-        <div className={`flex items-center justify-between p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div>
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Start Migration</h2>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+        <div className={`flex items-center justify-between p-4 sm:p-6 border-b sticky top-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="min-w-0 flex-1 pr-2">
+            <h2 className={`text-lg sm:text-2xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Start Migration</h2>
+            <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               School: <b>{schoolName}</b>
             </p>
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+            className={`p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           <div className={`p-4 rounded-xl border ${isDarkMode ? 'border-gray-700 bg-gray-900/20' : 'border-gray-200 bg-gray-50'}`}>
             <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               <b>Legacy School ID:</b> {legacySchoolId}
@@ -112,11 +113,11 @@ const StartMigrationModal: React.FC<StartMigrationModalProps> = ({ isOpen, legac
             </div>
           </div>
 
-          <div className={`flex justify-end gap-3 pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className={`flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                 isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >
@@ -137,7 +138,7 @@ const StartMigrationModal: React.FC<StartMigrationModalProps> = ({ isOpen, legac
                   setLoading(false);
                 }
               }}
-              className={`px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 touch-manipulation min-h-[44px] ${
                 loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
             >

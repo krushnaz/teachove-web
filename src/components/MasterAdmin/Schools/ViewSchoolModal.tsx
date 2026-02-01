@@ -15,15 +15,13 @@ const ViewSchoolModal: React.FC<ViewSchoolModalProps> = ({ isOpen, onClose, scho
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`relative w-full max-w-2xl rounded-2xl shadow-2xl ${
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl ${
         isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
       }`}>
         {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
-          <div className="flex items-center gap-3">
+        <div className={`flex items-center justify-between p-4 sm:p-6 border-b sticky top-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
             {school.logo ? (
               <img
                 src={school.logo}
@@ -47,8 +45,8 @@ const ViewSchoolModal: React.FC<ViewSchoolModalProps> = ({ isOpen, onClose, scho
                 }`} />
               </div>
             )}
-            <div>
-              <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <div className="min-w-0">
+              <h2 className={`text-lg sm:text-2xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {school.schoolName}
               </h2>
               <div className="flex items-center gap-2 mt-1">
@@ -218,12 +216,10 @@ const ViewSchoolModal: React.FC<ViewSchoolModalProps> = ({ isOpen, onClose, scho
         </div>
 
         {/* Footer */}
-        <div className={`flex justify-end gap-3 p-6 border-t ${
-          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
+        <div className={`flex justify-end gap-3 p-4 sm:p-6 border-t sticky bottom-0 ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
           <button
             onClick={onClose}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] w-full sm:w-auto ${
               isDarkMode
                 ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'

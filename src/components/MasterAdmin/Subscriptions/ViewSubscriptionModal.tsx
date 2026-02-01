@@ -108,27 +108,24 @@ const ViewSubscriptionModal: React.FC<ViewSubscriptionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`relative w-full max-w-4xl rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto ${
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className={`relative w-full max-w-4xl rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto ${
         isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
       }`}>
         {/* Header */}
-        <div className={`sticky top-0 flex items-center justify-between p-6 border-b ${
-          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-        }`}>
-          <div>
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className={`sticky top-0 flex items-center justify-between p-4 sm:p-6 border-b z-10 ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+          <div className="min-w-0 flex-1 pr-2">
+            <h2 className={`text-lg sm:text-2xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Subscription Details
             </h2>
-            <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`mt-1 text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               {sub.schoolName || 'Unknown School'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
-            }`}
+            className={`p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -140,7 +137,7 @@ const ViewSubscriptionModal: React.FC<ViewSubscriptionModalProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           </div>
         ) : (
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-6">
             {/* School Information */}
             <div>
               <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
@@ -386,7 +383,7 @@ const ViewSubscriptionModal: React.FC<ViewSubscriptionModalProps> = ({
                 <button
                   onClick={() => onStatusUpdate('pending')}
                   disabled={loading}
-                  className={`px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 ${
+                  className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 touch-manipulation min-h-[44px] ${
                     loading
                       ? 'bg-yellow-400 cursor-not-allowed'
                       : 'bg-yellow-600 hover:bg-yellow-700'
@@ -397,7 +394,7 @@ const ViewSubscriptionModal: React.FC<ViewSubscriptionModalProps> = ({
               )}
               <button
                 onClick={onClose}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                   isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'

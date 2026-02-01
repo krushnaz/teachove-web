@@ -223,7 +223,7 @@ const SubscriptionRequests: React.FC = () => {
 
   return (
     <MasterAdminLayout title="Subscription Requests" subtitle="Manage all subscription requests from schools">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Search Bar */}
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
@@ -329,17 +329,17 @@ const SubscriptionRequests: React.FC = () => {
                           isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
                         }`}
                       >
-                        <td className={`px-6 py-4 whitespace-nowrap ${
+                        <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                           isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}>
                           <div className="flex items-center gap-2">
-                            <Building className={`w-4 h-4 ${
+                            <Building className={`w-4 h-4 flex-shrink-0 ${
                               isDarkMode ? 'text-gray-400' : 'text-gray-500'
                             }`} />
-                            <span className="font-medium">{subscription.schoolName || 'Unknown School'}</span>
+                            <span className="font-medium truncate">{subscription.schoolName || 'Unknown School'}</span>
                           </div>
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap ${
+                        <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${
@@ -350,7 +350,7 @@ const SubscriptionRequests: React.FC = () => {
                             {subscription.subscription_type || 'N/A'}
                           </span>
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap ${
+                        <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
                           <div className="flex items-center gap-1">
@@ -360,16 +360,16 @@ const SubscriptionRequests: React.FC = () => {
                             {subscription.num_of_users}
                           </div>
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap ${
+                        <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
                           ₹{totalAmount.toLocaleString('en-IN')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
                           {getPaymentStatusChip(subscription.payment_status)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             {getStatusChip(subscription.approve_status)}
                             <button
                               onClick={() => handleStatusToggle(subscription)}
@@ -389,7 +389,7 @@ const SubscriptionRequests: React.FC = () => {
                             </button>
                           </div>
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap ${
+                        <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell ${
                           isDarkMode ? 'text-gray-300' : 'text-gray-700'
                         }`}>
                           <div className="flex items-center gap-1">
@@ -399,8 +399,8 @@ const SubscriptionRequests: React.FC = () => {
                             {formatDate(subscription.request_created_at)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1 sm:gap-2">
                             <button
                               onClick={() => openViewModal(subscription)}
                               className={`p-2 rounded-lg transition-colors ${
@@ -460,11 +460,11 @@ const SubscriptionRequests: React.FC = () => {
 
         {/* Confirmation Modal */}
         {confirmModalOpen && pendingStatusUpdate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className={`relative w-full max-w-md rounded-2xl shadow-2xl ${
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+            <div className={`relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl ${
               isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
             }`}>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                     pendingStatusUpdate.newStatus === 'approved'
@@ -509,7 +509,7 @@ const SubscriptionRequests: React.FC = () => {
                   <button
                     onClick={confirmStatusUpdate}
                     disabled={actionLoading === pendingStatusUpdate.subscriptionId}
-                    className={`px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 ${
+                    className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 touch-manipulation min-h-[44px] ${
                       pendingStatusUpdate.newStatus === 'approved'
                         ? 'bg-green-600 hover:bg-green-700'
                         : 'bg-yellow-600 hover:bg-yellow-700'

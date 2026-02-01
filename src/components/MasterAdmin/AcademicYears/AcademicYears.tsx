@@ -182,26 +182,26 @@ const AcademicYears: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className="min-w-0">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             Academic Years Management
           </h1>
-          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`mt-1 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Manage academic years for the platform
           </p>
         </div>
         <button
           onClick={openAddModal}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors w-full sm:w-auto touch-manipulation min-h-[44px] ${
             isDarkMode
               ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
               : 'bg-indigo-600 hover:bg-indigo-700 text-white'
           }`}
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5 flex-shrink-0" />
           Add Academic Year
         </button>
       </div>
@@ -228,28 +228,28 @@ const AcademicYears: React.FC = () => {
       <div className={`rounded-lg border overflow-hidden ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <table className="w-full min-w-[500px]">
             <thead className={`${
               isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
             }`}>
               <tr>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                <th className={`px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Academic Year
                 </th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                <th className={`px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Status
                 </th>
-                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                <th className={`px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Created
                 </th>
-                <th className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${
+                <th className={`px-4 sm:px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                   Actions
@@ -279,7 +279,7 @@ const AcademicYears: React.FC = () => {
                     <tr key={academicYearId} className={`hover:${
                       isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
                     } transition-colors`}>
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
                         <div className="flex items-center gap-3">
@@ -291,7 +291,7 @@ const AcademicYears: React.FC = () => {
                           <span className="font-medium">{academicYear.academicYear}</span>
                         </div>
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {academicYear.isActive ? (
@@ -314,8 +314,8 @@ const AcademicYears: React.FC = () => {
                           : 'N/A'
                         }
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
                           <button
                             onClick={() => handleToggleActivation(academicYear)}
                             disabled={isLoading}
@@ -371,20 +371,18 @@ const AcademicYears: React.FC = () => {
 
       {/* Add Modal */}
       {addModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-lg shadow-xl max-w-md w-full ${
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className={`rounded-t-2xl sm:rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
-            <div className={`p-6 border-b ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-              <h2 className={`text-xl font-bold ${
+            <div className={`p-4 sm:p-6 border-b sticky top-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <h2 className={`text-lg sm:text-xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 Add Academic Year
               </h2>
             </div>
-            <form onSubmit={handleAddAcademicYear} className="p-6 space-y-4">
+            <form onSubmit={handleAddAcademicYear} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -417,7 +415,7 @@ const AcademicYears: React.FC = () => {
                   Format: YYYY-YYYY (e.g., 2025-2026)
                 </p>
               </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
@@ -425,7 +423,7 @@ const AcademicYears: React.FC = () => {
                     setFormData({ academicYear: '' });
                     setFormError('');
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                     isDarkMode
                       ? 'bg-gray-700 hover:bg-gray-600 text-white'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
@@ -436,7 +434,7 @@ const AcademicYears: React.FC = () => {
                 <button
                   type="submit"
                   disabled={actionLoading === 'add'}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                     isDarkMode
                       ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white'
@@ -459,20 +457,18 @@ const AcademicYears: React.FC = () => {
 
       {/* Edit Modal */}
       {editModalOpen && selectedAcademicYear && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-lg shadow-xl max-w-md w-full ${
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className={`rounded-t-2xl sm:rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
-            <div className={`p-6 border-b ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-              <h2 className={`text-xl font-bold ${
+            <div className={`p-4 sm:p-6 border-b sticky top-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <h2 className={`text-lg sm:text-xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 Edit Academic Year
               </h2>
             </div>
-            <form onSubmit={handleEditAcademicYear} className="p-6 space-y-4">
+            <form onSubmit={handleEditAcademicYear} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className={`block text-sm font-medium mb-2 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -505,7 +501,7 @@ const AcademicYears: React.FC = () => {
                   Format: YYYY-YYYY (e.g., 2025-2026)
                 </p>
               </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
@@ -514,7 +510,7 @@ const AcademicYears: React.FC = () => {
                     setFormData({ academicYear: '' });
                     setFormError('');
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                     isDarkMode
                       ? 'bg-gray-700 hover:bg-gray-600 text-white'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
@@ -525,7 +521,7 @@ const AcademicYears: React.FC = () => {
                 <button
                   type="submit"
                   disabled={actionLoading === 'edit'}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                     isDarkMode
                       ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white'
@@ -548,33 +544,31 @@ const AcademicYears: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && selectedAcademicYear && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-lg shadow-xl max-w-md w-full ${
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className={`rounded-t-2xl sm:rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto ${
             isDarkMode ? 'bg-gray-800' : 'bg-white'
           }`}>
-            <div className={`p-6 border-b ${
-              isDarkMode ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-              <h2 className={`text-xl font-bold ${
+            <div className={`p-4 sm:p-6 border-b sticky top-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <h2 className={`text-lg sm:text-xl font-bold ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 Delete Academic Year
               </h2>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <p className={`${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
                 Are you sure you want to delete the academic year <strong>{selectedAcademicYear.academicYear}</strong>? This action cannot be undone.
               </p>
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setDeleteModalOpen(false);
                     setSelectedAcademicYear(null);
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                     isDarkMode
                       ? 'bg-gray-700 hover:bg-gray-600 text-white'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
@@ -585,7 +579,7 @@ const AcademicYears: React.FC = () => {
                 <button
                   onClick={handleDeleteAcademicYear}
                   disabled={actionLoading === 'delete'}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                     isDarkMode
                       ? 'bg-red-600 hover:bg-red-700 text-white'
                       : 'bg-red-600 hover:bg-red-700 text-white'

@@ -187,17 +187,17 @@ const SubscriptionPlans: React.FC = () => {
 
   return (
     <MasterAdminLayout title="Subscription Plans Management">
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} p-6`}>
+      <div className={`min-h-0 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} p-4 sm:p-6`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6 mb-6`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
-                  <DollarSign className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6`}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`p-2.5 sm:p-3 rounded-lg flex-shrink-0 ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+                  <DollarSign className={`w-5 h-5 sm:w-6 sm:h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                 </div>
-                <div>
-                  <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <div className="min-w-0">
+                  <h2 className={`text-xl sm:text-2xl font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     Subscription Plans Management
                   </h2>
                   <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -219,13 +219,13 @@ const SubscriptionPlans: React.FC = () => {
                     duration: 'monthly',
                   });
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors w-full sm:w-auto touch-manipulation min-h-[44px] ${
                   isDarkMode
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 flex-shrink-0" />
                 Add New Plan
               </button>
             </div>
@@ -237,7 +237,7 @@ const SubscriptionPlans: React.FC = () => {
               <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {plans.map((plan) => (
                 <div
                   key={plan.id}
@@ -356,12 +356,12 @@ const SubscriptionPlans: React.FC = () => {
 
           {/* Add/Edit Form Modal */}
           {showForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-              <div className={`relative w-full max-w-2xl rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto ${
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+              <div className={`relative w-full max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto ${
                 isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
               }`}>
-                <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-inherit">
-                  <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <div className="sticky top-0 flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-inherit z-10">
+                  <h3 className={`text-lg sm:text-xl font-bold truncate pr-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {editingPlan ? 'Edit Subscription Plan' : 'Create New Subscription Plan'}
                   </h3>
                   <button
@@ -378,15 +378,14 @@ const SubscriptionPlans: React.FC = () => {
                         duration: 'monthly',
                       });
                     }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
-                    }`}
+                    className={`p-2 rounded-lg transition-colors flex-shrink-0 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                    aria-label="Close"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="p-6 space-y-4">
+                <div className="p-4 sm:p-6 space-y-4">
                   <div>
                     <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Plan Name <span className="text-red-500">*</span>
@@ -540,7 +539,7 @@ const SubscriptionPlans: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button
                       onClick={() => {
                         setShowForm(false);
@@ -554,7 +553,7 @@ const SubscriptionPlans: React.FC = () => {
                           planType: '',
                         });
                       }}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] ${
                         isDarkMode
                           ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -565,7 +564,7 @@ const SubscriptionPlans: React.FC = () => {
                     <button
                       onClick={handleSubmit}
                       disabled={saving}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 ${
+                      className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 touch-manipulation min-h-[44px] ${
                         saving
                           ? 'bg-gray-400 cursor-not-allowed'
                           : 'bg-blue-600 hover:bg-blue-700'

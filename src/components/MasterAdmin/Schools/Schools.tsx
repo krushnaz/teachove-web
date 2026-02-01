@@ -176,26 +176,26 @@ const Schools: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className="min-w-0">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             Schools Management
           </h1>
-          <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`mt-1 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Manage all schools in the platform
           </p>
         </div>
         <button
           onClick={() => setAddModalOpen(true)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors w-full sm:w-auto touch-manipulation min-h-[44px] ${
             isDarkMode
               ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
               : 'bg-indigo-600 hover:bg-indigo-700 text-white'
           }`}
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5 flex-shrink-0" />
           Add School
         </button>
       </div>
@@ -236,48 +236,48 @@ const Schools: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <table className="w-full min-w-[700px]">
               <thead className={`${
                 isDarkMode ? 'bg-gray-900 border-b border-gray-700' : 'bg-gray-50 border-b border-gray-200'
               }`}>
                 <tr>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Logo
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     School Name
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden md:table-cell ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Email
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden lg:table-cell ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Phone
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden xl:table-cell ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Location
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden lg:table-cell ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Academic Year
                   </th>
-                  <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Status
                   </th>
-                  <th className={`px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Actions
@@ -304,26 +304,26 @@ const Schools: React.FC = () => {
                       }`}
                     >
                       {/* Logo */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <SchoolLogoCell school={school} />
                       </td>
                       {/* School Name */}
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
                         <span className="font-medium">{school.schoolName}</span>
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {school.email}
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {school.phoneNo}
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {school.city && school.state 
@@ -331,12 +331,12 @@ const Schools: React.FC = () => {
                           : school.city || school.state || '-'
                         }
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap ${
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {school.currentAcademicYear || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         {school.isActive ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                             <CheckCircle className="w-3 h-3" />
@@ -349,8 +349,8 @@ const Schools: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
                           {/* View Button */}
                           <button
                             onClick={(e) => {

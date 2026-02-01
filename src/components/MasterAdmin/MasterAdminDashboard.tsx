@@ -135,7 +135,7 @@ const MasterAdminDashboard: React.FC = () => {
     }
 
     return (
-      <div className={`group relative overflow-hidden rounded-2xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+      <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
         {/* Decorative Background Blob */}
@@ -156,7 +156,7 @@ const MasterAdminDashboard: React.FC = () => {
           </div>
           
           <div>
-            <h3 className={`text-3xl font-bold tracking-tight font-sans ${
+            <h3 className={`text-2xl sm:text-3xl font-bold tracking-tight font-sans ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>{value}</h3>
             <p className={`text-sm font-medium mt-1 ${
@@ -174,7 +174,7 @@ const MasterAdminDashboard: React.FC = () => {
     return (
       <button 
         onClick={() => navigate(action.path)}
-        className={`group relative flex flex-col items-start p-5 rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-transparent hover:-translate-y-1 w-full text-left overflow-hidden ${
+        className={`group relative flex flex-col items-start p-4 sm:p-5 rounded-xl sm:rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-transparent hover:-translate-y-1 w-full text-left overflow-hidden touch-manipulation min-h-[100px] ${
           isDarkMode 
             ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
             : 'bg-white border-gray-200 hover:border-transparent'
@@ -211,15 +211,15 @@ const MasterAdminDashboard: React.FC = () => {
     <MasterAdminLayout title="Dashboard" subtitle={`Welcome back, ${user?.name || 'Master Admin'}!`}>
       <div className="space-y-8">
         {/* Welcome Section */}
-        <div className={`p-6 rounded-2xl border ${
+        <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border ${
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <h2 className={`text-3xl font-bold mb-2 ${
+          <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             Welcome back, {user?.name || 'Master Admin'}!
           </h2>
-          <p className={`text-lg ${
+          <p className={`text-base sm:text-lg ${
             isDarkMode ? 'text-gray-400' : 'text-gray-600'
           }`}>
             Manage and monitor all schools and users from this central dashboard.
@@ -228,12 +228,12 @@ const MasterAdminDashboard: React.FC = () => {
 
         {/* Overview Section */}
         <div>
-          <h3 className={`text-xl font-bold mb-6 ${
+          <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             Overview
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <StatCard
               title="Total Schools"
               value={counts.schools}
@@ -272,7 +272,7 @@ const MasterAdminDashboard: React.FC = () => {
 
         {/* Finance Overview Section */}
         <div>
-          <h3 className={`text-xl font-bold mb-6 ${
+          <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             Finance Overview
@@ -301,12 +301,12 @@ const MasterAdminDashboard: React.FC = () => {
 
         {/* Quick Actions Section */}
         <div>
-          <h3 className={`text-xl font-bold mb-6 ${
+          <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             Quick Actions
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {quickActions.map((action, index) => (
               <QuickActionCard key={index} action={action} />
             ))}

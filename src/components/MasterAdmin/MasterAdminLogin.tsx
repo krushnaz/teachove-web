@@ -60,13 +60,13 @@ const MasterAdminLogin: React.FC = () => {
   }, [isAuthenticated, navigate, location, user]);
 
   return (
-    <div className={`min-h-screen flex ${isDarkMode ? 'dark bg-slate-950' : 'bg-white'}`}>
+    <div className={`min-h-screen flex flex-col lg:flex-row ${isDarkMode ? 'dark bg-slate-950' : 'bg-white'}`}>
       
       {/* --- Left Side: Form Section --- */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-20 xl:px-24 relative z-10">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-4 sm:px-8 lg:px-20 xl:px-24 py-6 sm:py-8 lg:py-0 relative z-10 min-h-0">
         
-        {/* Top Navigation */}
-        <div className="absolute top-8 left-8 sm:left-12">
+        {/* Top Navigation + Dark mode on mobile */}
+        <div className="absolute top-4 sm:top-8 left-4 sm:left-8 right-4 sm:right-auto flex items-center justify-between sm:justify-start">
           <Link
             to="/"
             className={`group inline-flex items-center gap-2 text-sm font-semibold transition-colors ${
@@ -76,24 +76,33 @@ const MasterAdminLogin: React.FC = () => {
             <div className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800 group-hover:bg-slate-700' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
               <ArrowLeft className="w-4 h-4" />
             </div>
-            <span>Back to Home</span>
+            <span className="hidden xs:inline sm:inline">Back to Home</span>
           </Link>
+          {/* Dark mode toggle - visible on mobile when right panel is hidden */}
+          <button
+            onClick={toggleDarkMode}
+            className="lg:hidden p-2.5 rounded-full border transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            style={isDarkMode ? { background: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' } : { background: 'rgba(0,0,0,0.05)', borderColor: 'rgba(0,0,0,0.1)' }}
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5 text-slate-600" />}
+          </button>
         </div>
 
-        {/* Main Content Container */}
-        <div className="w-full max-w-xl mx-auto mt-12 lg:mt-0">
+        {/* Main Content Container - scrollable on small screens */}
+        <div className="w-full max-w-xl mx-auto mt-16 sm:mt-20 lg:mt-0 overflow-y-auto flex-1 lg:flex-initial">
           
           {/* Header */}
-          <div className="mb-10">
+          <div className="mb-6 sm:mb-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-indigo-600/20' : 'bg-indigo-100'}`}>
-                <Shield className={`w-8 h-8 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
+              <div className={`p-2.5 sm:p-3 rounded-xl flex-shrink-0 ${isDarkMode ? 'bg-indigo-600/20' : 'bg-indigo-100'}`}>
+                <Shield className={`w-7 h-7 sm:w-8 sm:h-8 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
               </div>
-              <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 Master Admin
               </h1>
             </div>
-            <p className={`text-lg ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`text-base sm:text-lg ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Please enter your credentials to sign in.
             </p>
           </div>
@@ -173,7 +182,7 @@ const MasterAdminLogin: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2
+              className={`w-full py-3.5 sm:py-4 px-6 rounded-xl font-bold text-base sm:text-lg transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 touch-manipulation min-h-[48px]
                 ${isDarkMode 
                   ? 'bg-indigo-600 hover:bg-indigo-500 text-white' 
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white'

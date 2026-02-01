@@ -48,21 +48,22 @@ const MasterAdminHeader: React.FC<MasterAdminHeaderProps> = ({
 
   return (
     <header className={`sticky top-0 z-30 w-full transition-all duration-300 ${isDarkMode ? 'bg-gray-900/90 border-gray-800' : 'bg-white/90 border-gray-100'} backdrop-blur-xl border-b`}>
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between gap-4">
+      <div className="px-3 sm:px-6 lg:px-8">
+        <div className="flex h-14 sm:h-16 lg:h-20 items-center justify-between gap-2 sm:gap-4">
           
           {/* Left: Mobile Toggle & Title */}
-          <div className="flex items-center gap-4 min-w-max">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`lg:hidden p-2 rounded-xl transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`lg:hidden flex-shrink-0 p-2.5 rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${isDarkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-50'}`}
+              aria-label="Toggle menu"
             >
-              <Menu size={24} />
+              <Menu size={22} className="sm:w-6 sm:h-6" />
             </button>
             
-            <div className="hidden md:block">
-               <h2 className={`text-xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{title}</h2>
-               {subtitle && <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{subtitle}</p>}
+            <div className="min-w-0 flex-1 md:flex-initial">
+               <h2 className={`text-base sm:text-lg md:text-xl font-bold tracking-tight truncate ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{title}</h2>
+               {subtitle && <p className={`text-xs hidden sm:block truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{subtitle}</p>}
             </div>
           </div>
 
@@ -90,10 +91,11 @@ const MasterAdminHeader: React.FC<MasterAdminHeaderProps> = ({
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <button
               onClick={toggleDarkMode}
-              className={`p-2.5 rounded-xl transition-all duration-200 border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-yellow-400 hover:bg-gray-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 shadow-sm'}`}
+              className={`p-2.5 rounded-xl transition-all duration-200 border touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${isDarkMode ? 'bg-gray-800 border-gray-700 text-yellow-400 hover:bg-gray-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 shadow-sm'}`}
+              aria-label="Toggle dark mode"
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -102,14 +104,15 @@ const MasterAdminHeader: React.FC<MasterAdminHeaderProps> = ({
             <div className="relative" ref={notifRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2.5 rounded-xl transition-all duration-200 border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 shadow-sm'}`}
+                className={`relative p-2.5 rounded-xl transition-all duration-200 border touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 shadow-sm'}`}
+                aria-label="Notifications"
               >
                 <Bell size={20} />
-                <span className="absolute top-2.5 right-3 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
+                <span className="absolute top-2 right-2 sm:top-2.5 sm:right-3 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
               </button>
               
               {showNotifications && (
-                 <div className={`absolute right-0 mt-4 w-80 rounded-2xl shadow-2xl border p-0 z-50 transform transition-all overflow-hidden origin-top-right animate-in fade-in zoom-in-95 duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                 <div className={`absolute right-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-w-[20rem] rounded-2xl shadow-2xl border p-0 z-50 transform transition-all overflow-hidden origin-top-right animate-in fade-in zoom-in-95 duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
                     <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-50'}`}>
                       <div className="flex justify-between items-center">
                         <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
@@ -126,15 +129,16 @@ const MasterAdminHeader: React.FC<MasterAdminHeaderProps> = ({
               )}
             </div>
 
-            <div className={`h-8 w-[1px] mx-1 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
+            <div className={`h-6 sm:h-8 w-[1px] mx-0.5 sm:mx-1 hidden sm:block ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
 
             {/* Profile */}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setShowProfile(!showProfile)}
-                className={`flex items-center gap-3 pl-1 pr-2 py-1 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 border border-transparent ${showProfile ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
+                className={`flex items-center gap-2 sm:gap-3 pl-1 pr-2 py-1.5 sm:py-1 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 border border-transparent touch-manipulation min-h-[44px] ${showProfile ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
+                aria-label="Profile menu"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-200 dark:shadow-none">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-200 dark:shadow-none flex-shrink-0">
                   {user?.email?.charAt(0).toUpperCase() || 'M'}
                 </div>
                 <div className="hidden xl:block text-left">
@@ -145,7 +149,7 @@ const MasterAdminHeader: React.FC<MasterAdminHeaderProps> = ({
               </button>
 
               {showProfile && (
-                <div className={`absolute right-0 mt-4 w-64 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border z-50 overflow-hidden transform transition-all duration-200 origin-top-right animate-in fade-in zoom-in-95 ${
+                <div className={`absolute right-0 mt-2 w-[min(16rem,calc(100vw-2rem))] max-w-[16rem] rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border z-50 overflow-hidden transform transition-all duration-200 origin-top-right animate-in fade-in zoom-in-95 ${
                   isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                 }`}>
                   <div className="p-2">

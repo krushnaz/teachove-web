@@ -33,11 +33,11 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   const deleteAmount = subscription.amount ?? (costPerUser * numUsers);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`relative w-full max-w-md rounded-2xl shadow-2xl ${
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className={`relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl ${
         isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
       }`}>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-900/30">
               <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -88,11 +88,11 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             </p>
           </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
             <button
               onClick={onClose}
               disabled={loading}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors disabled:opacity-50 touch-manipulation min-h-[44px] ${
                 isDarkMode
                   ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -103,7 +103,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             <button
               onClick={onConfirm}
               disabled={loading}
-              className={`px-4 py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 ${
+              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium text-white transition-colors disabled:opacity-50 touch-manipulation min-h-[44px] ${
                 loading
                   ? 'bg-red-400 cursor-not-allowed'
                   : 'bg-red-600 hover:bg-red-700'
