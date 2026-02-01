@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://13.232.157.239:5000/',
+  BASE_URL: 'http://13.232.157.239:5000',
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
