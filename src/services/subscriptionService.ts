@@ -1,6 +1,48 @@
 import { apiClient } from '../config/axios';
 import { API_CONFIG } from '../config/api';
 
+// Can-add-students response (for add-student guard)
+export interface CanAddStudentsResponse {
+  canAdd: boolean;
+  currentStudents: number;
+  totalSubscribedSlots: number;
+  remainingSlots: number;
+  message: string;
+}
+
+// Current subscription details (for sidebar & subscription page)
+export interface CurrentSubscriptionDetails {
+  schoolId: string;
+  totalSeats: number;
+  expiryAt: { _seconds?: number } | string | null;
+  isActive: boolean;
+  remainingDays: number;
+  planName?: string | null;
+  purchasedAt?: { _seconds?: number } | null;
+  lastPurchasedAt?: { _seconds?: number } | null;
+  summary?: {
+    totalSubscribedSlots: number;
+    currentStudentCount: number;
+    remainingSlots: number;
+    nearestExpiryRemainingDays: number | null;
+    activeSubscriptionCount: number;
+  };
+}
+
+// Subscription plan (from master-admin plans API)
+export interface SubscriptionPlan {
+  id: string;
+  planName: string;
+  description?: string;
+  amount: number;
+  features: string[];
+  isActive: boolean;
+  planType?: string;
+  duration: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
 // Interfaces based on the API response
 export interface SubscriptionRequest {
   id: string;
@@ -50,10 +92,13 @@ export interface CreateSubscriptionRequest {
   school_id: string;
   payment_method: string;
   razorpay_payment_id?: string;
-  amount: number;
-  currency: string;
-  subscription_type: 'Both' | 'TeachoVE';
-  remaining_amount: number;
+  amount?: number;
+  currency?: string;
+  subscription_type?: 'Both' | 'TeachoVE';
+  remaining_amount?: number;
+  plan_id?: string;
+  plan_name?: string;
+  duration?: string;
 }
 
 export interface CreateSubscriptionResponse {
@@ -116,6 +161,70 @@ class SubscriptionService {
     } catch (error) {
       console.error('Error fetching subscription costs:', error);
       throw new Error('Failed to fetch subscription costs');
+    }
+  }
+
+  /**
+   * Check if school can add more students (subscription limit).
+   * Use before opening Add Student form; show limit UI when canAdd is false.
+   */
+  async getCanAddStudents(schoolId: string): Promise<CanAddStudentsResponse | null> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SUBSCRIPTIONS.CAN_ADD_STUDENTS.replace(':schoolId', schoolId);
+      const response = await apiClient.get<CanAddStudentsResponse>(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching can-add-students:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get current subscription details for school (active plan, expiry, seats)
+   */
+  async getCurrentSubscriptionDetails(schoolId: string): Promise<CurrentSubscriptionDetails | null> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SUBSCRIPTIONS.GET_CURRENT.replace(':schoolId', schoolId);
+      const response = await apiClient.get(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching current subscription:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get active subscription plans (from master-admin API)
+   * Returns array of plans for display; backend returns { data: { [planType]: plan } }
+   */
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SUBSCRIPTION_PLANS.GET_CURRENT;
+      type PlanEntry = { id: string; planName?: string; plan?: string; amount: number; description?: string; features?: string[]; planType?: string; duration?: string; isActive?: boolean };
+      const response = await apiClient.get<{ success?: boolean; data?: Record<string, PlanEntry> }>(endpoint);
+      const raw = response.data?.data ?? response.data;
+      const data = raw && typeof raw === 'object' ? (raw as Record<string, PlanEntry>) : null;
+      if (!data) return [];
+      const plans: SubscriptionPlan[] = [];
+      Object.keys(data).forEach((key) => {
+        const p = data[key];
+        if (p && (p.isActive !== false)) {
+          plans.push({
+            id: p.id,
+            planName: p.planName ?? p.plan ?? key,
+            description: p.description,
+            amount: Number(p.amount) || 0,
+            features: Array.isArray(p.features) ? p.features : [],
+            isActive: p.isActive ?? true,
+            planType: p.planType,
+            duration: p.duration || 'monthly',
+          });
+        }
+      });
+      return plans;
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+      return [];
     }
   }
 

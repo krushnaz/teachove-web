@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import MasterAdminLayout from './Layout';
-import { masterAdminService } from '../../services/masterAdminService';
+import { masterAdminService, type EarningsPeriod, type EarningsByPeriodResponse } from '../../services/masterAdminService';
 import { 
   Shield, 
   Users, 
@@ -18,6 +18,14 @@ import {
   Calendar,
   DollarSign
 } from 'lucide-react';
+
+const EARNINGS_PERIODS: { value: EarningsPeriod; label: string }[] = [
+  { value: 'daily', label: 'Today' },
+  { value: 'weekly', label: 'This Week' },
+  { value: 'monthly', label: 'This Month' },
+  { value: 'yearly', label: 'This Year' },
+  { value: 'custom', label: 'Custom' },
+];
 
 interface QuickAction {
   title: string;
@@ -43,6 +51,11 @@ const MasterAdminDashboard: React.FC = () => {
     paidSubscriptions: 0,
   });
   const [financeLoading, setFinanceLoading] = useState(true);
+  const [earningsPeriod, setEarningsPeriod] = useState<EarningsPeriod>('monthly');
+  const [earningsData, setEarningsData] = useState<EarningsByPeriodResponse | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(true);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +80,28 @@ const MasterAdminDashboard: React.FC = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      setEarningsLoading(true);
+      try {
+        const start = earningsPeriod === 'custom' && customStart ? customStart : undefined;
+        const end = earningsPeriod === 'custom' && customEnd ? customEnd : undefined;
+        const data = await masterAdminService.getEarningsByPeriod(earningsPeriod, start, end);
+        setEarningsData(data);
+      } catch {
+        setEarningsData({ earnings: 0, count: 0, period: earningsPeriod, startDate: '', endDate: '' });
+      } finally {
+        setEarningsLoading(false);
+      }
+    };
+    if (earningsPeriod !== 'custom' || (customStart && customEnd)) {
+      fetchEarnings();
+    } else {
+      setEarningsLoading(false);
+      setEarningsData(null);
+    }
+  }, [earningsPeriod, customStart, customEnd]);
 
   const quickActions: QuickAction[] = [
     {
@@ -277,9 +312,9 @@ const MasterAdminDashboard: React.FC = () => {
           }`}>
             Finance Overview
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <StatCard
-              title="Total Earnings"
+              title="Total Earnings (All time)"
               value={`₹${finance.totalEarnings.toLocaleString('en-IN')}`}
               icon={DollarSign}
               colorClass={{
@@ -289,11 +324,62 @@ const MasterAdminDashboard: React.FC = () => {
               }}
               loading={financeLoading}
             />
+            <div className={`rounded-xl border p-4 sm:p-5 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            }`}>
+              <p className={`text-sm font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Earnings by period
+              </p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {EARNINGS_PERIODS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setEarningsPeriod(value)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      earningsPeriod === value
+                        ? 'bg-indigo-600 text-white'
+                        : isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {earningsPeriod === 'custom' && (
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <input
+                    type="date"
+                    value={customStart}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                    className={`rounded border px-2 py-1.5 text-sm ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                  />
+                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>to</span>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className={`rounded border px-2 py-1.5 text-sm ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                  />
+                </div>
+              )}
+              {earningsLoading ? (
+                <div className={`h-8 w-28 rounded animate-pulse ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`} />
+              ) : earningsData ? (
+                <div>
+                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    ₹{(earningsData.earnings ?? 0).toLocaleString('en-IN')}
+                  </p>
+                  <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {earningsData.count} payment{earningsData.count !== 1 ? 's' : ''} in period
+                  </p>
+                </div>
+              ) : (
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Select custom date range</p>
+              )}
+            </div>
           </div>
           {!financeLoading && (
-            <div className={`mt-4 text-sm ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <div className={`mt-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               <p>Paid Subscriptions: {finance.paidSubscriptions.toLocaleString('en-IN')} of {finance.totalSubscriptions.toLocaleString('en-IN')} total</p>
             </div>
           )}

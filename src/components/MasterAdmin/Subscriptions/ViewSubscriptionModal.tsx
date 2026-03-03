@@ -69,8 +69,8 @@ const ViewSubscriptionModal: React.FC<ViewSubscriptionModalProps> = ({
   const numUsers = sub.num_of_users ?? 0;
   const totalAmount = sub.amount ?? (costPerUser * numUsers);
 
-  const formatDate = (timestamp?: { _seconds: number; _nanoseconds: number }) => {
-    if (!timestamp) return '-';
+  const formatDate = (timestamp?: { _seconds: number; _nanoseconds?: number } | null) => {
+    if (!timestamp || timestamp._seconds == null) return '-';
     const date = new Date(timestamp._seconds * 1000);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',

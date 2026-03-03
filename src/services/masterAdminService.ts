@@ -13,6 +13,16 @@ interface FinanceOverview {
   paidSubscriptions: number;
 }
 
+export type EarningsPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+
+export interface EarningsByPeriodResponse {
+  earnings: number;
+  count: number;
+  period: string;
+  startDate: string;
+  endDate: string;
+}
+
 interface SubscriptionPlan {
   id?: string;
   planName: string;
@@ -89,10 +99,11 @@ class MasterAdminService {
       const response = await apiHelper.get('/master-admin/finance/total-earnings');
       
       if (response.success && response.data) {
+        const d = response.data;
         return {
-          totalEarnings: response.data.totalEarnings || 0,
-          totalSubscriptions: response.data.totalSubscriptions || 0,
-          paidSubscriptions: response.data.paidSubscriptions || 0,
+          totalEarnings: d.totalEarnings ?? d.totalGrossCollected ?? 0,
+          totalSubscriptions: d.totalSubscriptions ?? 0,
+          paidSubscriptions: d.paidSubscriptions ?? 0,
         };
       }
       
@@ -107,6 +118,49 @@ class MasterAdminService {
         totalEarnings: 0,
         totalSubscriptions: 0,
         paidSubscriptions: 0,
+      };
+    }
+  }
+
+  // Get earnings by period (daily, weekly, monthly, yearly, custom)
+  async getEarningsByPeriod(
+    period: EarningsPeriod,
+    startDate?: string,
+    endDate?: string
+  ): Promise<EarningsByPeriodResponse> {
+    try {
+      const params = new URLSearchParams({ period });
+      if (period === 'custom' && startDate && endDate) {
+        params.set('startDate', startDate);
+        params.set('endDate', endDate);
+      }
+      const response = await apiHelper.get(`/master-admin/finance/earnings?${params.toString()}`);
+      
+      if (response.success && response.data) {
+        return {
+          earnings: response.data.earnings ?? 0,
+          count: response.data.count ?? 0,
+          period: response.data.period ?? period,
+          startDate: response.data.startDate ?? '',
+          endDate: response.data.endDate ?? '',
+        };
+      }
+      
+      return {
+        earnings: 0,
+        count: 0,
+        period,
+        startDate: '',
+        endDate: '',
+      };
+    } catch (error) {
+      console.error('Error fetching earnings by period:', error);
+      return {
+        earnings: 0,
+        count: 0,
+        period,
+        startDate: '',
+        endDate: '',
       };
     }
   }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { classroomService } from '../../../services/classroomService';
+import { subscriptionService, CanAddStudentsResponse } from '../../../services/subscriptionService';
 import { useAuth } from '../../../contexts/AuthContext';
 
 interface AddStudentDrawerProps {
@@ -46,6 +48,10 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
   teacherClassName
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const isEdit = !!student;
+  const [canAddStudents, setCanAddStudents] = useState<CanAddStudentsResponse | null>(null);
+  const [canAddStudentsLoading, setCanAddStudentsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -87,6 +93,26 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
 
     fetchClassDetails();
   }, [open, teacherClassId, user?.schoolId, teacherClassName]);
+
+  // Fetch can-add-students when drawer opens in Add mode (subscription limit check)
+  useEffect(() => {
+    const fetchCanAddStudents = async () => {
+      if (!user?.schoolId || !open || isEdit) return;
+      setCanAddStudentsLoading(true);
+      setCanAddStudents(null);
+      try {
+        const data = await subscriptionService.getCanAddStudents(user.schoolId);
+        setCanAddStudents(data ?? null);
+      } catch (error) {
+        console.error('Failed to check subscription limit:', error);
+        setCanAddStudents(null);
+      } finally {
+        setCanAddStudentsLoading(false);
+      }
+    };
+
+    fetchCanAddStudents();
+  }, [user?.schoolId, open, isEdit]);
 
   // Reset form when drawer opens/closes or student changes
   useEffect(() => {
@@ -174,9 +200,15 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const limitReached = !isEdit && !!canAddStudents && !canAddStudents.canAdd;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (limitReached) {
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -238,6 +270,46 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
             <div className="space-y-6">
+              {/* Subscription limit reached (Add mode only) */}
+              {!isEdit && canAddStudentsLoading && (
+                <div className="flex items-center justify-center py-4 rounded-lg bg-gray-100 dark:bg-gray-700">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent" />
+                  <span className="ml-3 text-gray-600 dark:text-gray-300">Checking subscription...</span>
+                </div>
+              )}
+              {!isEdit && !canAddStudentsLoading && canAddStudents && !canAddStudents.canAdd && (
+                <div className="p-5 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                      <svg className="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Subscription limit reached</h3>
+                      <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                        Your school subscription does not allow adding more students. You have used{' '}
+                        <strong>{canAddStudents.currentStudents}</strong> of{' '}
+                        <strong>{canAddStudents.totalSubscribedSlots}</strong> student slots.
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Contact your school admin or purchase more student slots to add students.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { onClose(); navigate('/school-admin/subscription-request'); }}
+                        className="mt-4 inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Go to Subscriptions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Profile Picture */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -262,7 +334,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                       type="file"
                       accept="image/*"
                       onChange={handleProfilePicChange}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300"
+                      disabled={limitReached}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       JPG, PNG or GIF (max 5MB)
@@ -281,7 +354,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  disabled={limitReached}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                     errors.name
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
@@ -303,7 +377,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  disabled={limitReached}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                     errors.email
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
@@ -326,7 +401,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    disabled={limitReached}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                       errors.password
                         ? 'border-red-300 dark:border-red-600'
                         : 'border-gray-300 dark:border-gray-600'
@@ -349,7 +425,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   name="phoneNo"
                   value={formData.phoneNo}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  disabled={limitReached}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                     errors.phoneNo
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
@@ -393,7 +470,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   name="rollNo"
                   value={formData.rollNo}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  disabled={limitReached}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                     errors.rollNo
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
@@ -415,7 +493,8 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   name="admissionYear"
                   value={formData.admissionYear}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  disabled={limitReached}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                     errors.admissionYear
                       ? 'border-red-300 dark:border-red-600'
                       : 'border-gray-300 dark:border-gray-600'
@@ -442,7 +521,7 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
             <button
               type="submit"
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || limitReached}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {loading ? (

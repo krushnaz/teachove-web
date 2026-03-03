@@ -60,6 +60,7 @@ import MasterAdminLayout from './components/MasterAdmin/Layout';
 import { Schools } from './components/MasterAdmin/Schools';
 import SchoolProfile from './components/MasterAdmin/Schools/SchoolProfile';
 import SubscriptionRequests from './components/MasterAdmin/Subscriptions/SubscriptionRequests';
+import SchoolSubscriptionHistory from './components/MasterAdmin/Subscriptions/SchoolSubscriptionHistory';
 import SubscriptionPlans from './components/MasterAdmin/SubscriptionPlans/SubscriptionPlans';
 import { VEBooks } from './components/MasterAdmin/VEBooks';
 import { MasterAdminQuestionPapers } from './components/MasterAdmin/QuestionPapers';
@@ -186,6 +187,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="master_admin">
                     <SchoolProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/subscription-request/school/:schoolId"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <SchoolSubscriptionHistory />
                   </ProtectedRoute>
                 }
               />

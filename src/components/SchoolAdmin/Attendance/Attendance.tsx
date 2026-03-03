@@ -158,6 +158,12 @@ const Attendance: React.FC = () => {
     fetchMarkedDates();
   }, [user?.schoolId]);
 
+  // When date changes: clear pending changes (they apply to the previous date) and fetch marked attendance for the new date
+  useEffect(() => {
+    setPendingChanges({});
+    setHasPendingChanges(false);
+  }, [selectedDate]);
+
   useEffect(() => {
     const fetchStatuses = async () => {
       if (!user?.schoolId || !teachersList.length) return;
@@ -167,34 +173,26 @@ const Attendance: React.FC = () => {
       try {
         const attendanceData = await teacherAttendanceService.getTeacherAttendanceByDate(user.schoolId, dateStr);
 
-        console.log('Fetched attendance data:', attendanceData);
-
-        // Create a map of teacherId to attendance status
+        // Create a map of teacherId to attendance status (support both teacherId and teacher_id from API)
         const statusMap: Record<string, string> = {};
-
-        // Process the attendance records from the API
-        attendanceData.forEach((attendance: any) => {
+        (attendanceData || []).forEach((attendance: any) => {
           const status = attendance.isPresent ? 'present' : 'absent';
-          statusMap[attendance.teacherId] = status;
+          const id = attendance.teacherId ?? attendance.teacher_id;
+          if (id) statusMap[id] = status;
         });
 
-        // Set status for teachers who don't have attendance records yet
         teachersList.forEach(teacher => {
-          if (!statusMap[teacher.teacherId]) {
-            statusMap[teacher.teacherId] = 'not-marked';
-          }
+          const id = teacher.teacherId ?? teacher.teacher_id;
+          if (id && !statusMap[id]) statusMap[id] = 'not-marked';
         });
 
-        console.log('Attendance status map:', statusMap);
         setAttendanceStatusMap(statusMap);
       } catch (error) {
         console.error('Failed to fetch attendance status:', error);
-        // Set all teachers as not-marked if API fails
         const statusMap: Record<string, string> = {};
         teachersList.forEach(teacher => {
-          if (teacher.teacherId) {
-            statusMap[teacher.teacherId] = 'not-marked';
-          }
+          const id = teacher.teacherId ?? teacher.teacher_id;
+          if (id) statusMap[id] = 'not-marked';
         });
         setAttendanceStatusMap(statusMap);
       } finally {
@@ -202,8 +200,7 @@ const Attendance: React.FC = () => {
       }
     };
 
-
-
+    fetchStatuses();
   }, [user?.schoolId, teachersList, selectedDate]);
 
   useEffect(() => {

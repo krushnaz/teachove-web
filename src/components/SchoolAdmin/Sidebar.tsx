@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useDarkMode } from '../../contexts/DarkModeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { subscriptionService, CurrentSubscriptionDetails } from '../../services/subscriptionService';
 import { 
   LayoutDashboard, 
   Users, 
@@ -25,9 +26,30 @@ interface SchoolAdminSidebarProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
+function formatExpiry(expiryAt: CurrentSubscriptionDetails['expiryAt']): string | null {
+  if (!expiryAt) return null;
+  try {
+    const date = typeof expiryAt === 'object' && expiryAt !== null && '_seconds' in expiryAt
+      ? new Date((expiryAt as { _seconds: number })._seconds * 1000)
+      : new Date(String(expiryAt));
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return null;
+  }
+}
+
 const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
-  const { isDarkMode } = useDarkMode();
+  const { user } = useAuth();
   const location = useLocation();
+  const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscriptionDetails | null>(null);
+
+  useEffect(() => {
+    const schoolId = user?.schoolId;
+    if (!schoolId) return;
+    subscriptionService.getCurrentSubscriptionDetails(schoolId).then((details) => {
+      setCurrentSubscription(details ?? null);
+    });
+  }, [user?.schoolId]);
 
   const isActive = (itemPath: string) => {
     if (itemPath === '/school-admin') {
@@ -155,24 +177,43 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
           ))}
         </nav>
 
-        {/* Footer Card */}
+        {/* Footer Card - Active plan details & expiry */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-800">
           <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 dark:from-indigo-900 dark:to-indigo-800 rounded-2xl p-4 text-white shadow-xl shadow-gray-200 dark:shadow-none">
-             {/* Decoration */}
-             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-white opacity-10 rounded-full blur-xl"></div>
-             
+             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-white opacity-10 rounded-full blur-xl" />
              <div className="flex items-center gap-3 relative z-10">
                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
                   <Crown size={16} className="text-yellow-300" fill="currentColor" />
                </div>
-               <div>
-                 <p className="text-xs font-bold">Pro Plan</p>
-                 <p className="text-[10px] text-gray-300">280 days remaining</p>
+               <div className="min-w-0 flex-1">
+                 <p className="text-xs font-bold truncate">
+                   {currentSubscription?.isActive && (currentSubscription.planName || currentSubscription.totalSeats)
+                     ? (currentSubscription.planName || 'Active Plan')
+                     : 'Subscription'}
+                 </p>
+                 <p className="text-[10px] text-gray-300">
+                   {currentSubscription?.isActive
+                     ? currentSubscription.remainingDays != null && currentSubscription.remainingDays >= 0
+                       ? `${currentSubscription.remainingDays} days remaining`
+                       : formatExpiry(currentSubscription.expiryAt)
+                         ? `Expires ${formatExpiry(currentSubscription.expiryAt)}`
+                         : 'Active'
+                     : currentSubscription?.totalSeats
+                       ? 'Expired'
+                       : 'No active plan'}
+                 </p>
+                 {currentSubscription?.isActive && (currentSubscription.totalSeats ?? 0) > 0 && (
+                   <p className="text-[10px] text-gray-400 mt-0.5">{currentSubscription.totalSeats} students</p>
+                 )}
                </div>
              </div>
-             <button className="mt-3 w-full py-1.5 text-[10px] font-bold uppercase tracking-wide bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
-               Upgrade
-             </button>
+             <Link
+               to="/school-admin/subscription-request"
+               onClick={() => setSidebarOpen(false)}
+               className="mt-3 block w-full py-1.5 text-center text-[10px] font-bold uppercase tracking-wide bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+             >
+               {currentSubscription?.isActive ? 'Manage' : 'Subscribe'}
+             </Link>
           </div>
         </div>
       </div>

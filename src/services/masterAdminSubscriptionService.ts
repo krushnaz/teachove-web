@@ -1,5 +1,10 @@
 import { apiHelper } from '../utils/apiHelper';
 
+export interface FirestoreTimestamp {
+  _seconds: number;
+  _nanoseconds?: number;
+}
+
 export interface SubscriptionRequest {
   id: string;
   subscriptionId: string;
@@ -17,18 +22,16 @@ export interface SubscriptionRequest {
   currency?: string;
   razorpay_payment_id?: string;
   remaining_amount?: number;
-  request_created_at?: {
-    _seconds: number;
-    _nanoseconds: number;
-  };
-  payment_created_at?: {
-    _seconds: number;
-    _nanoseconds: number;
-  } | null;
-  updated_at?: {
-    _seconds: number;
-    _nanoseconds: number;
-  };
+  request_created_at?: FirestoreTimestamp;
+  payment_created_at?: FirestoreTimestamp | null;
+  updated_at?: FirestoreTimestamp;
+  /** School-level proportionate status (from schoolSubscriptions) */
+  active?: boolean;
+  /** School-level proportionate expiry (from schoolSubscriptions) */
+  expiryAt?: FirestoreTimestamp | null;
+  totalSeats?: number;
+  /** Purchase date for this subscription (request_created_at or payment_created_at) */
+  purchaseDate?: FirestoreTimestamp | null;
 }
 
 export interface SubscriptionResponse {
@@ -80,13 +83,13 @@ class MasterAdminSubscriptionService {
     try {
       const response = await apiHelper.put(`/master-admin/subscriptions/${subscriptionId}/status`, {
         approveStatus
-      }) as { success: boolean; message: string };
+      }) as { success: boolean; message?: string };
       
       if (response.success) {
-        return response;
+        return response as { success: boolean; message: string };
       }
       
-      throw new Error('Failed to update subscription status');
+      throw new Error(response.message || 'Failed to update subscription status');
     } catch (error: any) {
       console.error('Error updating subscription status:', error);
       throw new Error(error.message || 'Failed to update subscription status');

@@ -1,6 +1,12 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://13.205.54.63:5000/api',
+  // Override for local/dev: set `REACT_APP_API_BASE_URL` in `.env`
+  // Example: REACT_APP_API_BASE_URL=http://192.168.1.47:5000/api
+  BASE_URL:
+    process.env.REACT_APP_API_BASE_URL ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://192.168.1.47:5000/api'
+      : 'http://13.205.54.63:5000/api'),
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
@@ -116,7 +122,12 @@ export const API_CONFIG = {
       GET_BY_SCHOOL: '/subscriptions/school/:schoolId',
       CREATE: '/subscriptions/',
       GET_COST: '/subscriptions/subscription-cost',
+      GET_CURRENT: '/subscriptions/current/:schoolId',
+      CAN_ADD_STUDENTS: '/subscriptions/can-add-students/:schoolId',
       DOWNLOAD_INVOICE: '/subscriptions/download-invoice',
+    },
+    SUBSCRIPTION_PLANS: {
+      GET_CURRENT: '/master-admin/subscription-plans/current',
     },
     PAYMENT_GATEWAY: {
       RAZORPAY: {
