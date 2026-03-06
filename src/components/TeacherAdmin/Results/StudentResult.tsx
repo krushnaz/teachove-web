@@ -1049,9 +1049,10 @@ const StudentResults: React.FC = () => {
       );
 
       setShowModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving result:', error);
-      toast.error(modalMode === 'add' ? 'Failed to add result' : 'Failed to update result');
+      const errorMessage = error?.message || (modalMode === 'add' ? 'Failed to add result' : 'Failed to update result');
+      toast.error(errorMessage);
     } finally {
       setIsModalLoading(false);
     }

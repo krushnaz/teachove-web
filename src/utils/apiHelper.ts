@@ -3,7 +3,7 @@ import { API_CONFIG } from '../config/api';
 export const apiHelper = {
   async post(endpoint: string, data: any) {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -23,9 +23,14 @@ export const apiHelper = {
         return responseData;
       }
 
-      // For other non-2xx status codes, throw an error
+      // For non-2xx status codes, throw an error with the server's message
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const serverMessage = responseData?.message || responseData?.error || `HTTP error! status: ${response.status}`;
+        const error = new Error(serverMessage);
+        (error as any).status = response.status;
+        (error as any).code = responseData?.code;
+        (error as any).responseData = responseData;
+        throw error;
       }
 
       return responseData;
@@ -37,7 +42,7 @@ export const apiHelper = {
 
   async get(endpoint: string) {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -59,7 +64,7 @@ export const apiHelper = {
 
   async put(endpoint: string, data: any) {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'PUT',
@@ -92,7 +97,7 @@ export const apiHelper = {
 
   async delete(endpoint: string) {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'DELETE',
@@ -124,7 +129,7 @@ export const apiHelper = {
 
   async patch(endpoint: string, data?: any) {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'PATCH',

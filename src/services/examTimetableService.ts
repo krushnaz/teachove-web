@@ -20,7 +20,11 @@ export const examTimetableService = {
       if (Array.isArray(data?.data)) return data.data;
       if (Array.isArray(data?.timetables)) return data.timetables;
       return [];
-    } catch (error) {
+    } catch (error: any) {
+      // 404 means "no timetables found" — return empty array, not an error
+      if (error?.response?.status === 404) {
+        return [];
+      }
       console.error('Error fetching exam timetables:', error);
       throw new Error('Failed to fetch exam timetables');
     }
@@ -144,20 +148,24 @@ export const examTimetableService = {
       const endpoint = API_CONFIG.ENDPOINTS.EXAMS.GET_BY_CLASS
         .replace(':schoolId', schoolId)
         .replace(':classId', classId);
-      
+
       const response = await apiClient.get(endpoint);
       const data = response.data;
 
       if (Array.isArray(data?.timetables)) {
         return data.timetables;
       }
-      
+
       if (Array.isArray(data)) {
         return data;
       }
-      
+
       return [];
-    } catch (error) {
+    } catch (error: any) {
+      // 404 means "no timetables found for this class" — return empty array, not an error
+      if (error?.response?.status === 404) {
+        return [];
+      }
       console.error('Error fetching exam timetables by class:', error);
       throw new Error('Failed to fetch exam timetables for class');
     }

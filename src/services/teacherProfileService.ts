@@ -83,7 +83,6 @@ export interface UpdateTeacherRequest {
   email?: string;
   phoneNo?: string;
   password?: string;
-  profilePic?: string;
 }
 
 export interface UpdateTeacherResponse {
@@ -114,14 +113,30 @@ class TeacherProfileService {
    * Update teacher profile
    */
   async updateTeacherProfile(
-    teacherId: string, 
-    updateData: UpdateTeacherRequest
+    teacherId: string,
+    updateData: UpdateTeacherRequest,
+    profilePicFile?: File
   ): Promise<UpdateTeacherResponse> {
     try {
-      const response = await apiClient.put(
-        API_CONFIG.ENDPOINTS.TEACHER_PROFILE.UPDATE_TEACHER.replace(':teacherId', teacherId),
-        updateData
-      );
+      const endpoint = API_CONFIG.ENDPOINTS.TEACHER_PROFILE.UPDATE_TEACHER.replace(':teacherId', teacherId);
+
+      // Use FormData if a profile picture file is provided (backend expects multipart)
+      if (profilePicFile) {
+        const formData = new FormData();
+        if (updateData.teacherName) formData.append('teacherName', updateData.teacherName);
+        if (updateData.email) formData.append('email', updateData.email);
+        if (updateData.phoneNo) formData.append('phoneNo', updateData.phoneNo);
+        if (updateData.password) formData.append('password', updateData.password);
+        formData.append('profilePic', profilePicFile);
+
+        const response = await apiClient.put(endpoint, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      }
+
+      // No file — send plain JSON
+      const response = await apiClient.put(endpoint, updateData);
       return response.data;
     } catch (error) {
       console.error('Error updating teacher profile:', error);
@@ -171,7 +186,7 @@ class TeacherProfileService {
    * Get classes taught by teacher
    */
   getTeacherClasses(classes: ClassData[], teacherId: string): ClassData[] {
-    return classes.filter(classData => 
+    return classes.filter(classData =>
       classData.subjects.some(subject => subject.teacherId === teacherId)
     );
   }

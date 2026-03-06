@@ -52,6 +52,16 @@ export interface GetLeavesResponse {
   leaves: StudentLeave[];
 }
 
+export interface PaginatedLeavesResponse {
+  success: boolean;
+  leaves: StudentLeave[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  yearId: string;
+}
+
 export interface LeaveResponse {
   success: boolean;
   message: string;
@@ -69,7 +79,7 @@ class StudentLeavesService {
   ): Promise<CreateLeaveResponse> {
     try {
       const formData = new FormData();
-      
+
       // Append all leave data
       formData.append('studentId', leaveData.studentId);
       formData.append('classId', leaveData.classId);
@@ -79,24 +89,24 @@ class StudentLeavesService {
       formData.append('toDate', leaveData.toDate);
       formData.append('leaveType', leaveData.leaveType);
       formData.append('status', leaveData.status || 'pending');
-      
+
       // Append file if provided
       if (file) {
         formData.append('file', file);
       }
-      
+
       const endpoint = API_CONFIG.ENDPOINTS.STUDENT_LEAVES.CREATE.replace(':schoolId', schoolId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error: any) {
       console.error('Error creating leave:', error);
@@ -113,18 +123,18 @@ class StudentLeavesService {
         .replace(':schoolId', schoolId)
         .replace(':studentId', studentId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data: GetLeavesResponse = await response.json();
       return data.leaves || [];
     } catch (error: any) {
@@ -142,18 +152,18 @@ class StudentLeavesService {
         .replace(':schoolId', schoolId)
         .replace(':leaveId', leaveId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data: LeaveResponse = await response.json();
       if (!data.leave) {
         throw new Error('Leave not found');
@@ -176,7 +186,7 @@ class StudentLeavesService {
   ): Promise<LeaveResponse> {
     try {
       const formData = new FormData();
-      
+
       // Append all leave data that's provided
       if (leaveData.studentId) formData.append('studentId', leaveData.studentId);
       if (leaveData.classId) formData.append('classId', leaveData.classId);
@@ -186,26 +196,26 @@ class StudentLeavesService {
       if (leaveData.toDate) formData.append('toDate', leaveData.toDate);
       if (leaveData.leaveType) formData.append('leaveType', leaveData.leaveType);
       if (leaveData.status) formData.append('status', leaveData.status);
-      
+
       // Append file if provided
       if (file) {
         formData.append('file', file);
       }
-      
+
       const endpoint = API_CONFIG.ENDPOINTS.STUDENT_LEAVES.UPDATE
         .replace(':schoolId', schoolId)
         .replace(':leaveId', leaveId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'PUT',
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error: any) {
       console.error('Error updating leave:', error);
@@ -222,14 +232,14 @@ class StudentLeavesService {
         .replace(':schoolId', schoolId)
         .replace(':leaveId', leaveId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -248,18 +258,22 @@ class StudentLeavesService {
         .replace(':schoolId', schoolId)
         .replace(':classId', classId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
+        // 404 means no leaves found — return empty, not an error
+        if (response.status === 404) {
+          return { yearId: '', leaves: [] };
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       return {
         yearId: data.yearId || '',
@@ -284,7 +298,7 @@ class StudentLeavesService {
         .replace(':schoolId', schoolId)
         .replace(':leaveId', leaveId);
       const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-      
+
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {
@@ -293,11 +307,11 @@ class StudentLeavesService {
         },
         body: JSON.stringify({ status }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error: any) {
       console.error('Error updating leave status:', error);
@@ -317,6 +331,51 @@ class StudentLeavesService {
    */
   async rejectLeave(schoolId: string, leaveId: string): Promise<{ success: boolean; message: string }> {
     return this.updateLeaveStatus(schoolId, leaveId, 'Rejected');
+  }
+
+  /**
+   * Get all leaves for a school (with pagination, class filter, name search)
+   */
+  async getAllLeavesBySchool(
+    schoolId: string,
+    params: {
+      page?: number;
+      limit?: number;
+      classId?: string;
+      status?: string;
+      search?: string;
+    } = {}
+  ): Promise<PaginatedLeavesResponse> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.STUDENT_LEAVES.GET_ALL_BY_SCHOOL
+        .replace(':schoolId', schoolId);
+
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (params.classId) queryParams.append('classId', params.classId);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.search) queryParams.append('search', params.search);
+
+      const queryString = queryParams.toString();
+      const url = `${API_CONFIG.BASE_URL}${endpoint}${queryString ? `?${queryString}` : ''}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('Error fetching all school leaves:', error);
+      throw new Error(error.message || 'Failed to fetch school leaves');
+    }
   }
 }
 

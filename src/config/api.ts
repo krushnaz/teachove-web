@@ -183,6 +183,7 @@ export const API_CONFIG = {
       DELETE: '/student-leaves/:schoolId/leaves/:leaveId',
       GET_BY_ID: '/student-leaves/:schoolId/leaves/:leaveId',
       UPDATE_STATUS: '/student-leaves/:schoolId/leaves/:leaveId/status',
+      GET_ALL_BY_SCHOOL: '/student-leaves/:schoolId/leaves/all',
     },
     RESULTS: {
       GET_BY_SCHOOL: "/results/school/:schoolId",

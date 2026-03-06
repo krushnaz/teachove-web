@@ -45,11 +45,11 @@ const TeacherProfile: React.FC = () => {
     }
   };
 
-  const handleProfileUpdate = async (updatedData: UpdateTeacherRequest) => {
+  const handleProfileUpdate = async (updatedData: UpdateTeacherRequest, profilePicFile?: File) => {
     try {
       setIsLoading(true);
       const { teacherId } = getUserData();
-      await teacherProfileService.updateTeacherProfile(teacherId, updatedData);
+      await teacherProfileService.updateTeacherProfile(teacherId, updatedData, profilePicFile);
       // Refresh profile data after update
       await fetchTeacherProfile();
     } catch (err) {

@@ -1,117 +1,155 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
-import { StudentLeave } from '../../../services/leaveManagementService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { studentLeavesService, StudentLeave } from '../../../services/studentLeavesService';
+import { classroomService, Classroom } from '../../../services/classroomService';
 import { 
   Calendar, 
   User, 
   FileText, 
-  Eye,
   Search,
   GraduationCap,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  RefreshCw
 } from 'lucide-react';
+
+const ITEMS_PER_PAGE = 10;
 
 const StudentLeaves: React.FC = () => {
   const { isDarkMode } = useDarkMode();
+  const { user } = useAuth();
   const [leaves, setLeaves] = useState<StudentLeave[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [error, setError] = useState<string | null>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalLeaves, setTotalLeaves] = useState(0);
+
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [classFilter, setClassFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchDebounced, setSearchDebounced] = useState('');
+
+  // Classes for filter dropdown
+  const [classes, setClasses] = useState<Classroom[]>([]);
+
+  // Modal
   const [selectedLeave, setSelectedLeave] = useState<StudentLeave | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  // Mock data - replace with actual API call
+  const schoolId = user?.schoolId || '';
+
+  // Debounce search
   useEffect(() => {
-    const loadLeaves = async () => {
-      setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setLeaves([
-          {
-            leaveId: '1',
-            schoolId: 'school1',
-            studentId: 'student1',
-            studentName: 'Alice Johnson',
-            teacherId: 'teacher1',
-            teacherName: 'John Smith',
-            classId: 'class1',
-            className: 'Grade 10A',
-            startDate: new Date('2024-01-15'),
-            endDate: new Date('2024-01-16'),
-            reason: 'Medical appointment - dental checkup',
-            status: 'approved',
-            fileUrl: '/uploads/medical-certificate.pdf',
-            createdAt: new Date('2024-01-12')
-          },
-          {
-            leaveId: '2',
-            schoolId: 'school1',
-            studentId: 'student2',
-            studentName: 'Bob Wilson',
-            teacherId: 'teacher2',
-            teacherName: 'Sarah Johnson',
-            classId: 'class2',
-            className: 'Grade 9B',
-            startDate: new Date('2024-01-18'),
-            endDate: new Date('2024-01-20'),
-            reason: 'Family function - sister wedding',
-            status: 'pending',
-            fileUrl: '/uploads/wedding-invitation.pdf',
-            createdAt: new Date('2024-01-15')
-          },
-          {
-            leaveId: '3',
-            schoolId: 'school1',
-            studentId: 'student3',
-            studentName: 'Carol Davis',
-            teacherId: 'teacher3',
-            teacherName: 'Mike Wilson',
-            classId: 'class1',
-            className: 'Grade 10A',
-            startDate: new Date('2024-01-22'),
-            endDate: new Date('2024-01-24'),
-            reason: 'Sports competition - state level',
-            status: 'approved',
-            fileUrl: '/uploads/sports-certificate.pdf',
-            createdAt: new Date('2024-01-18')
-          },
-          {
-            leaveId: '4',
-            schoolId: 'school1',
-            studentId: 'student4',
-            studentName: 'David Brown',
-            teacherId: 'teacher1',
-            teacherName: 'John Smith',
-            classId: 'class3',
-            className: 'Grade 11C',
-            startDate: new Date('2024-01-25'),
-            endDate: new Date('2024-01-25'),
-            reason: 'Personal work - passport renewal',
-            status: 'rejected',
-            fileUrl: '/uploads/passport-appointment.pdf',
-            createdAt: new Date('2024-01-20')
-          }
-        ]);
-        setLoading(false);
-      }, 1000);
+    const timer = setTimeout(() => {
+      setSearchDebounced(searchTerm);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page on filter/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, classFilter, searchDebounced]);
+
+  // Load classes for filter dropdown
+  useEffect(() => {
+    if (!schoolId) return;
+    const loadClasses = async () => {
+      try {
+        const classList = await classroomService.getClassesBySchoolId(schoolId);
+        setClasses(classList);
+      } catch (err) {
+        console.error('Error loading classes:', err);
+      }
     };
+    loadClasses();
+  }, [schoolId]);
 
-    loadLeaves();
-  }, []);
+  // Fetch leaves
+  const fetchLeaves = useCallback(async () => {
+    if (!schoolId) return;
+    try {
+      setLoading(true);
+      setError(null);
 
-  const filteredLeaves = leaves.filter(leave => {
-    const matchesFilter = filter === 'all' || leave.status === filter;
-    const matchesSearch = (leave.studentName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (leave.teacherName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (leave.className || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         leave.reason.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+      const params: any = {
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+      };
+
+      if (statusFilter !== 'all') {
+        // Backend expects capitalized status
+        params.status = statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+      }
+      if (classFilter !== 'all') {
+        params.classId = classFilter;
+      }
+      if (searchDebounced.trim()) {
+        params.search = searchDebounced.trim();
+      }
+
+      const response = await studentLeavesService.getAllLeavesBySchool(schoolId, params);
+      setLeaves(response.leaves || []);
+      setTotalPages(response.totalPages || 0);
+      setTotalLeaves(response.total || 0);
+    } catch (err: any) {
+      console.error('Error loading student leaves:', err);
+      setError('Failed to load student leaves. Please try again.');
+      setLeaves([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId, currentPage, statusFilter, classFilter, searchDebounced]);
+
+  useEffect(() => {
+    fetchLeaves();
+  }, [fetchLeaves]);
+
+  // Approve / Reject
+  const handleApprove = async (leaveId: string) => {
+    try {
+      await studentLeavesService.approveLeave(schoolId, leaveId);
+      setLeaves(prev => prev.map(l => l.leaveId === leaveId ? { ...l, status: 'approved' as const } : l));
+      showToast('Leave request approved successfully!', 'success');
+    } catch {
+      showToast('Failed to approve leave. Please try again.', 'error');
+    }
+  };
+
+  const handleReject = async (leaveId: string) => {
+    try {
+      await studentLeavesService.rejectLeave(schoolId, leaveId);
+      setLeaves(prev => prev.map(l => l.leaveId === leaveId ? { ...l, status: 'rejected' as const } : l));
+      showToast('Leave request rejected.', 'error');
+    } catch {
+      showToast('Failed to reject leave. Please try again.', 'error');
+    }
+  };
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-6 right-6 px-4 py-2 rounded-lg shadow-lg ${
+      type === 'success'
+        ? isDarkMode ? 'bg-green-900 text-green-200 border-green-700' : 'bg-green-50 text-green-700 border-green-200'
+        : isDarkMode ? 'bg-red-900 text-red-200 border-red-700' : 'bg-red-50 text-red-700 border-red-200'
+    } border z-50`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => document.body.removeChild(toast), 3000);
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const s = status.toLowerCase();
+    switch (s) {
       case 'pending':
         return isDarkMode ? 'text-yellow-400 bg-yellow-900/20 border-yellow-700/30' : 'text-yellow-600 bg-yellow-50 border-yellow-200';
       case 'approved':
@@ -124,7 +162,8 @@ const StudentLeaves: React.FC = () => {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    const s = status.toLowerCase();
+    switch (s) {
       case 'pending':
         return <Clock className="w-4 h-4" />;
       case 'approved':
@@ -136,15 +175,34 @@ const StudentLeaves: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+  const formatDate = (date: Date | string | any) => {
+    if (!date) return 'N/A';
+    // Handle Firestore Timestamp objects
+    if (date._seconds) {
+      return new Date(date._seconds * 1000).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      });
+    }
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    return dateObj.toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
     });
   };
 
-  if (loading) {
+  const getDayCount = (from: string | any, to: string | any) => {
+    try {
+      const fromTs = from?._seconds ? from._seconds * 1000 : new Date(from).getTime();
+      const toTs = to?._seconds ? to._seconds * 1000 : new Date(to).getTime();
+      if (isNaN(fromTs) || isNaN(toTs)) return '?';
+      return Math.max(1, Math.ceil((toTs - fromTs) / (1000 * 60 * 60 * 24)) + 1);
+    } catch {
+      return '?';
+    }
+  };
+
+  // Loading skeleton
+  if (loading && leaves.length === 0) {
     return (
       <div className="p-6">
         <div className="space-y-4">
@@ -168,29 +226,68 @@ const StudentLeaves: React.FC = () => {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className={`p-12 text-center rounded-xl ${isDarkMode ? 'bg-red-900/20 border border-red-700' : 'bg-red-50 border border-red-200'}`}>
+          <XCircle className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+          <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-red-300' : 'text-red-900'}`}>
+            Error Loading Student Leaves
+          </h3>
+          <p className={`${isDarkMode ? 'text-red-400' : 'text-red-600'} mb-4`}>{error}</p>
+          <button
+            onClick={() => fetchLeaves()}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              isDarkMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'
+            }`}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       {/* Header with Filters */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-            Student Leave Records
-          </h2>
-          <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            View student leave applications and their status
-          </p>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-1`}>
+              Student Leave Records
+            </h2>
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {totalLeaves} total leave record{totalLeaves !== 1 ? 's' : ''} found
+            </p>
+          </div>
+
+          <button
+            onClick={() => fetchLeaves()}
+            disabled={loading}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
+              isDarkMode
+                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 border border-blue-700/30'
+                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200'
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        {/* Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           {/* Search */}
-          <div className="relative">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
             <input
               type="text"
-              placeholder="Search students, teachers, or classes..."
+              placeholder="Search by student name or roll no..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`pl-10 pr-4 py-2 rounded-lg border ${
+              className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
                 isDarkMode 
                   ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -198,10 +295,31 @@ const StudentLeaves: React.FC = () => {
             />
           </div>
 
-          {/* Filter */}
+          {/* Class Filter */}
+          <div className="relative">
+            <Filter className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <select
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+              className={`pl-10 pr-8 py-2 rounded-lg border appearance-none ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+            >
+              <option value="all">All Classes</option>
+              {classes.map((cls) => (
+                <option key={cls.classId} value={cls.classId}>
+                  {cls.className}{cls.section ? ` - ${cls.section}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
           <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
             className={`px-4 py-2 rounded-lg border ${
               isDarkMode 
                 ? 'bg-gray-700 border-gray-600 text-white' 
@@ -216,20 +334,30 @@ const StudentLeaves: React.FC = () => {
         </div>
       </div>
 
+      {/* Loading overlay for subsequent loads */}
+      {loading && leaves.length > 0 && (
+        <div className="flex items-center justify-center py-4 mb-4">
+          <RefreshCw className={`w-5 h-5 animate-spin ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} mr-2`} />
+          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Updating...</span>
+        </div>
+      )}
+
       {/* Leaves List */}
       <div className="space-y-4">
-        {filteredLeaves.length === 0 ? (
+        {leaves.length === 0 ? (
           <div className={`p-12 text-center rounded-xl ${isDarkMode ? 'bg-gray-700/50 border border-gray-600' : 'bg-gray-50 border border-gray-200'}`}>
             <GraduationCap className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
             <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
               No student leave records found
             </h3>
             <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {filter === 'all' ? 'No student leave records available.' : `No ${filter} student leave records found.`}
+              {statusFilter !== 'all' || classFilter !== 'all' || searchDebounced
+                ? 'No records match your filters. Try adjusting your search criteria.'
+                : 'No student leave records available for this school.'}
             </p>
           </div>
         ) : (
-          filteredLeaves.map((leave) => (
+          leaves.map((leave) => (
             <div
               key={leave.leaveId}
               className={`p-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl ${
@@ -238,47 +366,58 @@ const StudentLeaves: React.FC = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4 flex-1">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg`}>
-                    {(leave.studentName || 'S').charAt(0).toUpperCase()}
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
+                    {((leave as any).studentName || 'S').charAt(0).toUpperCase()}
                   </div>
                   
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {leave.studentName || 'Unknown Student'}
+                        {(leave as any).studentName || 'Unknown Student'}
                       </h3>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium border flex items-center gap-1 ${getStatusColor(leave.status)}`}>
                         {getStatusIcon(leave.status)}
-                        {leave.status.charAt(0).toUpperCase() + leave.status.slice(1)}
+                        {leave.status.charAt(0).toUpperCase() + leave.status.slice(1).toLowerCase()}
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-6 mb-3">
+                    <div className="flex items-center gap-6 mb-3 flex-wrap">
                       <div className="flex items-center gap-2">
                         <GraduationCap className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {leave.className || 'Unknown Class'}
+                          {(leave as any).className || 'Unknown Class'}
+                          {(leave as any).classSection ? ` - ${(leave as any).classSection}` : ''}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          Teacher: {leave.teacherName || 'Unknown Teacher'}
-                        </span>
-                      </div>
+                      {(leave as any).studentRollNo && (
+                        <div className="flex items-center gap-2">
+                          <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Roll No: {(leave as any).studentRollNo}
+                          </span>
+                        </div>
+                      )}
+                      {leave.leaveType && (
+                        <div className="flex items-center gap-2">
+                          <FileText className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {leave.leaveType}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="flex items-center gap-6 mb-3">
+                    <div className="flex items-center gap-6 mb-3 flex-wrap">
                       <div className="flex items-center gap-2">
                         <Calendar className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
+                          {formatDate(leave.fromDate)} - {formatDate(leave.toDate)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                         <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {Math.ceil((leave.endDate.getTime() - leave.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} days
+                          {getDayCount(leave.fromDate, leave.toDate)} day{getDayCount(leave.fromDate, leave.toDate) !== 1 ? 's' : ''}
                         </span>
                       </div>
                     </div>
@@ -287,7 +426,7 @@ const StudentLeaves: React.FC = () => {
                       {leave.reason}
                     </p>
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
                       {leave.fileUrl && (
                         <button
                           onClick={() => window.open(leave.fileUrl, '_blank')}
@@ -310,26 +449,117 @@ const StudentLeaves: React.FC = () => {
                   </div>
                 </div>
 
-                {/* View Button */}
-                <button
-                  onClick={() => {
-                    setSelectedLeave(leave);
-                    setShowModal(true);
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
-                    isDarkMode 
-                      ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 border border-blue-700/30' 
-                      : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200'
-                  }`}
-                >
-                  <Eye className="w-4 h-4" />
-                  View Details
-                </button>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2 ml-4 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      setSelectedLeave(leave);
+                      setShowModal(true);
+                    }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      isDarkMode 
+                        ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 border border-blue-700/30' 
+                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200'
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4" />
+                    View
+                  </button>
+                  {leave.status.toLowerCase() === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(leave.leaveId)}
+                        className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(leave.leaveId)}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, totalLeaves)} of {totalLeaves} records
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                currentPage === 1
+                  ? 'opacity-50 cursor-not-allowed'
+                  : isDarkMode 
+                    ? 'hover:bg-gray-700 text-gray-300' 
+                    : 'hover:bg-gray-100 text-gray-700'
+              } border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === pageNum
+                        ? 'bg-blue-600 text-white'
+                        : isDarkMode
+                          ? 'text-gray-300 hover:bg-gray-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                currentPage === totalPages
+                  ? 'opacity-50 cursor-not-allowed'
+                  : isDarkMode 
+                    ? 'hover:bg-gray-700 text-gray-300' 
+                    : 'hover:bg-gray-100 text-gray-700'
+              } border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Detail Modal */}
       {showModal && selectedLeave && (
@@ -358,19 +588,26 @@ const StudentLeaves: React.FC = () => {
                     <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Student Name
                     </label>
-                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedLeave.studentName || 'Unknown Student'}</p>
+                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {(selectedLeave as any).studentName || 'Unknown Student'}
+                    </p>
                   </div>
                   <div>
                     <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Class
                     </label>
-                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedLeave.className || 'Unknown Class'}</p>
+                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {(selectedLeave as any).className || 'Unknown Class'}
+                      {(selectedLeave as any).classSection ? ` - ${(selectedLeave as any).classSection}` : ''}
+                    </p>
                   </div>
                   <div>
                     <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Teacher
+                      Leave Type
                     </label>
-                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedLeave.teacherName || 'Unknown Teacher'}</p>
+                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {selectedLeave.leaveType || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -378,21 +615,37 @@ const StudentLeaves: React.FC = () => {
                     </label>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium border flex items-center gap-1 w-fit ${getStatusColor(selectedLeave.status)}`}>
                       {getStatusIcon(selectedLeave.status)}
-                      {selectedLeave.status.charAt(0).toUpperCase() + selectedLeave.status.slice(1)}
+                      {selectedLeave.status.charAt(0).toUpperCase() + selectedLeave.status.slice(1).toLowerCase()}
                     </span>
                   </div>
                   <div>
                     <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Start Date
+                      From Date
                     </label>
-                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(selectedLeave.startDate)}</p>
+                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(selectedLeave.fromDate)}</p>
                   </div>
                   <div>
                     <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      End Date
+                      To Date
                     </label>
-                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(selectedLeave.endDate)}</p>
+                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDate(selectedLeave.toDate)}</p>
                   </div>
+                  {(selectedLeave as any).studentRollNo && (
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Roll No
+                      </label>
+                      <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{(selectedLeave as any).studentRollNo}</p>
+                    </div>
+                  )}
+                  {(selectedLeave as any).studentPhone && (
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Phone
+                      </label>
+                      <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{(selectedLeave as any).studentPhone}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -417,6 +670,32 @@ const StudentLeaves: React.FC = () => {
                     >
                       <FileText className="w-4 h-4" />
                       View Document
+                    </button>
+                  </div>
+                )}
+
+                {/* Modal action buttons for pending leaves */}
+                {selectedLeave.status.toLowerCase() === 'pending' && (
+                  <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        handleApprove(selectedLeave.leaveId);
+                        setShowModal(false);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleReject(selectedLeave.leaveId);
+                        setShowModal(false);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Reject
                     </button>
                   </div>
                 )}

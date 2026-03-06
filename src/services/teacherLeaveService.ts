@@ -50,16 +50,24 @@ export const teacherLeaveService = {
 
   // Get teacher leaves by teacher ID - supports array or wrapped response
   getTeacherLeavesByTeacher: async (schoolId: string, teacherId: string): Promise<TeacherLeavesResponse> => {
-    const response = await apiClient.get(
-      `${API_CONFIG.ENDPOINTS.TEACHER_LEAVES.GET_BY_TEACHER
-        .replace(':schoolId', schoolId)
-        .replace(':teacherId', teacherId)}`
-    );
-    const data = response.data;
-    if (Array.isArray(data)) {
-      return { leaves: data, total: data.length, success: true } as TeacherLeavesResponse;
+    try {
+      const response = await apiClient.get(
+        `${API_CONFIG.ENDPOINTS.TEACHER_LEAVES.GET_BY_TEACHER
+          .replace(':schoolId', schoolId)
+          .replace(':teacherId', teacherId)}`
+      );
+      const data = response.data;
+      if (Array.isArray(data)) {
+        return { leaves: data, total: data.length, success: true } as TeacherLeavesResponse;
+      }
+      return data;
+    } catch (error: any) {
+      // 404 means no leaves found — return empty, not an error
+      if (error?.response?.status === 404) {
+        return { leaves: [], total: 0, success: true };
+      }
+      throw error;
     }
-    return data;
   },
 
   // Get teacher leave by ID
@@ -79,7 +87,7 @@ export const teacherLeaveService = {
     formData.append('startDate', leaveData.startDate);
     formData.append('endDate', leaveData.endDate);
     formData.append('reason', leaveData.reason);
-    
+
     if (leaveData.file) {
       formData.append('file', leaveData.file);
     }
@@ -98,12 +106,12 @@ export const teacherLeaveService = {
 
   // Update teacher leave request
   updateTeacherLeave: async (
-    schoolId: string, 
-    leaveId: string, 
+    schoolId: string,
+    leaveId: string,
     leaveData: UpdateTeacherLeaveRequest
   ): Promise<TeacherLeave> => {
     const formData = new FormData();
-    
+
     if (leaveData.startDate) formData.append('startDate', leaveData.startDate);
     if (leaveData.endDate) formData.append('endDate', leaveData.endDate);
     if (leaveData.reason) formData.append('reason', leaveData.reason);
@@ -125,8 +133,8 @@ export const teacherLeaveService = {
 
   // Update leave status (approve/reject)
   updateLeaveStatus: async (
-    schoolId: string, 
-    leaveId: string, 
+    schoolId: string,
+    leaveId: string,
     statusData: UpdateLeaveStatusRequest
   ): Promise<TeacherLeave> => {
     const response = await apiClient.patch(

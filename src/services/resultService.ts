@@ -1,11 +1,11 @@
 import { apiHelper } from '../utils/apiHelper';
 import { API_CONFIG } from '../config/api';
-import { 
-  StudentResult, 
-  CreateResultRequest, 
-  UpdateResultRequest, 
-  ResultsResponse, 
-  ResultResponse 
+import {
+  StudentResult,
+  CreateResultRequest,
+  UpdateResultRequest,
+  ResultsResponse,
+  ResultResponse
 } from '../models/result';
 
 // Helper function for safe error logging
@@ -176,8 +176,12 @@ class ResultService {
       const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.CREATE;
       const response = await apiHelper.post(endpoint, payload);
       return response;
-    } catch (error) {
+    } catch (error: any) {
       logError(error, 'Failed to create student result');
+      // Re-throw with more context if it's a subscription error
+      if (error.message?.includes('403')) {
+        throw new Error('School subscription has expired. Please renew your subscription to add results.');
+      }
       throw error;
     }
   }
@@ -250,7 +254,7 @@ class ResultService {
       const endpoint = API_CONFIG.ENDPOINTS.STUDENT_RESULTS.DOWNLOAD
         .replace(':schoolId', schoolId)
         .replace(':resultId', resultId);
-      
+
       const url = `${this.baseURL}${endpoint}`;
       const response = await fetch(url, {
         method: 'GET',
@@ -293,7 +297,7 @@ class ResultService {
       if (examType) {
         endpoint += `?examType=${examType}`;
       }
-      
+
       const url = `${this.baseURL}${endpoint}`;
       const response = await fetch(url, {
         method: 'GET',

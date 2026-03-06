@@ -14,7 +14,7 @@ interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   profileData: TeacherProfileData;
-  onUpdate: (data: UpdateTeacherRequest) => Promise<void>;
+  onUpdate: (data: UpdateTeacherRequest, profilePicFile?: File) => Promise<void>;
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({
@@ -28,6 +28,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: keyof TeacherProfileData, value: string) => {
@@ -82,11 +83,15 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         return;
       }
 
+      // Store the file object for upload
+      setSelectedFile(file);
+      setErrors(prev => ({ ...prev, profilePic: '' }));
+
+      // Create a preview URL for display only
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setFormData(prev => ({ ...prev, profilePic: result }));
-        setErrors(prev => ({ ...prev, profilePic: '' }));
       };
       reader.readAsDataURL(file);
     }
@@ -107,10 +112,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         email: formData.email,
         phoneNo: formData.phoneNo,
         password: formData.password,
-        profilePic: formData.profilePic
       };
 
-      await onUpdate(updateData);
+      await onUpdate(updateData, selectedFile || undefined);
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);

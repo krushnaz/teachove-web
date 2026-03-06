@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { examTimetableService } from '../../../services/examTimetableService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { ExamTimetable as ExamTimetableType } from '../../../models/examTimetable';
-import { toast } from 'react-toastify';
+
 
 const ExamTimetable: React.FC = () => {
   const { user } = useAuth();
@@ -25,10 +25,9 @@ const ExamTimetable: React.FC = () => {
         } else {
           setError('School ID or Class ID not found');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching exam timetables:', error);
-        setError('Failed to load exam timetables');
-        toast.error('Failed to load exam timetables');
+        setError('Failed to load exam timetables. Please try again.');
       } finally {
         setLoading(false);
       }

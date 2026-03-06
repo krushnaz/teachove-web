@@ -1,17 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { teacherLeaveService } from '../../../services/teacherLeaveService';
 import { authService } from '../../../services/authService';
-import { Card, CardHeader, CardContent, Button, Tabs, Tab, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Tooltip, Skeleton, CircularProgress, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Paper } from '@mui/material';
-import { Add, Edit, CloudUpload, Article } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 import StudentLeavesTab from './StudentLeavesTab';
 
 type TabKey = 'teacher' | 'student';
 
 const TeacherLeave: React.FC = () => {
   const { user } = useAuth();
-  const { isDarkMode } = useDarkMode();
   const [tab, setTab] = useState<TabKey>('teacher');
   const [leaves, setLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +16,7 @@ const TeacherLeave: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<any | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>('');
 
   const [form, setForm] = useState({
     reason: '',
@@ -52,11 +50,16 @@ const TeacherLeave: React.FC = () => {
 
   const stats = useMemo(() => {
     const total = leaves.length;
-    const pending = leaves.filter(l => l.status === 'pending').length;
-    const approved = leaves.filter(l => l.status === 'approved').length;
-    const rejected = leaves.filter(l => l.status === 'rejected').length;
+    const pending = leaves.filter(l => (l.status || '').toLowerCase() === 'pending').length;
+    const approved = leaves.filter(l => (l.status || '').toLowerCase() === 'approved').length;
+    const rejected = leaves.filter(l => (l.status || '').toLowerCase() === 'rejected').length;
     return { total, pending, approved, rejected };
   }, [leaves]);
+
+  const filteredLeaves = useMemo(() => {
+    if (!filterStatus) return leaves;
+    return leaves.filter(l => (l.status || '').toLowerCase() === filterStatus);
+  }, [leaves, filterStatus]);
 
   const openApply = () => {
     setEditing(null);
@@ -81,6 +84,10 @@ const TeacherLeave: React.FC = () => {
     if (!user?.schoolId) return;
     const teacherId = authService.getTeacherId();
     if (!teacherId) return;
+    if (!form.reason || !form.fromDate || !form.toDate) {
+      toast.error('Please fill all required fields');
+      return;
+    }
     setSubmitting(true);
     try {
       if (editing?.leaveId) {
@@ -90,6 +97,7 @@ const TeacherLeave: React.FC = () => {
           reason: form.reason,
           file: file || undefined,
         });
+        toast.success('Leave updated successfully!');
       } else {
         await teacherLeaveService.createTeacherLeave({
           schoolId: user.schoolId,
@@ -99,193 +107,346 @@ const TeacherLeave: React.FC = () => {
           reason: form.reason,
           file: file || undefined,
         });
+        toast.success('Leave applied successfully!');
       }
       // Refresh
       const resp = await teacherLeaveService.getTeacherLeavesByTeacher(user.schoolId, teacherId);
       setLeaves(resp.leaves || []);
       setOpen(false);
+    } catch (error) {
+      toast.error(editing ? 'Failed to update leave' : 'Failed to apply leave');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString || '-';
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const s = (status || 'pending').toLowerCase();
+    if (s === 'approved') return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+    if (s === 'rejected') return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+    return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+  };
+
+  // Loading state
+  if (loading && tab === 'teacher') {
+    return (
+      <div>
+        {/* Tab bar shimmer */}
+        <div className="flex gap-4 mb-6">
+          <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+          <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        </div>
+        {/* Stats shimmer */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                <div className="ml-4 space-y-2">
+                  <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-6 w-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Table shimmer */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-4 space-y-3">
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-100 dark:bg-gray-700/50 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <Card className="mb-6 dark:bg-gray-800 dark:border dark:border-gray-700">
-        <CardHeader
-          title="Leaves"
-          subheader="Apply for leave and track status"
-          sx={{
-            '& .MuiCardHeader-title': { color: isDarkMode ? '#ffffff' : '#111827' },
-            '& .MuiCardHeader-subheader': { color: isDarkMode ? '#9CA3AF' : '#6B7280' }
-          }}
-          action={
-            <Tabs value={tab} onChange={(_, v) => setTab(v)}
-              textColor="primary" indicatorColor="primary"
-              sx={{
-                minHeight: 48,
-                '& .MuiTabs-flexContainer': { justifyContent: 'center' },
-                '& .MuiTab-root': { color: isDarkMode ? '#E5E7EB' : undefined, minHeight: 48 }
-              }}
-            >
-              <Tab value="teacher" label="Teacher" />
-              <Tab value="student" label="Student" />
-            </Tabs>
-          }
-        />
-        <CardContent className="dark:text-gray-100">
-          {tab === 'teacher' && (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Chip label={`Total: ${stats.total}`} variant={isDarkMode ? 'filled' : 'outlined'} sx={isDarkMode ? { backgroundColor: '#374151', color: '#E5E7EB' } : undefined} />
-                <Chip label={`Pending: ${stats.pending}`} color={isDarkMode ? undefined : 'warning'} variant={isDarkMode ? 'filled' : 'outlined'} sx={isDarkMode ? { backgroundColor: '#92400E', color: '#FEF3C7' } : undefined} />
-                <Chip label={`Approved: ${stats.approved}`} color={isDarkMode ? undefined : 'success'} variant={isDarkMode ? 'filled' : 'outlined'} sx={isDarkMode ? { backgroundColor: '#065F46', color: '#ECFDF5' } : undefined} />
-                <Chip label={`Rejected: ${stats.rejected}`} color={isDarkMode ? undefined : 'error'} variant={isDarkMode ? 'filled' : 'outlined'} sx={isDarkMode ? { backgroundColor: '#7F1D1D', color: '#FEE2E2' } : undefined} />
-                <div className="ml-auto">
-                  <Button startIcon={<Add />} variant="contained" onClick={openApply}>Apply Leave</Button>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setTab('teacher')}
+          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            tab === 'teacher'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+          }`}
+        >
+          My Leaves
+        </button>
+        <button
+          onClick={() => setTab('student')}
+          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            tab === 'student'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+          }`}
+        >
+          Student Leaves
+        </button>
+      </div>
+
+      {tab === 'teacher' && (
+        <>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Leaves</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pending}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Approved</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.approved}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Rejected</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.rejected}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                <div className="sm:w-48">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
                 </div>
               </div>
 
-              {loading ? (
-                <div className="space-y-3">
-                  <Skeleton variant="rounded" height={42} />
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <Skeleton key={i} variant="rounded" height={48} />
-                  ))}
-                </div>
-              ) : (
-                <TableContainer
-                  component={Paper}
-                  className="dark:bg-gray-800 dark:border dark:border-gray-700"
-                  sx={{ boxShadow: 'none', borderRadius: '12px' }}
-                >
-                  <Table size="small" sx={{
-                    '& td, & th': { borderColor: isDarkMode ? '#374151' : '#E5E7EB' }
-                  }}>
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: isDarkMode ? '#111827' : '#F9FAFB' }}>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }}>Reason</TableCell>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }}>From</TableCell>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }}>To</TableCell>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }}>Type</TableCell>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }}>Status</TableCell>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }}>Attachment</TableCell>
-                        <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#374151', fontWeight: 600 }} align="right">Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {leaves.map(leave => (
-                        <TableRow key={leave.leaveId} hover sx={{ backgroundColor: isDarkMode ? '#0B1220' : undefined }}>
-                          <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}>{leave.reason || '-'}</TableCell>
-                          <TableCell sx={{ color: isDarkMode ? '#D1D5DB' : undefined }}>{new Date(leave.startDate || leave.fromDate).toLocaleDateString()}</TableCell>
-                          <TableCell sx={{ color: isDarkMode ? '#D1D5DB' : undefined }}>{new Date(leave.endDate || leave.toDate).toLocaleDateString()}</TableCell>
-                          <TableCell sx={{ color: isDarkMode ? '#D1D5DB' : undefined }}>{leave.leaveType || '-'}</TableCell>
-                          <TableCell>
-                            <Chip size="small" label={leave.status || 'Pending'} color={leave.status === 'approved' ? 'success' : leave.status === 'rejected' ? 'error' : 'warning'} variant={isDarkMode ? 'filled' : 'outlined'} />
-                          </TableCell>
-                          <TableCell>
-                            {leave.filePath ? (
-                              <Tooltip title="Open attachment">
-                                <IconButton size="small" component="a" href={leave.filePath} target="_blank" rel="noopener noreferrer" sx={{ color: isDarkMode ? '#93C5FD' : undefined }}>
-                                  <Article fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            ) : <span style={{ color: isDarkMode ? '#9CA3AF' : undefined }}>-</span>}
-                          </TableCell>
-                          <TableCell align="right">
-                            <Tooltip title="Edit">
-                              <IconButton size="small" onClick={() => openEdit(leave)} sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}><Edit fontSize="small" /></IconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
+              <button
+                onClick={openApply}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Apply Leave
+              </button>
             </div>
-          )}
-
-          {tab === 'student' && <StudentLeavesTab />}
-        </CardContent>
-      </Card>
-
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        fullWidth
-        maxWidth="sm"
-        PaperProps={{
-          sx: isDarkMode ? { backgroundColor: '#111827', color: '#E5E7EB' } : undefined
-        }}
-      >
-        <DialogTitle sx={isDarkMode ? { color: '#FFFFFF' } : undefined}>{editing ? 'Edit Leave' : 'Apply Leave'}</DialogTitle>
-        <DialogContent dividers sx={isDarkMode ? { borderColor: '#374151' } : undefined}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextField 
-              label="Reason" 
-              fullWidth 
-              value={form.reason} 
-              onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              className="md:col-span-2"
-              InputLabelProps={{ sx: isDarkMode ? { color: '#9CA3AF' } : undefined }}
-              InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            />
-            <TextField 
-              label="From Date" 
-              type="date" 
-              fullWidth 
-              InputLabelProps={{ shrink: true, sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} 
-              value={form.fromDate} 
-              onChange={(e) => setForm({ ...form, fromDate: e.target.value })}
-              InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            />
-            <TextField 
-              label="To Date" 
-              type="date" 
-              fullWidth 
-              InputLabelProps={{ shrink: true, sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} 
-              value={form.toDate} 
-              onChange={(e) => setForm({ ...form, toDate: e.target.value })}
-              InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            />
-            <TextField 
-              select 
-              label="Leave Type" 
-              fullWidth 
-              value={form.leaveType} 
-              onChange={(e) => setForm({ ...form, leaveType: e.target.value })}
-              InputLabelProps={{ sx: isDarkMode ? { color: '#9CA3AF' } : undefined }}
-              InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } }, '& .MuiMenu-paper': { backgroundColor: '#111827' } } : undefined}
-            >
-              {leaveTypes.map(t => (
-                <MenuItem key={t.value} value={t.value} sx={isDarkMode ? { backgroundColor: '#111827', color: '#E5E7EB', '&:hover': { backgroundColor: '#1F2937' } } : undefined}>
-                  {t.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button 
-              variant={isDarkMode ? 'contained' : 'outlined'} 
-              component="label" 
-              startIcon={<CloudUpload />} 
-              sx={isDarkMode ? { backgroundColor: '#1F2937', color: '#E5E7EB', '&:hover': { backgroundColor: '#374151' } } : undefined}
-            >
-              {file ? file.name : 'Upload File'}
-              <input type="file" hidden onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            </Button>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={submitting} startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : undefined}>
-            {editing ? 'Update' : 'Apply'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+          {/* Leaves Table */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reason</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">From</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">To</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attachment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredLeaves.map(leave => (
+                    <tr key={leave.leaveId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{leave.reason || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate(leave.startDate || leave.fromDate)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatDate(leave.endDate || leave.toDate)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 capitalize">{leave.leaveType || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getStatusBadge(leave.status)}`}>
+                          {leave.status || 'Pending'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {leave.filePath ? (
+                          <a href={leave.filePath} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                            View
+                          </a>
+                        ) : <span className="text-gray-400">-</span>}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => openEdit(leave)}
+                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                          title="Edit Leave"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredLeaves.length === 0 && (
+              <div className="text-center py-12">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No leave requests yet</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Click "Apply Leave" to submit your first leave request.
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {tab === 'student' && <StudentLeavesTab />}
+
+      {/* Apply / Edit Leave Dialog */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {editing ? 'Edit Leave' : 'Apply Leave'}
+              </h3>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason *</label>
+                <textarea
+                  rows={3}
+                  value={form.reason}
+                  onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                  placeholder="Enter reason for leave..."
+                  className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date *</label>
+                  <input
+                    type="date"
+                    value={form.fromDate}
+                    onChange={(e) => setForm({ ...form, fromDate: e.target.value })}
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Date *</label>
+                  <input
+                    type="date"
+                    value={form.toDate}
+                    onChange={(e) => setForm({ ...form, toDate: e.target.value })}
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Leave Type</label>
+                  <select
+                    value={form.leaveType}
+                    onChange={(e) => setForm({ ...form, leaveType: e.target.value })}
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {leaveTypes.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment</label>
+                  <label className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span className="text-sm truncate">{file ? file.name : 'Upload File'}</span>
+                    <input type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+              <button
+                onClick={() => setOpen(false)}
+                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting && <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {editing ? 'Update' : 'Apply'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
