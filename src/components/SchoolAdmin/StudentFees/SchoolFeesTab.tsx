@@ -16,7 +16,7 @@ interface StudentFeeRow {
   classId: string; // Add this field
 }
 
-const StudentFees: React.FC = () => {
+const SchoolFeesTab: React.FC = () => {
   const { isDarkMode } = useDarkMode();
   const { user } = useAuth();
 
@@ -117,6 +117,16 @@ const StudentFees: React.FC = () => {
       return matchesQuery && matchesStatus && matchesClass;
     });
   }, [rows, query, statusFilter, classFilter]);
+
+  // Sync selectedRow when rows update
+  useEffect(() => {
+    if (selectedRow) {
+      const updatedMatch = rows.find(r => r.studentId === selectedRow.studentId);
+      if (updatedMatch) {
+        setSelectedRow(updatedMatch);
+      }
+    }
+  }, [rows]);
 
   const totalFees = totals.total;
   const receivedFees = totals.received;
@@ -1226,4 +1236,4 @@ const StudentFees: React.FC = () => {
   );
 };
 
-export default StudentFees;
+export default SchoolFeesTab;

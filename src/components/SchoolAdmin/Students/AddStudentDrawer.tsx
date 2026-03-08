@@ -24,6 +24,7 @@ interface AddStudentDrawerProps {
     admissionYear: string;
     classId: string;
     rollNo: string; // Add rollNo field
+    password?: string;
   }, profilePicFile?: File) => void;
   student?: {
     studentId: string;
@@ -195,14 +196,18 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
     setSubmitting(true);
     try {
       if (isEdit && onEditStudent) {
-        await onEditStudent(student!.studentId, {
+        const editData: any = {
           name: form.name,
           email: form.email,
           phoneNo: form.phoneNo,
           admissionYear: form.admissionYear,
           classId: form.classId,
           rollNo: form.rollNo, // Add rollNo field
-        }, selectedFile || undefined);
+        };
+        if (form.password) {
+          editData.password = form.password;
+        }
+        await onEditStudent(student!.studentId, editData, selectedFile || undefined);
       } else {
         await onAddStudent({
           name: form.name,
@@ -347,24 +352,22 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                 />
               </div>
 
-              {/* Password (only for add, not edit) */}
-              {!isEdit && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Password *
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    disabled={limitReached}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                    placeholder="Enter password"
-                  />
-                </div>
-              )}
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Password {isEdit ? '' : '*'}
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required={!isEdit}
+                  disabled={limitReached}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder={isEdit ? "Enter new password (leave blank to keep current)" : "Enter password"}
+                />
+              </div>
 
               {/* Roll Number */}
               <div>

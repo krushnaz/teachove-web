@@ -23,6 +23,7 @@ interface AddStudentDrawerProps {
     admissionYear: string;
     classId: string;
     rollNo: string;
+    password?: string;
   }, profilePicFile?: File) => void;
   student?: {
     studentId: string;
@@ -215,15 +216,17 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
 
     setLoading(true);
     try {
-      const studentData = {
+      const studentData: any = {
         name: formData.name.trim(),
         email: formData.email.trim(),
-        password: formData.password.trim(),
         phoneNo: formData.phoneNo.trim(),
         admissionYear: formData.admissionYear.trim(),
         classId: teacherClassId,
         rollNo: formData.rollNo.trim(),
       };
+      if (formData.password.trim()) {
+        studentData.password = formData.password.trim();
+      }
 
       if (student) {
         await onEditStudent(student.studentId, studentData, profilePicFile || undefined);
@@ -390,30 +393,28 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                 )}
               </div>
 
-              {/* Password (only for new students) */}
-              {!student && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Password *
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    disabled={limitReached}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
-                      errors.password
-                        ? 'border-red-300 dark:border-red-600'
-                        : 'border-gray-300 dark:border-gray-600'
-                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-                    placeholder="Enter password"
-                  />
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
-                  )}
-                </div>
-              )}
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Password {!student ? '*' : ''}
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  disabled={limitReached}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${
+                    errors.password
+                      ? 'border-red-300 dark:border-red-600'
+                      : 'border-gray-300 dark:border-gray-600'
+                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                  placeholder={student ? "Enter new password (leave blank to keep current)" : "Enter password"}
+                />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+                )}
+              </div>
 
               {/* Phone Number */}
               <div>

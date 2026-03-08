@@ -210,5 +210,11 @@ export const API_CONFIG = {
       UPDATE: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
       DELETE: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
     },
+    MISC_FEES: {
+      ADMISSION: '/student-admissions/:schoolId/:studentId',
+      UNIFORM: '/student-uniform-fees/get',
+      BAG: '/student-bag-fees/get',
+      BOOK: '/book-fees/student/:schoolId',
+    },
   },
 };

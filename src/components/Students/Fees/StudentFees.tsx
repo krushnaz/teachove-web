@@ -36,7 +36,7 @@ const StudentFees: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await studentFeesService.getStudentPayments(
+      const response = await studentFeesService.getAllStudentFees(
         user.schoolId,
         schoolDetails.currentAcademicYear,
         user.studentId
@@ -267,6 +267,11 @@ const StudentFees: React.FC = () => {
                     <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {formatCurrency(payment.amount)}
                     </h3>
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                      isDarkMode ? 'bg-indigo-900/30 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
+                    }`}>
+                      {payment.feeType || 'School Fee'}
+                    </span>
                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
                       isDarkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-700'
                     }`}>

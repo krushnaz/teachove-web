@@ -108,6 +108,7 @@ const Students: React.FC = () => {
     admissionYear: string;
     classId: string;
     rollNo: string;
+    password?: string;
   }, profilePicFile?: File) => {
     if (!user?.schoolId) {
       toast.error('User session expired. Please login again.');
@@ -115,7 +116,7 @@ const Students: React.FC = () => {
     }
 
     try {
-      const response = await studentService.editStudent(studentId, {
+      const editPayload: any = {
         schoolId: user.schoolId,
         classId: studentData.classId,
         name: studentData.name,
@@ -123,7 +124,12 @@ const Students: React.FC = () => {
         phoneNo: studentData.phoneNo,
         admissionYear: studentData.admissionYear,
         rollNo: studentData.rollNo,
-      }, profilePicFile);
+      };
+      if (studentData.password) {
+        editPayload.password = studentData.password;
+      }
+
+      const response = await studentService.editStudent(studentId, editPayload, profilePicFile);
 
       // Update the student in local state
       setStudents(prev => prev.map(s =>
