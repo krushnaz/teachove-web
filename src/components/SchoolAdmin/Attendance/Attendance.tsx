@@ -71,7 +71,6 @@ const ShimmerCalendarStrip: React.FC = () => (
 
 const Attendance: React.FC = () => {
   const [activeTab, setActiveTab] = useState('teachers');
-  const [selectedReportType, setSelectedReportType] = useState('teachers');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
@@ -91,18 +90,6 @@ const Attendance: React.FC = () => {
 
   const [attendanceSummary, setAttendanceSummary] = useState<any>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const nonTeachingStaff: StaffMember[] = [
-    { id: 1, name: 'Mr. Suresh Kumar', designation: 'Administrative Officer', avatar: 'SK', status: 'present' },
-    { id: 2, name: 'Mrs. Geeta Sharma', designation: 'Accountant', avatar: 'GS', status: 'present' },
-    { id: 3, name: 'Mr. Rajesh Verma', designation: 'Librarian', avatar: 'RV', status: 'absent' },
-    { id: 4, name: 'Ms. Priya Singh', designation: 'Receptionist', avatar: 'PS', status: 'absent' },
-    { id: 5, name: 'Mr. Amit Kumar', designation: 'IT Support', avatar: 'AK', status: 'present' },
-    { id: 6, name: 'Mrs. Sunita Patel', designation: 'Clerk', avatar: 'SP', status: 'present' },
-    { id: 7, name: 'Mr. Ramesh Singh', designation: 'Security Guard', avatar: 'RS', status: 'present' },
-    { id: 8, name: 'Ms. Kavita Gupta', designation: 'Cleaner', avatar: 'KG', status: 'not-marked' }
-  ];
-
-  const [nonTeachingList, setNonTeachingList] = useState(nonTeachingStaff);
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -226,30 +213,20 @@ const Attendance: React.FC = () => {
     fetchAttendanceSummary();
   }, [user?.schoolId, activeTab, fromDate, toDate]);
 
-  const handleStatusToggle = async (teacherId: string, currentStatus: string, type: 'teachers' | 'non-teaching') => {
-    if (type === 'teachers') {
-      // For teachers, we'll track changes locally first
-      const newStatus = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'not-marked' : 'present';
-      
-      // Update pending changes
-      const newPendingChanges = { ...pendingChanges, [teacherId]: newStatus };
-      setPendingChanges(newPendingChanges);
-      setHasPendingChanges(Object.keys(newPendingChanges).length > 0);
-      
-      // Update the display immediately
-      setAttendanceStatusMap(prev => ({
-        ...prev,
-        [teacherId]: newStatus
-      }));
-    } else {
-      // For non-teaching staff
-      setNonTeachingList(prev => prev.map(staff =>
-        staff.id === parseInt(teacherId) ? {
-          ...staff,
-          status: staff.status === 'present' ? 'absent' : staff.status === 'absent' ? 'not-marked' : 'present'
-        } : staff
-      ));
-    }
+  const handleStatusToggle = async (teacherId: string, currentStatus: string) => {
+    // For teachers, we'll track changes locally first
+    const newStatus = currentStatus === 'present' ? 'absent' : currentStatus === 'absent' ? 'not-marked' : 'present';
+    
+    // Update pending changes
+    const newPendingChanges = { ...pendingChanges, [teacherId]: newStatus };
+    setPendingChanges(newPendingChanges);
+    setHasPendingChanges(Object.keys(newPendingChanges).length > 0);
+    
+    // Update the display immediately
+    setAttendanceStatusMap(prev => ({
+      ...prev,
+      [teacherId]: newStatus
+    }));
   };
 
 
@@ -398,33 +375,24 @@ const Attendance: React.FC = () => {
 
 
 
-  const getAttendanceData = (list: any[], type: 'teachers' | 'non-teaching'): AttendanceData => {
-    if (type === 'teachers') {
-      // For teachers, calculate based on attendanceStatusMap and pendingChanges
-      let present = 0;
-      let absent = 0;
-      
-      teachersList.forEach(teacher => {
-        const currentStatus = attendanceStatusMap[teacher.teacherId] || 'not-marked';
-        const pendingStatus = pendingChanges[teacher.teacherId];
-        const finalStatus = pendingStatus || currentStatus;
-        
-        if (finalStatus === 'present') {
-          present++;
-        } else if (finalStatus === 'absent') {
-          absent++;
-        }
-      });
-      
-      return { present, absent, late: 0, total: teachersList.length };
-    } else {
-      // For non-teaching staff, use the original logic
-    const present = list.filter(item => item.status === 'present').length;
-    const absent = list.filter(item => item.status === 'absent').length;
-    const total = list.length;
+  const getAttendanceData = (): AttendanceData => {
+    // Calculate based on attendanceStatusMap and pendingChanges
+    let present = 0;
+    let absent = 0;
     
-    return { present, absent, late: 0, total };
-    }
+    teachersList.forEach(teacher => {
+      const currentStatus = attendanceStatusMap[teacher.teacherId] || 'not-marked';
+      const pendingStatus = pendingChanges[teacher.teacherId];
+      const finalStatus = pendingStatus || currentStatus;
+      
+      if (finalStatus === 'present') {
+        present++;
+      } else if (finalStatus === 'absent') {
+        absent++;
+      }
+    });
+    
+    return { present, absent, late: 0, total: teachersList.length };
   };
 
 
@@ -568,8 +536,8 @@ const Attendance: React.FC = () => {
 
 
 
-  const renderAttendanceList = (list: any[], type: 'teachers' | 'non-teaching') => {
-    const attendanceData = getAttendanceData(list, type);
+  const renderAttendanceList = (list: any[]) => {
+    const attendanceData = getAttendanceData();
 
     return (
       <div className="space-y-6">
@@ -644,12 +612,12 @@ const Attendance: React.FC = () => {
         </div>
         
         {/* Calendar Strip */}
-        {type === 'teachers' && (loading || markedDatesLoading ? (
+        {loading || markedDatesLoading ? (
           <ShimmerCalendarStrip />
-        ) : renderCalendarStrip())}
+        ) : renderCalendarStrip()}
         
-        {/* Compact Bulk Actions - Only for Teachers */}
-        {type === 'teachers' && !loading && hasPendingChanges && (
+        {/* Compact Bulk Actions */}
+        {!loading && hasPendingChanges && (
           <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-xl p-4 border border-emerald-200/50 dark:border-emerald-800/30 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -767,9 +735,7 @@ const Attendance: React.FC = () => {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {list.map((teacher, index) => {
-                    const currentStatus = type === 'teachers'
-                      ? attendanceStatusMap[teacher.teacherId] || 'not-marked'
-                      : teacher.status;
+                    const currentStatus = attendanceStatusMap[teacher.teacherId] || 'not-marked';
 
                     return (
                       <tr key={teacher.teacherId || teacher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -819,9 +785,8 @@ const Attendance: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => handleStatusToggle(
-                              type === 'teachers' ? teacher.teacherId : teacher.id.toString(),
-                              currentStatus,
-                              type
+                              teacher.teacherId,
+                              currentStatus
                             )}
                             className={`inline-flex items-center px-3 py-2 border border-transparent text-xs font-medium rounded-md ${
                               currentStatus === 'present'
@@ -852,10 +817,6 @@ const Attendance: React.FC = () => {
 
 
   const renderReports = () => {
-    const teachersData = getAttendanceData(teachersList, 'teachers');
-    const nonTeachingData = getAttendanceData(nonTeachingList, 'non-teaching');
-    const selectedData = selectedReportType === 'teachers' ? teachersData : nonTeachingData;
-    
     const presentPercentage = attendanceSummary ? parseFloat(attendanceSummary.presentPercentage.replace("%", "")) : 0;
     const absentPercentage = attendanceSummary ? parseFloat(attendanceSummary.absentPercentage.replace("%", "")) : 0;
 
@@ -863,19 +824,7 @@ const Attendance: React.FC = () => {
       <div>
         {/* Report Controls */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Staff Type</label>
-              <select
-                value={selectedReportType}
-                onChange={(e) => setSelectedReportType(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="teachers">Teachers</option>
-                <option value="non-teaching">Non-Teaching Staff</option>
-              </select>
-            </div>
-            
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From Date</label>
               <input
@@ -1002,16 +951,6 @@ const Attendance: React.FC = () => {
               Teacher Attendance
             </button>
             <button
-              onClick={() => setActiveTab('non-teaching')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'non-teaching'
-                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              Non-Teaching Staff Attendance
-            </button>
-            <button
               onClick={() => setActiveTab('reports')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'reports'
@@ -1030,8 +969,7 @@ const Attendance: React.FC = () => {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400">Loading teachers...</p>
         </div>
-      ) : activeTab === 'teachers' && renderAttendanceList(teachersList, 'teachers')}
-      {activeTab === 'non-teaching' && renderAttendanceList(nonTeachingList, 'non-teaching')}
+      ) : activeTab === 'teachers' && renderAttendanceList(teachersList)}
       {activeTab === 'reports' && renderReports()}
     </div>
   );

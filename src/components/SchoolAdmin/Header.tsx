@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { schoolProfileService, type SchoolProfile } from '../../services/schoolProfileService';
 import { 
-  Menu, Sun, Moon, Bell, Search, LogOut, 
-  User, Settings, ChevronDown 
+  Menu, Sun, Moon, Bell, LogOut, 
+  User, Settings, ChevronDown, School
 } from 'lucide-react';
 
 interface SchoolAdminHeaderProps {
@@ -24,12 +25,20 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
   const { user, logout } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   // ... (Keep the rest of the useEffect and handler logic exactly the same) ...
   
   useEffect(() => {
+    const schoolId = user?.schoolId;
+    if (schoolId) {
+      schoolProfileService.getSchoolProfile(schoolId).then((profile) => {
+         setSchoolProfile(profile);
+      }).catch(console.error);
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfile(false);
@@ -40,84 +49,68 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [user?.schoolId]);
 
   return (
-    <header className={`sticky top-0 z-30 w-full transition-all duration-300 ${isDarkMode ? 'bg-gray-900/90 border-gray-800' : 'bg-white/90 border-gray-100'} backdrop-blur-xl border-b`}>
+    <header className={`sticky top-0 z-30 w-full transition-colors duration-200 ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-b`}>
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between gap-4">
+        <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
           
           {/* Left: Mobile Toggle & Title */}
           <div className="flex items-center gap-4 min-w-max">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`lg:hidden p-2 rounded-xl transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`lg:hidden p-2 rounded-md transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-500 hover:bg-gray-100'}`}
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
             
-            <div className="hidden md:block">
-               <h2 className={`text-xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{title}</h2>
-               {/* Optional: You can render the subtitle here if you want */}
-               {subtitle && <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{subtitle}</p>}
+            <div className="flex items-center gap-3">
+              <img 
+                src="/icon.png" 
+                alt="TeachoVE Logo" 
+                className="h-12 w-auto object-contain flex-shrink-0"
+              />
+              <span className={`text-xl sm:text-2xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                TeachoVE
+              </span>
             </div>
           </div>
 
           {/* ... (Keep the Search Bar, Actions, Theme Toggle, etc. exactly the same) ... */}
           
-          {/* Center: Enhanced Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-auto">
-             <div className="relative w-full group">
-               <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-400 group-hover:text-indigo-500'}`}>
-                 <Search size={18} />
-               </div>
-               <input 
-                 type="text" 
-                 className={`block w-full py-2.5 pl-10 pr-12 text-sm rounded-2xl border transition-all duration-200 outline-none 
-                   ${isDarkMode 
-                     ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' 
-                     : 'bg-gray-50 border-gray-200/60 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-indigo-200 focus:ring-4 focus:ring-indigo-50/50 shadow-inner focus:shadow-lg'
-                   }`} 
-                 placeholder="Search (Cmd + K)" 
-               />
-               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-white border-gray-200 text-gray-400'}`}>
-                    ⌘K
-                 </span>
-               </div>
-             </div>
-          </div>
+
 
           {/* Right: Actions */}
           <div className="flex items-center gap-3">
             <button
               onClick={toggleDarkMode}
-              className={`p-2.5 rounded-xl transition-all duration-200 border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-yellow-400 hover:bg-gray-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 shadow-sm'}`}
+              className={`p-2 rounded-md transition-colors border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-yellow-400 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600'}`}
             >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
             {/* Notification Bell */}
             <div className="relative" ref={notifRef}>
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2.5 rounded-xl transition-all duration-200 border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 shadow-sm'}`}
+                className={`relative p-2 rounded-md transition-colors border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600'}`}
               >
-                <Bell size={20} />
-                <span className="absolute top-2.5 right-3 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
+                <Bell size={18} />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
               </button>
               
               {showNotifications && (
-                 <div className={`absolute right-0 mt-4 w-80 rounded-2xl shadow-2xl border p-0 z-50 transform transition-all overflow-hidden origin-top-right animate-in fade-in zoom-in-95 duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-                    <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-50'}`}>
+                 <div className={`absolute right-0 mt-2 w-80 rounded-md shadow-lg border p-0 z-50 overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                       <div className="flex justify-between items-center">
-                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
-                        <span className="text-xs font-medium text-indigo-500 cursor-pointer hover:text-indigo-600">Mark all read</span>
+                        <h3 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
+                        <span className="text-xs font-semibold text-indigo-600 cursor-pointer hover:underline">Mark all read</span>
                       </div>
                     </div>
                     <div className={`p-8 flex flex-col items-center text-center ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                        <div className={`p-3 rounded-full mb-3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                          <Bell size={24} className="opacity-50" />
+                          <Bell size={20} className="opacity-50" />
                        </div>
                        <p className="text-sm">No new notifications</p>
                     </div>
@@ -125,48 +118,63 @@ const SchoolAdminHeader: React.FC<SchoolAdminHeaderProps> = ({
               )}
             </div>
 
-            <div className={`h-8 w-[1px] mx-1 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}></div>
+            <div className={`h-6 w-px mx-1 hidden sm:block ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
 
             {/* Profile */}
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setShowProfile(!showProfile)}
-                className={`flex items-center gap-3 pl-1 pr-2 py-1 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 border border-transparent ${showProfile ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
+                className={`flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-full transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 border border-transparent ${showProfile ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-200 dark:shadow-none">
-                  {user?.email?.charAt(0).toUpperCase() || 'A'}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-100'}`}>
+                  {schoolProfile?.logo ? (
+                     <img src={schoolProfile.logo} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                     <User size={16} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+                  )}
                 </div>
-                <div className="hidden xl:block text-left">
-                  <p className={`text-sm font-bold leading-tight ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Admin User</p>
-                  <p className={`text-[10px] font-medium ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Administrator</p>
+                <div className="hidden xl:block text-left mr-1">
+                  <p className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{schoolProfile?.schoolName || 'Admin User'}</p>
+                  <p className={`text-[10px] font-medium uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Administrator</p>
                 </div>
-                <ChevronDown size={16} className={`hidden xl:block transition-transform duration-200 ${showProfile ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                <ChevronDown size={14} className={`hidden xl:block transition-transform duration-200 ${showProfile ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
               </button>
 
               {showProfile && (
-                <div className={`absolute right-0 mt-4 w-64 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border z-50 overflow-hidden transform transition-all duration-200 origin-top-right animate-in fade-in zoom-in-95 ${
-                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                <div className={`absolute right-0 mt-2 w-64 rounded-md shadow-lg border z-50 overflow-hidden ${
+                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                 }`}>
-                  <div className="p-2">
-                     <div className={`p-3 rounded-xl mb-1 ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                        <p className={`text-xs font-semibold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider mb-1`}>
-                          Signed in as
-                        </p>
-                        <p className={`text-sm font-medium truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {user?.email || 'admin@school.com'}
-                        </p>
+                  <div className="p-1">
+                     <div className={`p-3 rounded mb-1 ${isDarkMode ? 'bg-gray-900 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+                        <div className="flex items-center gap-3">
+                           <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                             {schoolProfile?.logo ? (
+                                <img src={schoolProfile.logo} alt="Profile" className="w-full h-full object-cover" />
+                             ) : (
+                                <School size={20} className={isDarkMode ? 'text-gray-400' : 'text-indigo-600'} />
+                             )}
+                           </div>
+                           <div className="min-w-0">
+                               <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                 {schoolProfile?.schoolName || 'Teachove Admin'}
+                               </p>
+                               <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                 {user?.email || 'admin@school.com'}
+                               </p>
+                           </div>
+                        </div>
                      </div>
-                    <Link to="/school-admin/profile" className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-colors ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'}`}>
-                      <User size={18} />
-                      <span>My Profile</span>
+                    <Link to="/school-admin/profile" className={`flex items-center gap-3 px-3 py-2 text-sm rounded transition-colors ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100 hover:text-indigo-600'}`}>
+                      <User size={16} />
+                      <span className="font-medium">My Profile</span>
                     </Link>
-                    <Link to="/school-admin/settings" className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-colors ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'}`}>
-                      <Settings size={18} />
-                      <span>Account Settings</span>
+                    <Link to="/school-admin/settings" className={`flex items-center gap-3 px-3 py-2 text-sm rounded transition-colors ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100 hover:text-indigo-600'}`}>
+                      <Settings size={16} />
+                      <span className="font-medium">Account Settings</span>
                     </Link>
-                    <div className={`my-1 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}></div>
-                    <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-rose-600 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
-                      <LogOut size={18} />
+                    <div className={`my-1 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}></div>
+                    <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                      <LogOut size={16} />
                       <span>Sign out</span>
                     </button>
                   </div>

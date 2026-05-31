@@ -15,6 +15,12 @@ export const schoolService = {
     return response.data;
   },
 
+  async getSchoolProfile(schoolId: string) {
+    const url = API_CONFIG.ENDPOINTS.SCHOOL.GET_PROFILE.replace(':schoolId', schoolId);
+    const response = await axios.get(url);
+    return response.data;
+  },
+
   async getSchoolStats(schoolId: string): Promise<SchoolStats> {
     const url = API_CONFIG.ENDPOINTS.SCHOOL.STATS.replace(':schoolId', schoolId);
     const response = await axios.get(url);

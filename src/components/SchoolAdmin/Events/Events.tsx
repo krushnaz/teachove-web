@@ -2,6 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { eventService, Event, CreateEventRequest, UpdateEventRequest } from '../../../services/eventService';
+import { 
+  Calendar, 
+  Clock, 
+  Megaphone, 
+  FileText, 
+  GraduationCap, 
+  Search, 
+  Edit3, 
+  X, 
+  ArrowUpRight,
+  Upload,
+  AlertCircle,
+  Eye,
+  Trash2,
+  Download,
+  ChevronRight,
+  Plus
+} from 'lucide-react';
 
 interface EventForm {
   title: string;
@@ -371,34 +389,25 @@ const Events: React.FC = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} p-6 transition-colors duration-300`}>
-        <div className="w-full mx-auto space-y-8 animate-pulse">
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-[#F8FAFC]'} p-0 sm:p-2 lg:p-4 transition-colors duration-200`}>
+        <div className="w-full mx-auto space-y-4 sm:space-y-6 animate-pulse">
           {/* Header Skeleton */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-3">
-              <div className={`h-10 w-64 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
-              <div className={`h-5 w-96 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
-            </div>
-            <div className="flex gap-3">
-              <div className={`h-12 w-32 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
-              <div className={`h-12 w-40 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
-            </div>
-          </div>
+          <div className={`h-32 sm:h-40 rounded-none sm:rounded-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-b sm:border border-gray-200 dark:border-gray-800`} />
 
           {/* Stats Cards Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 px-2 sm:px-0">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className={`h-32 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+              <div key={i} className={`h-20 sm:h-24 rounded-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border border-gray-200 dark:border-gray-800`} />
             ))}
           </div>
 
           {/* Filters Skeleton */}
-          <div className={`h-16 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+          <div className={`h-14 mx-4 sm:mx-0 rounded-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border border-gray-200 dark:border-gray-800`} />
 
           {/* Events Grid Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 px-4 sm:px-0">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className={`h-64 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+              <div key={i} className={`h-48 rounded-md ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border border-gray-200 dark:border-gray-800`} />
             ))}
           </div>
         </div>
@@ -407,274 +416,241 @@ const Events: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'} transition-colors duration-300`}>
-      <div className="w-full mx-auto p-6 space-y-8">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-[#F8FAFC] text-gray-900'} transition-colors duration-200`}>
+      <div className="w-full mx-auto p-0 sm:p-2 lg:p-4 space-y-4 sm:space-y-6">
         {/* Header Section */}
-        <div className={`relative overflow-hidden rounded-xl p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+        <div className={`relative overflow-hidden rounded-none sm:rounded-md p-6 sm:p-8 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-b sm:border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-center`}>
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 mb-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-3 border border-indigo-100 dark:border-indigo-800/30">
+                <Calendar size={13} />
+                Events Management
+              </div>
+              <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                 Events Hub
               </h1>
-              <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Plan, organize, and celebrate school moments
+              <p className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Plan, organize, and celebrate school moments with ease.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleTemplatesClick}
-                className={`px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 border ${
+                className={`px-4 py-2.5 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 border ${
                   isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600' 
-                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
-                } hover:bg-gray-100 active:scale-95`}
+                    ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' 
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
               >
-                <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
+                <div className="p-1 px-1.5 rounded bg-indigo-50 dark:bg-indigo-900/30">
+                  <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
                 <span>Templates</span>
               </button>
               <button
                 onClick={handleAddEvent}
-                className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:translate-y-0 transition-all duration-200 flex items-center gap-2"
+                className="px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 <span>New Event</span>
               </button>
             </div>
           </div>
-          {/* Decorative background elements */}
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-gradient-to-tr from-pink-500/10 to-orange-500/10 rounded-full blur-3xl" />
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 px-2 sm:px-0">
           {[
             { 
               label: 'Total Events', 
               value: events.length, 
-              icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              ),
-              color: 'text-blue-600',
-              bg: 'bg-blue-500/10',
-              border: 'border-blue-200/50'
+              icon: Megaphone,
+              color: 'text-indigo-600 dark:text-indigo-400',
+              bg: 'bg-indigo-50 dark:bg-indigo-900/20'
             },
             { 
               label: 'Templates', 
               value: templates.length, 
-              icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-              ),
-              color: 'text-green-600',
-              bg: 'bg-green-500/10',
-              border: 'border-green-200/50'
+              icon: FileText,
+              color: 'text-gray-600 dark:text-gray-400',
+              bg: 'bg-gray-50 dark:bg-gray-800'
             },
             { 
               label: 'This Month', 
               value: events.filter(e => e && e.date && new Date(e.date).getMonth() === new Date().getMonth()).length, 
-              icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              ),
-              color: 'text-purple-600',
-              bg: 'bg-purple-500/10',
-              border: 'border-purple-200/50'
+              icon: Calendar,
+              color: 'text-indigo-600 dark:text-indigo-400',
+              bg: 'bg-indigo-50 dark:bg-indigo-900/20'
             },
             { 
               label: 'Upcoming', 
               value: events.filter(e => e && e.date && new Date(e.date) > new Date()).length, 
-              icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              ),
-              color: 'text-orange-600',
-              bg: 'bg-orange-500/10',
-              border: 'border-orange-200/50'
+              icon: GraduationCap,
+              color: 'text-indigo-600 dark:text-indigo-400',
+              bg: 'bg-indigo-50 dark:bg-indigo-900/20'
             },
           ].map((stat, idx) => (
-            <div key={idx} className={`group p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white ' + stat.border} transition-all duration-300`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>{stat.label}</p>
-                  <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
+            <div key={idx} className={`p-2.5 sm:p-5 rounded-md border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm flex flex-col justify-between h-full`}>
+              <div className="flex justify-between items-start mb-2 sm:mb-3">
+                <div className={`p-1.5 sm:p-2 rounded-md ${stat.bg} ${stat.color} flex items-center justify-center`}>
+                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div className={`p-3.5 rounded-lg ${stat.bg} ${stat.color} group-hover:scale-105 transition-transform duration-300`}>
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {stat.icon}
-                  </svg>
-                </div>
+              </div>
+              <div>
+                <h3 className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{stat.value}</h3>
+                <p className="text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5 truncate">{stat.label}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Search & Filter Bar */}
-        <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-          <div className="flex flex-col md:flex-row gap-4 p-2">
+        <div className={`mx-4 sm:mx-0 p-3 sm:p-4 rounded-md shadow-sm ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className={`w-5 h-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <Search size={18} className={isDarkMode ? 'text-gray-500' : 'text-gray-400'} />
               </div>
               <input
                 type="text"
-                placeholder="Search events by title or description..."
+                placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-11 pr-4 py-3 rounded-xl border-0 ring-1 ring-inset ${
+                className={`w-full pl-10 pr-4 py-2 text-sm rounded-md border transition-colors ${
                   isDarkMode 
-                    ? 'bg-gray-900/50 ring-gray-700 text-white placeholder-gray-500 focus:ring-blue-500' 
-                    : 'bg-gray-50 ring-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:bg-white'
-                } focus:ring-2 focus:ring-inset transition-all`}
+                    ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500' 
+                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white'
+                } outline-none`}
               />
             </div>
             <div className="md:w-64">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className={`w-5 h-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                </div>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as any)}
-                  className={`w-full pl-11 pr-10 py-3 rounded-xl border-0 ring-1 ring-inset appearance-none ${
-                    isDarkMode 
-                      ? 'bg-gray-900/50 ring-gray-700 text-white focus:ring-blue-500' 
-                      : 'bg-gray-50 ring-gray-200 text-gray-900 focus:ring-blue-500 focus:bg-white'
-                  } focus:ring-2 focus:ring-inset transition-all cursor-pointer`}
-                >
-                  <option value="all">All Entries</option>
-                  <option value="events">Events Only</option>
-                  <option value="templates">Templates Only</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <svg className={`w-4 h-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+                className={`w-full px-3 py-2 text-sm rounded-md border appearance-none transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-900 border-gray-700 text-white focus:border-indigo-500' 
+                    : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-indigo-500 focus:bg-white'
+                } outline-none cursor-pointer`}
+              >
+                <option value="all">All Entries</option>
+                <option value="events">Events Only</option>
+                <option value="templates">Templates Only</option>
+              </select>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className="px-4 sm:px-0">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className={`text-lg sm:text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Events & Schedule ({filteredEvents.length})
             </h2>
           </div>
 
           {filteredEvents.length === 0 ? (
-            <div className={`flex flex-col items-center justify-center p-16 rounded-xl border border-dashed text-center ${isDarkMode ? 'border-gray-700 bg-gray-800/30' : 'border-gray-300 bg-gray-50/50'}`}>
-              <div className={`mb-6 p-6 rounded-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border border-gray-100`}>
-                <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+            <div className={`flex flex-col items-center justify-center p-12 rounded-md border border-dashed text-center ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+              <div className={`mb-4 p-4 rounded-full ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} border border-gray-100 dark:border-gray-800`}>
+                <Calendar size={32} className="text-gray-400" />
               </div>
-              <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+              <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                 No events found
               </h3>
-              <p className={`max-w-md mx-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {searchTerm ? 'Try adjusting your search terms to find what you are looking for.' : 'Get started by creating a new event or choosing from our templates.'}
+              <p className={`text-sm max-w-xs mx-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {searchTerm ? 'Try adjusting your search terms.' : 'Create a new event or use a template to get started.'}
               </p>
               {!searchTerm && (
                 <button
                   onClick={handleAddEvent}
-                  className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition"
+                  className="mt-6 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-colors"
                 >
                   Create First Event
                 </button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredEvents.map((event) => (
                 <div 
                   key={event.eventId} 
-                  className={`group relative flex flex-col p-6 rounded-xl border transition-all duration-300 ${
+                  className={`group flex flex-col p-5 rounded-md border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-800 border-gray-700 hover:border-gray-500' 
-                      : 'bg-white border-gray-200 hover:border-blue-400'
+                      ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
+                      : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div className={`p-3 rounded-lg text-center min-w-[70px] ${
-                      isDarkMode ? 'bg-gray-700 text-gray-200' : 'bg-blue-50 text-blue-700'
+                    <div className={`p-2 rounded-md text-center min-w-[60px] border ${
+                      isDarkMode ? 'bg-gray-900 border-gray-700 text-gray-200' : 'bg-indigo-50 border-indigo-100 text-indigo-700'
                     }`}>
-                      <span className="block text-xs font-bold uppercase tracking-wider opacity-70">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider opacity-70">
                         {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
                       </span>
-                      <span className="block text-2xl font-extrabold leading-none mt-1">
+                      <span className="block text-xl font-bold leading-none mt-0.5">
                         {new Date(event.date).getDate()}
                       </span>
                     </div>
                     {event.isTemplate && (
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        isDarkMode ? 'bg-purple-900/50 text-purple-200 border border-purple-700' : 'bg-purple-100 text-purple-700 border border-purple-200'
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        isDarkMode ? 'bg-indigo-900/30 text-indigo-300 border border-indigo-800' : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
                       }`}>
                         Template
                       </span>
                     )}
                   </div>
 
-                  <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'} group-hover:text-blue-600 transition-colors`}>
+                  <h3 className={`font-bold mb-1.5 ${isDarkMode ? 'text-white' : 'text-gray-900'} group-hover:text-indigo-600 transition-colors`}>
                     {event.title}
                   </h3>
                   
-                  <div className="flex items-center gap-4 mb-4 text-sm opacity-80">
+                  <div className="flex items-center gap-3 mb-4 text-xs font-medium">
                     <div className={`flex items-center gap-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <Clock size={14} className="text-gray-400" />
                       {formatTime(event.time)}
                     </div>
                   </div>
 
-                  <p className={`text-sm mb-6 flex-grow line-clamp-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className={`text-sm mb-6 flex-grow line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     {event.description}
                   </p>
 
-                  <div className="flex items-center gap-2 pt-4 border-t border-dashed mt-auto ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}">
+                  <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
                     <button
                       onClick={() => handleViewEvent(event)}
-                      className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors ${
+                      className={`flex-1 py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider transition-colors ${
                         isDarkMode 
-                          ? 'bg-blue-600/10 text-blue-300 hover:bg-blue-600 hover:text-white' 
-                          : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                          ? 'bg-gray-700 text-gray-300 hover:bg-indigo-600 hover:text-white' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-indigo-600 hover:text-white'
                       }`}
                     >
                       Details
                     </button>
                     <button
                       onClick={() => handleEditEvent(event)}
-                      className={`p-2.5 rounded-lg transition-colors ${
+                      className={`p-1.5 rounded transition-colors ${
                         isDarkMode 
                           ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                          : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                          : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
                       }`}
                       title="Edit"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
+                      <Edit3 size={18} />
                     </button>
                     <button
                       onClick={() => handleDeleteEvent(event)}
-                      className={`p-2.5 rounded-lg transition-colors ${
+                      className={`p-1.5 rounded transition-colors ${
                         isDarkMode 
-                          ? 'text-gray-400 hover:text-red-300 hover:bg-red-900/30' 
+                          ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20' 
                           : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
                       }`}
                       title="Delete"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <X size={18} />
                     </button>
                   </div>
                 </div>
@@ -715,87 +691,66 @@ const Events: React.FC = () => {
                 </div>
 
                 {/* Templates List */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                   {filteredTemplates.map((template) => (
                     <div 
                       key={template.eventId} 
-                      className={`group p-5 rounded-lg border transition-all duration-200 ${
+                      className={`p-4 rounded-md border transition-colors ${
                         isDarkMode 
-                          ? 'bg-gray-800/50 border-gray-700 hover:border-gray-600 hover:bg-gray-800' 
-                          : 'bg-white border-gray-200 hover:border-blue-400'
+                          ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
+                          : 'bg-white border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <div className="mb-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        <div className="flex justify-between items-start mb-1">
+                          <h3 className={`font-bold text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                             {template.title}
                           </h3>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-600'
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                            isDarkMode ? 'bg-indigo-900/30 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
                           }`}>
                             Template
                           </span>
                         </div>
-                        <p className={`text-sm line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <p className={`text-xs line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                           {template.description}
                         </p>
                       </div>
                       
-                      <div className="flex items-center gap-4 mb-4 text-xs font-medium opacity-70">
+                      <div className="flex items-center gap-4 mb-4 text-[10px] font-bold uppercase tracking-tight opacity-70">
                          <div className={`flex items-center gap-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
+                          <Calendar size={12} />
                           <span>{formatDate(template.date)}</span>
                         </div>
                         <div className={`flex items-center gap-1.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                          <Clock size={12} />
                           <span>{formatTime(template.time)}</span>
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
                             handleAddFromTemplate(template);
                             setIsTemplatesSidebarOpen(false);
                           }}
                           disabled={isAddingFromTemplate}
-                          className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none ${
-                            isDarkMode 
-                              ? 'bg-blue-600 hover:bg-blue-500' 
-                              : 'bg-blue-600 hover:bg-blue-700'
-                          }`}
+                          className="flex-1 py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50"
                         >
-                          {isAddingFromTemplate ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Adding...
-                            </span>
-                          ) : (
-                            'Use Template'
-                          )}
+                          {isAddingFromTemplate ? 'Adding...' : 'Use Template'}
                         </button>
                         <button
                           onClick={() => {
                             handleViewEvent(template);
                             setIsTemplatesSidebarOpen(false);
                           }}
-                          className={`px-3 py-2 rounded-xl transition-colors ${
+                          className={`p-1.5 rounded transition-colors ${
                             isDarkMode 
-                              ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white' 
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900'
+                              ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                           }`}
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
+                          <ArrowUpRight size={18} />
                         </button>
                       </div>
                     </div>
@@ -849,11 +804,11 @@ const Events: React.FC = () => {
                         id="title"
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        className={`w-full px-4 py-3 rounded-xl border-0 ring-1 ring-inset transition-all ${
+                        className={`w-full px-3 py-2 text-sm rounded-md border transition-colors outline-none ${
                           isDarkMode 
-                            ? 'bg-gray-800 ring-gray-700 text-white placeholder-gray-500 focus:ring-blue-500' 
-                            : 'bg-gray-50 ring-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:bg-white'
-                        } focus:ring-2 focus:ring-inset`}
+                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500' 
+                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white'
+                        }`}
                         placeholder="e.g., Annual Sports Day"
                         required
                       />
@@ -867,11 +822,11 @@ const Events: React.FC = () => {
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                         rows={4}
-                        className={`w-full px-4 py-3 rounded-xl border-0 ring-1 ring-inset transition-all ${
+                        className={`w-full px-3 py-2 text-sm rounded-md border transition-colors outline-none ${
                           isDarkMode 
-                            ? 'bg-gray-800 ring-gray-700 text-white placeholder-gray-500 focus:ring-blue-500' 
-                            : 'bg-gray-50 ring-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:bg-white'
-                        } focus:ring-2 focus:ring-inset`}
+                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500' 
+                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white'
+                        }`}
                         placeholder="Describe the event..."
                         required
                       />
@@ -916,15 +871,15 @@ const Events: React.FC = () => {
                       <label htmlFor="file" className={`block text-sm font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                         Attachment (Optional)
                       </label>
-                      <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl ${
-                        isDarkMode ? 'border-gray-700 hover:border-gray-600' : 'border-gray-300 hover:border-gray-400'
+                      <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border border-dashed rounded-md ${
+                        isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-300 bg-gray-50'
                       }`}>
                         <div className="space-y-1 text-center">
                           <svg className={`mx-auto h-12 w-12 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                           <div className={`flex text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            <label htmlFor="file" className="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <label htmlFor="file" className="relative cursor-pointer bg-transparent rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
                               <span>Upload a file</span>
                               <input id="file" name="file" type="file" className="sr-only" onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] }))} />
                             </label>
@@ -950,10 +905,10 @@ const Events: React.FC = () => {
                     <button
                       onClick={() => setIsAddSidebarOpen(false)}
                       disabled={isAddingEvent || isUpdatingEvent}
-                      className={`flex-1 px-4 py-3 text-sm font-semibold rounded-xl transition-colors ${
+                      className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
                         isDarkMode 
-                          ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                          : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                          ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' 
+                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
                       Cancel
@@ -961,23 +916,9 @@ const Events: React.FC = () => {
                     <button
                       onClick={handleSaveEvent}
                       disabled={isAddingEvent || isUpdatingEvent}
-                      className={`flex-[2] px-4 py-3 text-sm font-semibold rounded-xl text-white shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none ${
-                        isDarkMode 
-                          ? 'bg-blue-600 hover:bg-blue-500' 
-                          : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
+                      className="flex-[2] px-4 py-2 text-xs font-bold uppercase tracking-wider rounded text-white bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50"
                     >
-                      {(isAddingEvent || isUpdatingEvent) ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </span>
-                      ) : (
-                        selectedEvent ? 'Update Event' : 'Create Event'
-                      )}
+                      {(isAddingEvent || isUpdatingEvent) ? 'Processing...' : (selectedEvent ? 'Update Event' : 'Create Event')}
                     </button>
                   </div>
                 </div>
@@ -1030,11 +971,11 @@ const Events: React.FC = () => {
                         id="editTitle"
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        className={`w-full px-4 py-3 rounded-xl border-0 ring-1 ring-inset transition-all ${
+                        className={`w-full px-3 py-2 text-sm rounded-md border transition-colors outline-none ${
                           isDarkMode 
-                            ? 'bg-gray-800 ring-gray-700 text-white placeholder-gray-500 focus:ring-blue-500' 
-                            : 'bg-gray-50 ring-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:bg-white'
-                        } focus:ring-2 focus:ring-inset`}
+                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500' 
+                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white'
+                        }`}
                       />
                     </div>
                     <div>
@@ -1046,11 +987,11 @@ const Events: React.FC = () => {
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                         rows={4}
-                        className={`w-full px-4 py-3 rounded-xl border-0 ring-1 ring-inset transition-all ${
+                        className={`w-full px-3 py-2 text-sm rounded-md border transition-colors outline-none ${
                           isDarkMode 
-                            ? 'bg-gray-800 ring-gray-700 text-white placeholder-gray-500 focus:ring-blue-500' 
-                            : 'bg-gray-50 ring-gray-200 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:bg-white'
-                        } focus:ring-2 focus:ring-inset`}
+                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500' 
+                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:bg-white'
+                        }`}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -1091,15 +1032,15 @@ const Events: React.FC = () => {
                       <label htmlFor="editFile" className={`block text-sm font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                         Attachment (Optional)
                       </label>
-                      <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl ${
-                        isDarkMode ? 'border-gray-700 hover:border-gray-600' : 'border-gray-300 hover:border-gray-400'
+                      <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border border-dashed rounded-md ${
+                        isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-300 bg-gray-50'
                       }`}>
                         <div className="space-y-1 text-center">
                           <svg className={`mx-auto h-12 w-12 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                           <div className={`flex text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            <label htmlFor="editFile" className="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <label htmlFor="editFile" className="relative cursor-pointer bg-transparent rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
                               <span>Change file</span>
                               <input id="editFile" name="editFile" type="file" className="sr-only" onChange={(e) => setFormData(prev => ({ ...prev, file: e.target.files?.[0] }))} />
                             </label>
@@ -1119,26 +1060,21 @@ const Events: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className={`p-6 border-t ${isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-100 bg-gray-50'}`}>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setIsEditSidebarOpen(false)}
-                      className={`flex-1 px-4 py-3 text-sm font-semibold rounded-xl transition-colors ${
+                      className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
                         isDarkMode 
-                          ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                          : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                          ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' 
+                          : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSaveEvent}
-                      className={`flex-[2] px-4 py-3 text-sm font-semibold rounded-xl text-white shadow-lg shadow-blue-500/25 transition-all active:scale-95 ${
-                        isDarkMode 
-                          ? 'bg-blue-600 hover:bg-blue-500' 
-                          : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
+                      className="flex-[2] px-4 py-2 text-xs font-bold uppercase tracking-wider rounded text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
                     >
                       Save Changes
                     </button>
@@ -1150,94 +1086,68 @@ const Events: React.FC = () => {
           </div>
         )}
 
-        {/* View Event Dialog */}
+                {/* View Event Dialog */}
         {isViewDialogOpen && selectedEvent && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" onClick={() => setIsViewDialogOpen(false)} />
-            <div className={`relative w-full max-w-2xl transform overflow-hidden rounded-xl border transition-all ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-hidden" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-gray-900/60 transition-opacity" onClick={() => setIsViewDialogOpen(false)} />
+            <div className={`relative w-full h-full sm:h-auto sm:max-w-2xl transform overflow-hidden sm:rounded-md border transition-all ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
               
               {/* Header */}
-              <div className={`flex items-center justify-between px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {selectedEvent.title}
-                    </h2>
-                    {selectedEvent.isTemplate && (
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        isDarkMode 
-                          ? 'bg-blue-900/30 text-blue-300 border-blue-800' 
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}>
-                        Template
-                      </span>
-                    )}
-                  </div>
+              <div className={`flex items-center justify-between px-6 py-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-100'}`}>
+                <div className="flex items-center gap-3">
+                  <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {selectedEvent.title}
+                  </h2>
                 </div>
                 <button
                   onClick={() => setIsViewDialogOpen(false)}
-                  className={`p-2 rounded-full transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className={`p-2 rounded transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X size={20} />
                 </button>
               </div>
 
               {/* Content */}
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="md:col-span-2 space-y-6">
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2 space-y-4">
                     <div>
-                      <h3 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                         Description
                       </h3>
-                      <p className={`text-base leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         {selectedEvent.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                     <div className={`p-5 rounded-xl ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'} space-y-4`}>
+                  <div className="space-y-4">
+                     <div className={`p-4 rounded-md ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'} space-y-3`}>
                       <div>
-                        <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Date & Time
+                        <h3 className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                          Schedule
                         </h3>
-                         <div className={`flex items-center gap-2 mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                           <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
+                         <div className={`flex items-center gap-2 mb-1 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                           <Calendar size={14} className="text-indigo-600 dark:text-indigo-400" />
                           <span className="font-medium">{formatDate(selectedEvent.date)}</span>
                         </div>
-                        <div className={`flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                           <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                        <div className={`flex items-center gap-2 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                           <Clock size={14} className="text-indigo-600 dark:text-indigo-400" />
                           <span className="font-medium">{formatTime(selectedEvent.time)}</span>
                         </div>
                       </div>
 
                       {selectedEvent.filePath && (
-                        <div>
-                          <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Attachment
-                          </h3>
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                           <button
                             onClick={() => {
                               setIsViewDialogOpen(false);
                               handleAttachmentPreview(selectedEvent);
                             }}
-                            className="flex items-center gap-2 text-sm font-medium text-blue-500 hover:text-blue-600 transition-colors group"
+                            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700 transition-colors"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            <span className="group-hover:underline">View File</span>
+                            <FileText size={14} />
+                            View Attachment
                           </button>
                         </div>
                       )}
@@ -1247,37 +1157,26 @@ const Events: React.FC = () => {
               </div>
 
               {/* Footer */}
-              <div className={`px-6 py-4 flex justify-end gap-3 border-t ${isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-100 bg-gray-50'}`}>
+              <div className={`px-6 py-4 flex justify-end gap-3 border-t ${isDarkMode ? 'border-gray-800 bg-gray-900/50' : 'border-gray-100 bg-gray-50'}`}>
                 <button
                   onClick={() => setIsViewDialogOpen(false)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                      : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
+                    isDarkMode ? 'bg-gray-800 text-gray-300 hover:text-white' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   Close
                 </button>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setIsViewDialogOpen(false);
-                      handleEditEvent(selectedEvent);
-                    }}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
-                      isDarkMode 
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white' 
-                        : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setIsViewDialogOpen(false);
+                    handleEditEvent(selectedEvent);
+                  }}
+                  className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                >
+                  <Edit3 size={14} />
+                  Edit
+                </button>
               </div>
-
             </div>
           </div>
         )}
@@ -1285,30 +1184,25 @@ const Events: React.FC = () => {
         {/* Delete Event Dialog */}
         {isDeleteDialogOpen && selectedEvent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" onClick={() => setIsDeleteDialogOpen(false)} />
-            <div className={`relative w-full max-w-md transform overflow-hidden rounded-xl border transition-all ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-              
-              <div className="p-8 text-center">
-                 <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-6 ${isDarkMode ? 'bg-red-900/30' : 'bg-red-50'}`}>
-                  <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+            <div className="absolute inset-0 bg-gray-900/60 transition-opacity" onClick={() => setIsDeleteDialogOpen(false)} />
+            <div className={`relative w-full max-w-md transform overflow-hidden rounded-md border transition-all ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
+              <div className="p-6 text-center">
+                 <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full mb-4 ${isDarkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
+                  <Trash2 size={24} className="text-red-500" />
                 </div>
-                <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Delete Event?
                 </h3>
                 <p className={`text-sm mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Are you sure you want to delete <span className="font-semibold text-current">"{selectedEvent.title}"</span>? This action cannot be undone.
+                  Permanently delete <span className="font-semibold text-current">"{selectedEvent.title}"</span>?
                 </p>
                 
-                <div className="flex gap-3 justify-center">
+                <div className="flex gap-2 justify-center">
                   <button
                     onClick={() => setIsDeleteDialogOpen(false)}
                     disabled={isDeletingEvent}
-                    className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors ${
-                      isDarkMode 
-                        ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                        : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                    className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
+                      isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     Cancel
@@ -1316,48 +1210,32 @@ const Events: React.FC = () => {
                   <button
                     onClick={handleConfirmDelete}
                     disabled={isDeletingEvent}
-                    className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/25 transition-all active:scale-95 disabled:opacity-70 flex items-center gap-2"
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded bg-red-600 hover:bg-red-500 text-white transition-colors"
                   >
-                    {isDeletingEvent ? (
-                      <>
-                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Deleting...
-                      </>
-                    ) : (
-                      'Delete Event'
-                    )}
+                    {isDeletingEvent ? 'Deleting...' : 'Delete Event'}
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         )}
 
         {/* Attachment Preview Dialog */}
         {isAttachmentPreviewOpen && selectedEvent && selectedEvent.filePath && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-gray-900/90 backdrop-blur-md transition-opacity" onClick={() => setIsAttachmentPreviewOpen(false)} />
-            <div className={`relative w-full max-w-5xl h-[85vh] rounded-xl border flex flex-col overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-hidden" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-gray-900/95 transition-opacity" onClick={() => setIsAttachmentPreviewOpen(false)} />
+            <div className={`relative w-full h-full sm:h-[85vh] sm:max-w-5xl sm:rounded-md border flex flex-col overflow-hidden ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
               
               {/* Header */}
-              <div className={`flex items-center justify-between px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className={`flex items-center justify-between px-6 py-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-3 overflow-hidden">
-                   <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
+                   <div className={`p-2 rounded ${isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
+                    <FileText size={18} />
                   </div>
                   <div>
-                    <h2 className={`text-lg font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <h2 className={`text-sm font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {selectedEvent.title}
                     </h2>
-                     <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Previewing attachment
-                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1365,15 +1243,9 @@ const Events: React.FC = () => {
                     href={selectedEvent.filePath}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`px-4 py-2 text-sm font-semibold rounded-xl text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center gap-2 ${
-                      isDarkMode 
-                        ? 'bg-blue-600 hover:bg-blue-500' 
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    }`}
+                    className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-2"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
+                    <Download size={14} />
                     Download
                   </a>
                   <button
@@ -1381,39 +1253,31 @@ const Events: React.FC = () => {
                       setIsAttachmentPreviewOpen(false);
                       setAttachmentLoadError(false);
                     }}
-                    className={`p-2 rounded-full transition-colors ${
-                      isDarkMode 
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                        : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className={`p-2 rounded transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <X size={20} />
                   </button>
                 </div>
               </div>
 
               {/* Content */}
-              <div className={`flex-1 overflow-auto flex items-center justify-center p-8 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+              <div className={`flex-1 overflow-auto flex items-center justify-center p-4 sm:p-8 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
                 {attachmentLoadError ? (
                   <div className="text-center max-w-md">
-                    <div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full mb-6 ${isDarkMode ? 'bg-red-900/30' : 'bg-red-50'}`}>
-                      <svg className="h-10 w-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
+                    <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${isDarkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
+                      <AlertCircle size={24} className="text-red-500" />
                     </div>
-                    <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       Preview Unavailable
                     </h3>
                     <p className={`text-sm mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      We couldn't preview this file directly. Please download it to view the content.
+                      Please download the file to view its content.
                     </p>
                     <a
                       href={selectedEvent.filePath}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-lg shadow-blue-500/20"
+                      className="inline-flex items-center px-4 py-2 rounded text-xs font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
                     >
                       Download File
                     </a>
@@ -1422,36 +1286,32 @@ const Events: React.FC = () => {
                   <img
                     src={selectedEvent.filePath}
                     alt="Preview"
-                    className="max-w-full max-h-full object-contain rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="max-w-full max-h-full object-contain rounded-md"
                     onError={() => setAttachmentLoadError(true)}
-                    onLoad={() => setAttachmentLoadError(false)}
                   />
                 ) : selectedEvent.filePath.toLowerCase().match(/\.(pdf)$/i) ? (
                   <iframe
                     src={selectedEvent.filePath}
-                    className="w-full h-full rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="w-full h-full rounded-md border border-gray-200 dark:border-gray-800"
                     title="PDF Preview"
                     onError={() => setAttachmentLoadError(true)}
-                    onLoad={() => setAttachmentLoadError(false)}
                   />
                 ) : (
                    <div className="text-center max-w-md">
-                    <div className={`mx-auto flex h-24 w-24 items-center justify-center rounded-xl mb-6 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                      <svg className="h-12 w-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                    <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-md mb-4 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                      <FileText size={32} className="text-indigo-600" />
                     </div>
-                    <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      File Type Not Supported
+                    <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Not Supported
                     </h3>
                     <p className={`text-sm mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      This file format cannot be previewed in the browser.
+                      This file format cannot be previewed.
                     </p>
                     <a
                       href={selectedEvent.filePath}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-lg shadow-blue-500/20"
+                      className="inline-flex items-center px-4 py-2 rounded text-xs font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
                     >
                       Download to View
                     </a>

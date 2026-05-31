@@ -40,11 +40,11 @@ const ShimmerBlock = ({ className }: { className: string }) => (
 
 const StatusBadge = ({ type, text }: { type: string; text: string }) => {
   const colors: Record<string, string> = {
-    all: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-    teachers: 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
-    classes: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+    all: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
+    teachers: 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+    classes: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
   };
-  const colorClass = colors[type.toLowerCase()] || 'bg-gray-50 text-gray-700 border-gray-100 dark:bg-gray-800 dark:text-gray-300';
+  const colorClass = colors[type.toLowerCase()] || 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
 
   return (
     <span className={`px-2.5 py-1 text-[11px] uppercase tracking-wider font-bold rounded-full border ${colorClass}`}>
@@ -330,41 +330,39 @@ const Announcements: React.FC = () => {
   // --- Render Loading State ---
   if (loading) {
     return (
-      <div className={`min-h-screen p-6 lg:p-8 ${isDarkMode ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
-        <div className="max-w-screen-2xl mx-auto space-y-8">
+      <div className={`min-h-screen p-2 sm:p-4 lg:p-6 ${isDarkMode ? 'bg-gray-900' : 'bg-[#F8FAFC]'}`}>
+        <div className="mx-auto space-y-4 sm:space-y-6">
           <div className="flex justify-between items-end">
             <div className="space-y-2">
-               <ShimmerBlock className="h-10 w-48 rounded-xl" />
-               <ShimmerBlock className="h-4 w-64 rounded-lg" />
+               <ShimmerBlock className="h-8 w-48 rounded-md" />
+               <ShimmerBlock className="h-4 w-64 rounded-md" />
             </div>
-            <ShimmerBlock className="h-12 w-40 rounded-xl" />
+            <ShimmerBlock className="h-10 w-32 rounded-md" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
              {[1, 2, 3, 4].map(i => (
-               <div key={i} className={`h-32 rounded-lg border p-6 ${isDarkMode ? 'border-gray-800 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+               <div key={i} className={`h-24 sm:h-32 rounded-md border p-4 sm:p-6 ${isDarkMode ? 'border-gray-800 bg-gray-800' : 'border-gray-200 bg-white'}`}>
                  <div className="flex justify-between">
                     <div className="space-y-3 w-full">
-                        <ShimmerBlock className="h-4 w-20 rounded" />
-                        <ShimmerBlock className="h-8 w-12 rounded" />
+                        <ShimmerBlock className="h-3 w-16 rounded" />
+                        <ShimmerBlock className="h-6 w-10 rounded" />
                     </div>
-                    <ShimmerBlock className="h-12 w-12 rounded-full" />
                  </div>
                </div>
             ))}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
              {[1, 2, 3, 4].map(i => (
-                 <div key={i} className={`h-40 rounded-xl border p-6 ${isDarkMode ? 'border-gray-800 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                 <div key={i} className={`h-32 rounded-md border p-4 sm:p-6 ${isDarkMode ? 'border-gray-800 bg-gray-800' : 'border-gray-200 bg-white'}`}>
                     <div className="flex gap-4">
                         <div className="flex-1 space-y-4">
                             <div className="flex gap-3">
-                                <ShimmerBlock className="h-6 w-1/3 rounded-lg" />
-                                <ShimmerBlock className="h-6 w-20 rounded-full" />
+                                <ShimmerBlock className="h-5 w-1/3 rounded-md" />
                             </div>
-                            <ShimmerBlock className="h-4 w-3/4 rounded" />
-                            <ShimmerBlock className="h-4 w-1/2 rounded" />
+                            <ShimmerBlock className="h-3 w-3/4 rounded" />
+                            <ShimmerBlock className="h-3 w-1/2 rounded" />
                         </div>
                     </div>
                  </div>
@@ -376,49 +374,46 @@ const Announcements: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-[#F8FAFC] text-gray-900'}`}>
-      <div className="p-6 lg:p-8 max-w-screen-2xl mx-auto">
+    <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-[#F8FAFC] text-gray-900'}`}>
+      <div className="p-0 sm:p-2 lg:p-4 space-y-4 sm:space-y-6">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10">
+        <div className="bg-white dark:bg-gray-800 rounded-none sm:rounded-md p-4 sm:p-6 border-b sm:border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
-              Announcements
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-1 text-gray-900 dark:text-white">
+              Notice Board
             </h1>
-            <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Broadcast updates to your school community.
             </p>
           </div>
           <button
             onClick={handlePostAnnouncement}
-            className="group relative px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 overflow-hidden"
+            className="w-full md:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-md transition-colors flex justify-center items-center gap-2"
           >
-            <span className="relative z-10 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                </svg>
-                Create New
-            </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1s_infinite]" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            Create New
           </button>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 px-3 sm:px-0">
           {[
-            { label: 'Total Posted', value: announcements.length, icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-            { label: 'This Month', value: announcements.filter(a => new Date(a.createdDate).getMonth() === new Date().getMonth()).length, icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-            { label: 'To Students', value: announcements.filter(a => ['all', 'classes'].includes(a.selectedAudience)).length, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-900/20' },
-            { label: 'To Teachers', value: announcements.filter(a => a.selectedAudience === 'teachers').length, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+            { label: 'Total Posted', value: announcements.length, icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+            { label: 'This Month', value: announcements.filter(a => new Date(a.createdDate).getMonth() === new Date().getMonth()).length, icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+            { label: 'To Students', value: announcements.filter(a => ['all', 'classes'].includes(a.selectedAudience)).length, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+            { label: 'To Teachers', value: announcements.filter(a => a.selectedAudience === 'teachers').length, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
           ].map((stat, idx) => (
-            <div key={idx} className={`p-6 rounded-lg border transition-all duration-300 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div key={idx} className={`p-4 sm:p-5 rounded-md border shadow-sm transition-all duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{stat.label}</p>
-                  <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
+                  <p className={`text-xs sm:text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{stat.label}</p>
+                  <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-xl ${stat.bg}`}>
-                  <svg className={`w-6 h-6 ${stat.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`p-2 sm:p-2.5 rounded-lg ${stat.bg}`}>
+                  <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
                   </svg>
                 </div>
@@ -428,7 +423,7 @@ const Announcements: React.FC = () => {
         </div>
 
         {/* Search & Filters */}
-        <div className={`p-2 rounded-lg mb-8 border ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <div className={`mx-3 sm:mx-0 p-2 rounded-md border shadow-sm ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -461,38 +456,36 @@ const Announcements: React.FC = () => {
         </div>
 
         {/* Main Content List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4 px-3 sm:px-0">
           {filteredAnnouncements.length === 0 ? (
-            <div className={`rounded-xl border border-dashed p-16 text-center ${isDarkMode ? 'border-gray-700' : 'border-gray-300 bg-gray-50'}`}>
-               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`rounded-md border border-dashed p-10 text-center ${isDarkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-300 bg-gray-50'}`}>
+               <div className="w-12 h-12 mx-auto mb-3 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                </div>
-               <h3 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>No announcements found</h3>
-               <p className={`mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Try clearing your filters or post a new one.</p>
+               <h3 className={`text-base font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>No announcements found</h3>
+               <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Try clearing your filters or post a new one.</p>
             </div>
           ) : (
             filteredAnnouncements.map((announcement) => (
               <div 
                 key={announcement.announcementId} 
-                className={`group relative rounded-xl border p-6 transition-all duration-300 ${
+                className={`group relative rounded-md border p-4 sm:p-5 transition-colors duration-200 ${
                   isDarkMode 
-                    ? 'bg-gray-800 border-gray-700 hover:border-gray-500' 
-                    : 'bg-white border-gray-200 hover:border-blue-400'
+                    ? 'bg-gray-800 border-gray-700 hover:bg-gray-800/80' 
+                    : 'bg-white border-gray-200 hover:bg-gray-50'
                 }`}
               >
-                <div className="flex flex-col sm:flex-row gap-6">
+                <div className="flex flex-col sm:flex-row gap-4">
                   {/* Icon/Avatar Area */}
                   <div className="hidden sm:flex flex-col items-center gap-2">
-                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center border ${
+                     <div className={`w-10 h-10 rounded-md flex items-center justify-center border ${
                         announcement.selectedAudience === 'teachers' 
-                        ? 'bg-amber-100 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
-                        : announcement.selectedAudience === 'classes'
-                        ? 'bg-violet-100 text-violet-600 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800'
-                        : 'bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+                        ? 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
+                        : 'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800'
                      }`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                         </svg>
                      </div>
@@ -584,27 +577,27 @@ const Announcements: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             {/* Title */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Title</label>
+                                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Title</label>
                                 <input 
                                     type="text" 
                                     value={formData.title} 
                                     onChange={(e) => setFormData({...formData, title: e.target.value})}
-                                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white focus:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}
+                                    className={`w-full px-3 py-2.5 rounded-md border outline-none transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
                                     placeholder="e.g., Annual Sports Day"
                                 />
                             </div>
                             
                             {/* Audience */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Target Audience</label>
+                                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Target Audience</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {audienceOptions.map(opt => (
                                         <button
                                             key={opt}
                                             onClick={() => setFormData({...formData, selectedAudience: opt, selectedRecipients: []})}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                                            className={`px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
                                                 formData.selectedAudience === opt 
-                                                ? 'bg-blue-600 text-white border-blue-600' 
+                                                ? 'bg-indigo-600 text-white border-indigo-600' 
                                                 : isDarkMode 
                                                     ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' 
                                                     : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
@@ -646,38 +639,38 @@ const Announcements: React.FC = () => {
 
                             {/* Message */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Message</label>
+                                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Message</label>
                                 <textarea 
                                     rows={6}
                                     value={formData.message}
                                     onChange={(e) => setFormData({...formData, message: e.target.value})}
-                                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white focus:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}
+                                    className={`w-full px-3 py-2.5 rounded-md border outline-none transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white focus:border-indigo-500' : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
                                     placeholder="Write your announcement here..."
                                 />
                             </div>
 
                             {/* File Upload */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Attachment</label>
-                                <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Attachment</label>
+                                <label className={`flex flex-col items-center justify-center w-full h-20 border border-dashed rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}>
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                        <p className="mb-1 text-xs text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                                        <svg className="w-5 h-5 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                        <p className="text-xs text-gray-500 font-medium">Click to upload</p>
                                     </div>
                                     <input type="file" className="hidden" onChange={(e) => setFormData({...formData, file: e.target.files?.[0]})} />
                                 </label>
                                 {(formData.file || (isEditSidebarOpen && selectedAnnouncement?.file)) && (
-                                    <div className="mt-2 flex items-center gap-2 text-sm text-blue-500">
+                                    <div className="mt-2 flex items-center gap-2 text-xs font-medium text-indigo-600 dark:text-indigo-400">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         {formData.file ? formData.file.name : 'Existing file attached'}
                                     </div>
                                 )}
                             </div>
                         </div>
-                        <div className={`p-6 border-t ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+                        <div className={`p-4 sm:p-6 border-t ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
                             <button 
                                 onClick={handleSaveAnnouncement}
-                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all"
+                                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-md transition-colors"
                             >
                                 {isEditSidebarOpen ? 'Save Changes' : 'Post Announcement'}
                             </button>
@@ -687,14 +680,13 @@ const Announcements: React.FC = () => {
             </div>
         )}
 
-        {/* View Dialog (Glassmorphism) */}
+        {/* View Dialog */}
         {isViewDialogOpen && selectedAnnouncement && (
              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
-                <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity" onClick={() => setIsViewDialogOpen(false)} />
-                <div className={`relative w-full max-w-2xl rounded-xl border overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} transform transition-all scale-100`}>
-                    <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-600 to-violet-600 opacity-10" />
-                    <div className="p-8 relative">
-                        <div className="flex justify-between items-start mb-6">
+                <div className="absolute inset-0 bg-gray-900/50 transition-opacity" onClick={() => setIsViewDialogOpen(false)} />
+                <div className={`relative w-full max-w-2xl rounded-md border overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} flex flex-col max-h-[90vh]`}>
+                    <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h2 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedAnnouncement.title}</h2>
                                 <div className="flex gap-2 items-center">
@@ -710,19 +702,19 @@ const Announcements: React.FC = () => {
                             <p className="whitespace-pre-wrap leading-relaxed">{selectedAnnouncement.message}</p>
                         </div>
                         {selectedAnnouncement.file && (
-                            <div className={`flex items-center justify-between p-4 rounded-xl border ${isDarkMode ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'}`}>
+                            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-md border ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    <div className="p-2 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                     </div>
-                                    <div className="text-sm">
-                                        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Attached File</p>
-                                        <p className="text-gray-500">{getFileNameFromUrl(selectedAnnouncement.file)}</p>
+                                    <div className="text-sm min-w-0">
+                                        <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Attached File</p>
+                                        <p className="text-gray-500 truncate">{getFileNameFromUrl(selectedAnnouncement.file)}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => handleFilePreview(selectedAnnouncement.file!)} className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">Preview</button>
-                                    <button onClick={() => handleFileDownload(selectedAnnouncement.file!, 'download')} className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">Download</button>
+                                    <button onClick={() => handleFilePreview(selectedAnnouncement.file!)} className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100/50 rounded hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 transition-colors">Preview</button>
+                                    <button onClick={() => handleFileDownload(selectedAnnouncement.file!, 'download')} className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-700 bg-gray-200/50 rounded hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors">Download</button>
                                 </div>
                             </div>
                         )}
@@ -734,16 +726,16 @@ const Announcements: React.FC = () => {
         {/* Delete Dialog */}
         {isDeleteDialogOpen && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDeleteDialogOpen(false)} />
-                <div className={`relative w-full max-w-sm p-6 rounded-xl border text-center ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center dark:bg-red-900/30 dark:text-red-400">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                <div className="absolute inset-0 bg-gray-900/50" onClick={() => setIsDeleteDialogOpen(false)} />
+                <div className={`relative w-full max-w-sm p-6 rounded-md border text-center ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="w-12 h-12 mx-auto mb-4 rounded-md bg-red-50 text-red-600 flex items-center justify-center dark:bg-red-900/20 dark:text-red-400">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </div>
-                    <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Confirm Deletion</h3>
-                    <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Are you sure you want to delete this? This action cannot be undone.</p>
+                    <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Confirm Deletion</h3>
+                    <p className={`text-sm mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Are you sure you want to delete this? This action cannot be undone.</p>
                     <div className="flex gap-3 justify-center">
-                        <button onClick={() => setIsDeleteDialogOpen(false)} className="px-5 py-2 rounded-xl font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Cancel</button>
-                        <button onClick={confirmDelete} className="px-5 py-2 rounded-xl font-medium bg-red-600 text-white hover:bg-red-700">Delete</button>
+                        <button onClick={() => setIsDeleteDialogOpen(false)} className="px-4 py-2 font-semibold text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Cancel</button>
+                        <button onClick={confirmDelete} className="px-4 py-2 font-semibold text-sm rounded-md bg-red-600 text-white hover:bg-red-700">Delete</button>
                     </div>
                 </div>
             </div>
@@ -751,27 +743,27 @@ const Announcements: React.FC = () => {
 
         {/* File Preview Dialog */}
         {isFilePreviewOpen && selectedFile && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={() => setIsFilePreviewOpen(false)} />
-                 <div className={`relative w-full max-w-5xl h-[80vh] rounded-xl border overflow-hidden flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
-                    <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{getFileNameFromUrl(selectedFile)}</h3>
-                        <button onClick={() => setIsFilePreviewOpen(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                             <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+                 <div className="absolute inset-0 bg-gray-900/80 transition-opacity" onClick={() => setIsFilePreviewOpen(false)} />
+                 <div className={`relative w-full max-w-4xl h-[85vh] rounded-md border overflow-hidden flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="flex justify-between items-center p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'} truncate mr-4`}>{getFileNameFromUrl(selectedFile)}</h3>
+                        <button onClick={() => setIsFilePreviewOpen(false)} className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
+                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
-                    <div className="flex-1 bg-gray-100 dark:bg-black/50 p-4 overflow-auto flex items-center justify-center">
+                    <div className="flex-1 bg-gray-100 dark:bg-black/50 p-2 sm:p-4 overflow-auto flex items-center justify-center">
                         {isImageFile(getFileNameFromUrl(selectedFile)) ? (
-                            <img src={selectedFile} alt="Preview" className="max-w-full max-h-full object-contain rounded border dark:border-gray-700" />
+                            <img src={selectedFile} alt="Preview" className="max-w-full max-h-full object-contain rounded border border-gray-200 dark:border-gray-700 shadow-sm" />
                         ) : isPdfFile(getFileNameFromUrl(selectedFile)) ? (
-                            <iframe src={selectedFile} className="w-full h-full rounded border-0" title="PDF Preview" />
+                            <iframe src={selectedFile} className="w-full h-full rounded border border-gray-200 dark:border-gray-700 bg-white" title="PDF Preview" />
                         ) : (
-                            <div className="text-center">
-                                <div className="mb-4 p-4 bg-gray-200 dark:bg-gray-800 rounded-full inline-block">
-                                     <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <div className="text-center p-6">
+                                <div className="mb-4 p-3 bg-gray-200 dark:bg-gray-800 rounded-md inline-block">
+                                     <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 </div>
-                                <p className={`text-lg mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview not available</p>
-                                <button onClick={() => handleFileDownload(selectedFile, getFileNameFromUrl(selectedFile))} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Download File</button>
+                                <p className={`text-base font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Preview not available</p>
+                                <button onClick={() => handleFileDownload(selectedFile, getFileNameFromUrl(selectedFile))} className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700">Download File</button>
                             </div>
                         )}
                     </div>

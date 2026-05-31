@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 interface StudentResultState {
   studentId: string;
   studentName: string;
-  rollNo: string;
+  rollNo: string | number;
   email: string;
   className: string;
   results: StudentResult[];
@@ -822,7 +822,7 @@ const StudentResults: React.FC = () => {
               resultsData.push({
                 studentId: student.studentId,
                 studentName: student.name,
-                rollNo: student.rollNo || '',
+                rollNo: student.rollNo ? String(student.rollNo) : '',
                 email: student.email || '',
                 className: student.className || '',
                 results: results
@@ -832,7 +832,7 @@ const StudentResults: React.FC = () => {
               resultsData.push({
                 studentId: student.studentId,
                 studentName: student.name,
-                rollNo: student.rollNo || '',
+                rollNo: student.rollNo ? String(student.rollNo) : '',
                 email: student.email || '',
                 className: student.className || '',
                 results: []
@@ -1060,7 +1060,7 @@ const StudentResults: React.FC = () => {
 
   const filteredStudentResults = studentResults.filter(sr => {
     const matchesSearch = sr.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         sr.rollNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         String(sr.rollNo).toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sr.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (!selectedExamType) return matchesSearch;

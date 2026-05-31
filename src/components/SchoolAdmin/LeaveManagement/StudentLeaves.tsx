@@ -343,9 +343,9 @@ const StudentLeaves: React.FC = () => {
       )}
 
       {/* Leaves List */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {leaves.length === 0 ? (
-          <div className={`p-12 text-center rounded-xl ${isDarkMode ? 'bg-gray-700/50 border border-gray-600' : 'bg-gray-50 border border-gray-200'}`}>
+          <div className={`col-span-full p-12 text-center rounded-xl ${isDarkMode ? 'bg-gray-700/50 border border-gray-600' : 'bg-gray-50 border border-gray-200'}`}>
             <GraduationCap className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
             <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
               No student leave records found
@@ -357,136 +357,104 @@ const StudentLeaves: React.FC = () => {
             </p>
           </div>
         ) : (
-          leaves.map((leave) => (
-            <div
-              key={leave.leaveId}
-              className={`p-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl ${
-                isDarkMode ? 'bg-gray-700/50 border border-gray-600 hover:border-gray-500' : 'bg-white border border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4 flex-1">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
-                    {((leave as any).studentName || 'S').charAt(0).toUpperCase()}
+          leaves.map((leave) => {
+            const fromDateAny = leave.fromDate as any;
+            const fromDateObj = fromDateAny?._seconds ? new Date(fromDateAny._seconds * 1000) : new Date(leave.fromDate);
+            const isPending = leave.status.toLowerCase() === 'pending';
+            return (
+              <div
+                key={leave.leaveId}
+                className={`group flex flex-col p-5 rounded-md border transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
+                    : 'bg-white border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className={`p-2 rounded-md text-center min-w-[60px] border ${
+                    isDarkMode ? 'bg-gray-900 border-gray-700 text-gray-200' : 'bg-indigo-50 border-indigo-100 text-indigo-700'
+                  }`}>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider opacity-70">
+                      {isNaN(fromDateObj.getTime()) ? 'N/A' : fromDateObj.toLocaleDateString('en-US', { month: 'short' })}
+                    </span>
+                    <span className="block text-xl font-bold leading-none mt-0.5">
+                      {isNaN(fromDateObj.getTime()) ? '-' : fromDateObj.getDate()}
+                    </span>
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {(leave as any).studentName || 'Unknown Student'}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border flex items-center gap-1 ${getStatusColor(leave.status)}`}>
-                        {getStatusIcon(leave.status)}
-                        {leave.status.charAt(0).toUpperCase() + leave.status.slice(1).toLowerCase()}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-6 mb-3 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {(leave as any).className || 'Unknown Class'}
-                          {(leave as any).classSection ? ` - ${(leave as any).classSection}` : ''}
-                        </span>
-                      </div>
-                      {(leave as any).studentRollNo && (
-                        <div className="flex items-center gap-2">
-                          <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            Roll No: {(leave as any).studentRollNo}
-                          </span>
-                        </div>
-                      )}
-                      {leave.leaveType && (
-                        <div className="flex items-center gap-2">
-                          <FileText className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            {leave.leaveType}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-6 mb-3 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <Calendar className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {formatDate(leave.fromDate)} - {formatDate(leave.toDate)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {getDayCount(leave.fromDate, leave.toDate)} day{getDayCount(leave.fromDate, leave.toDate) !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-3`}>
-                      {leave.reason}
-                    </p>
-                    
-                    <div className="flex items-center gap-4 flex-wrap">
-                      {leave.fileUrl && (
-                        <button
-                          onClick={() => window.open(leave.fileUrl, '_blank')}
-                          className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition-colors ${
-                            isDarkMode 
-                              ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20' 
-                              : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-                          }`}
-                        >
-                          <FileText className="w-4 h-4" />
-                          View Document
-                        </button>
-                      )}
-                      {leave.createdAt && (
-                        <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                          Applied on {formatDate(leave.createdAt)}
-                        </span>
-                      )}
-                    </div>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1 ${getStatusColor(leave.status)}`}>
+                    {getStatusIcon(leave.status)}
+                    {leave.status}
+                  </span>
+                </div>
+
+                <h3 className={`font-bold mb-1.5 ${isDarkMode ? 'text-white' : 'text-gray-900'} group-hover:text-indigo-600 transition-colors`}>
+                  {(leave as any).studentName || 'Unknown Student'}
+                </h3>
+                
+                <div className="flex flex-col gap-1 mb-4 text-xs font-medium text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={14} className="text-gray-400" />
+                    <span>
+                      {formatDate(leave.fromDate)} - {formatDate(leave.toDate)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap size={14} className="text-gray-400" />
+                    <span>
+                      {(leave as any).className || 'Unknown Class'}
+                      {(leave as any).classSection ? ` - ${(leave as any).classSection}` : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-gray-400" />
+                    <span>
+                      {getDayCount(leave.fromDate, leave.toDate)} day{getDayCount(leave.fromDate, leave.toDate) !== 1 ? 's' : ''}
+                    </span>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2 ml-4 flex-shrink-0">
+                <p className={`text-sm mb-6 flex-grow line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {leave.reason}
+                </p>
+
+                <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
                   <button
                     onClick={() => {
                       setSelectedLeave(leave);
                       setShowModal(true);
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`flex-1 py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 border ${
                       isDarkMode 
-                        ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 border border-blue-700/30' 
-                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200'
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200'
                     }`}
                   >
-                    <Calendar className="w-4 h-4" />
-                    View
+                    Details
                   </button>
-                  {leave.status.toLowerCase() === 'pending' && (
+                  {isPending ? (
                     <>
                       <button
                         onClick={() => handleApprove(leave.leaveId)}
-                        className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        className="flex-1 py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 text-white bg-green-600 hover:bg-green-700 shadow-sm"
                       >
-                        <CheckCircle className="w-4 h-4" />
                         Approve
                       </button>
                       <button
                         onClick={() => handleReject(leave.leaveId)}
-                        className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                        className="py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 text-white bg-red-600 hover:bg-red-700 shadow-sm"
                       >
-                        <XCircle className="w-4 h-4" />
-                        Reject
+                        <XCircle size={12} />
                       </button>
                     </>
+                  ) : (
+                    <span className={`text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 py-1.5 w-full text-center`}>
+                      Applied on {formatDate(leave.createdAt)}
+                    </span>
                   )}
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

@@ -40,7 +40,7 @@ const SchoolAdminLayout: React.FC<SchoolAdminLayoutProps> = ({
 
         {/* Scrollable Main Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-8 min-h-full">
+          <div className="p-2 sm:p-4 lg:p-8 min-h-full">
             {children}
           </div>
         </div>

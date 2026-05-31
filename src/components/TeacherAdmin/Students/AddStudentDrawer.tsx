@@ -14,7 +14,7 @@ interface AddStudentDrawerProps {
     phoneNo: string;
     admissionYear: string;
     classId: string;
-    rollNo: string;
+    rollNo: string | number;
   }, profilePicFile?: File) => void;
   onEditStudent: (studentId: string, studentData: {
     name: string;
@@ -22,7 +22,7 @@ interface AddStudentDrawerProps {
     phoneNo: string;
     admissionYear: string;
     classId: string;
-    rollNo: string;
+    rollNo: string | number;
     password?: string;
   }, profilePicFile?: File) => void;
   student?: {
@@ -32,7 +32,7 @@ interface AddStudentDrawerProps {
     phoneNo: string;
     admissionYear: string;
     classId: string;
-    rollNo: string;
+    rollNo: string | number;
     profilePic?: string;
   };
   teacherClassId: string;
@@ -125,7 +125,7 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
           password: '',
           phoneNo: student.phoneNo,
           admissionYear: student.admissionYear,
-          rollNo: student.rollNo,
+          rollNo: student.rollNo ? String(student.rollNo) : '',
         });
         setProfilePicPreview(student.profilePic || '');
       } else {
@@ -193,7 +193,7 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
       newErrors.admissionYear = 'Admission year is required';
     }
 
-    if (!formData.rollNo.trim()) {
+    if (!String(formData.rollNo).trim()) {
       newErrors.rollNo = 'Roll number is required';
     }
 

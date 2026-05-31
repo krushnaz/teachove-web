@@ -11,6 +11,9 @@ import LoginPage from './components/LoginPage';
 import {
   SchoolAdminDashboard,
   SchoolAdminStudents,
+  SchoolAdminAlumni,
+  SchoolAdminStudentProfile,
+  SchoolAdminStudentPromotion,
   SchoolAdminTeachers,
   SchoolAdminAttendance,
   SchoolAdminClassroom,
@@ -93,6 +96,9 @@ function App() {
                       <Routes>
                         <Route index element={<SchoolAdminDashboard />} />
                         <Route path="students" element={<SchoolAdminStudents />} />
+                        <Route path="students/:studentId" element={<SchoolAdminStudentProfile />} />
+                        <Route path="alumni" element={<SchoolAdminAlumni />} />
+                        <Route path="students/promote" element={<SchoolAdminStudentPromotion />} />
                         <Route path="teachers" element={<SchoolAdminTeachers />} />
                         <Route path="attendance" element={<SchoolAdminAttendance />} />
                         <Route path="classroom" element={<SchoolAdminClassroom />} />

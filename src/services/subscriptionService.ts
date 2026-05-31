@@ -18,6 +18,7 @@ export interface CurrentSubscriptionDetails {
   isActive: boolean;
   remainingDays: number;
   planName?: string | null;
+  planType?: string | null;
   purchasedAt?: { _seconds?: number } | null;
   lastPurchasedAt?: { _seconds?: number } | null;
   summary?: {
@@ -35,6 +36,7 @@ export interface SubscriptionPlan {
   planName: string;
   description?: string;
   amount: number;
+  seats?: number;
   features: string[];
   isActive: boolean;
   planType?: string;
@@ -200,7 +202,7 @@ class SubscriptionService {
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.SUBSCRIPTION_PLANS.GET_CURRENT;
-      type PlanEntry = { id: string; planName?: string; plan?: string; amount: number; description?: string; features?: string[]; planType?: string; duration?: string; isActive?: boolean };
+      type PlanEntry = { id: string; planName?: string; plan?: string; amount: number; seats?: number; description?: string; features?: string[]; planType?: string; duration?: string; isActive?: boolean };
       const response = await apiClient.get<{ success?: boolean; data?: Record<string, PlanEntry> }>(endpoint);
       const raw = response.data?.data ?? response.data;
       const data = raw && typeof raw === 'object' ? (raw as Record<string, PlanEntry>) : null;
@@ -214,6 +216,7 @@ class SubscriptionService {
             planName: p.planName ?? p.plan ?? key,
             description: p.description,
             amount: Number(p.amount) || 0,
+            seats: Number(p.seats) || 0,
             features: Array.isArray(p.features) ? p.features : [],
             isActive: p.isActive ?? true,
             planType: p.planType,
@@ -341,6 +344,27 @@ class SubscriptionService {
         ? this.convertFirebaseTimestamp(subscription.updated_at)
         : null,
     };
+  }
+
+  /**
+   * Submit a contact sales inquiry (for >500 students plan)
+   */
+  async createSalesRequest(payload: {
+    schoolId?: string;
+    schoolName: string;
+    contactPerson: string;
+    phone: string;
+    email: string;
+    expectedStudentCount: number;
+    message?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.post('/subscriptions/contact-sales', payload);
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting sales request:', error);
+      throw new Error('Failed to submit sales inquiry');
+    }
   }
 }
 

@@ -1,10 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, BookOpen } from 'lucide-react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 
 const Navigation: React.FC = () => {
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { isDarkMode } = useDarkMode();
 
   return (
     <nav
@@ -18,13 +17,11 @@ const Navigation: React.FC = () => {
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3">
-            <div
-              className={`h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center ${
-                isDarkMode ? 'bg-blue-600' : 'bg-blue-600'
-              }`}
-            >
-              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.5} />
-            </div>
+            <img 
+              src="/icon.png" 
+              alt="TeachoVE Logo" 
+              className="h-14 sm:h-16 w-auto object-contain"
+            />
             <span
               className={`text-lg sm:text-xl font-bold tracking-tight ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
@@ -53,17 +50,6 @@ const Navigation: React.FC = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={toggleDarkMode}
-              className={`p-2 sm:p-2.5 rounded-lg transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                isDarkMode 
-                  ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
             <Link
               to="/login"
               className={`px-4 sm:px-6 py-2 sm:py-2.5 text-sm font-semibold text-white transition-all duration-200 rounded-full hover:opacity-90 active:scale-95 touch-manipulation min-h-[44px] flex items-center justify-center ${

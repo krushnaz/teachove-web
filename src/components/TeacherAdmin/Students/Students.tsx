@@ -33,7 +33,11 @@ const Students: React.FC = () => {
         if (user?.schoolId && user?.classId) {
           const response = await studentService.getStudentsByClass(user.schoolId, user.classId);
           if (response.success) {
-            setStudents(response.students);
+            // Filter out alumni
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            const activeStudents = response.students.filter(student => student.status !== 'alumni');
+            setStudents(activeStudents);
           } else {
             setError('Failed to load students');
           }
@@ -61,7 +65,7 @@ const Students: React.FC = () => {
     phoneNo: string;
     admissionYear: string;
     classId: string;
-    rollNo: string;
+    rollNo: string | number;
   }, profilePicFile?: File) => {
     if (!user?.schoolId) return;
 
@@ -107,7 +111,7 @@ const Students: React.FC = () => {
     phoneNo: string;
     admissionYear: string;
     classId: string;
-    rollNo: string;
+    rollNo: string | number;
     password?: string;
   }, profilePicFile?: File) => {
     if (!user?.schoolId) {
@@ -219,18 +223,18 @@ const Students: React.FC = () => {
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (student.rollNo && student.rollNo.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (student.rollNo && String(student.rollNo).toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   }).sort((a, b) => {
     // Sort by roll number if both have roll numbers
-    if (a.rollNo && b.rollNo) {
-      const aNum = parseInt(a.rollNo);
-      const bNum = parseInt(b.rollNo);
+    if (a.rollNo !== undefined && a.rollNo !== null && b.rollNo !== undefined && b.rollNo !== null) {
+      const aNum = parseInt(String(a.rollNo));
+      const bNum = parseInt(String(b.rollNo));
       
       if (!isNaN(aNum) && !isNaN(bNum)) {
         return aNum - bNum;
       } else {
-        return a.rollNo.localeCompare(b.rollNo);
+        return String(a.rollNo).localeCompare(String(b.rollNo));
       }
     }
     

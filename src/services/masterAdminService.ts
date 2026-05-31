@@ -28,6 +28,7 @@ interface SubscriptionPlan {
   planName: string;
   description?: string;
   amount: number;
+  seats?: number;
   features?: string[];
   isActive: boolean;
   planType?: string;
@@ -54,6 +55,7 @@ interface CurrentPlansResponse {
       features?: string[];
       planType?: string;
       duration?: 'monthly' | 'yearly';
+      seats?: number;
     };
   };
 }

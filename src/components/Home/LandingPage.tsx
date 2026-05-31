@@ -5,7 +5,6 @@ import HeroSection from './HeroSection';
 import AppsSection from './AppsSection';
 import FeaturesSection from './FeaturesSection';
 import BenefitsSection from './BenefitsSection';
-import TestimonialsSection from './TestimonialsSection';
 import StepsSection from './StepsSection';
 import ContactSection from './ContactSection';
 import Footer from './Footer';
@@ -15,9 +14,18 @@ const LandingPage: React.FC = () => {
 
   useEffect(() => {
     const root = document.documentElement;
+    const hadDark = root.classList.contains('dark');
+    if (hadDark) {
+      root.classList.remove('dark');
+    }
     root.style.scrollBehavior = 'smooth';
     return () => {
       root.style.scrollBehavior = 'auto';
+      // If we navigate away and global dark mode was active, restore it
+      const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+      if (savedDarkMode) {
+        root.classList.add('dark');
+      }
     };
   }, []);
 
@@ -33,7 +41,6 @@ const LandingPage: React.FC = () => {
       <AppsSection />
       <FeaturesSection />
       <BenefitsSection />
-      <TestimonialsSection />
       <StepsSection />
       <ContactSection />
       <Footer />

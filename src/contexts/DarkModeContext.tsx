@@ -12,6 +12,16 @@ export const useDarkMode = () => {
   if (context === undefined) {
     throw new Error('useDarkMode must be used within a DarkModeProvider');
   }
+  
+  // Force light mode on the public landing page (path "/")
+  const isLandingPage = typeof window !== 'undefined' && window.location.pathname === '/';
+  if (isLandingPage) {
+    return {
+      isDarkMode: false,
+      toggleDarkMode: () => {}
+    };
+  }
+
   return context;
 };
 

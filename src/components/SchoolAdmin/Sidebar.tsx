@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { subscriptionService, CurrentSubscriptionDetails } from '../../services/subscriptionService';
+import { schoolProfileService, type SchoolProfile } from '../../services/schoolProfileService';
 import { 
   LayoutDashboard, 
   Users, 
@@ -42,13 +43,19 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
   const { user } = useAuth();
   const location = useLocation();
   const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscriptionDetails | null>(null);
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
 
   useEffect(() => {
     const schoolId = user?.schoolId;
     if (!schoolId) return;
+    
     subscriptionService.getCurrentSubscriptionDetails(schoolId).then((details) => {
       setCurrentSubscription(details ?? null);
-    });
+    }).catch(console.error);
+
+    schoolProfileService.getSchoolProfile(schoolId).then((profile) => {
+       setSchoolProfile(profile);
+    }).catch(console.error);
   }, [user?.schoolId]);
 
   const isActive = (itemPath: string) => {
@@ -74,6 +81,7 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
         { path: '/school-admin/teachers', label: 'Teachers', icon: Users },
         { path: '/school-admin/attendance', label: 'Attendance', icon: CalendarCheck },
         { path: '/school-admin/leaves', label: 'Leave Requests', icon: FileText },
+        { path: '/school-admin/alumni', label: 'Alumni', icon: Users },
       ]
     },
     {
@@ -105,29 +113,20 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Container */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transform transition-transform duration-300 ease-out flex flex-col h-full shadow-2xl lg:shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <div className={`fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transform transition-transform duration-300 ease-in-out flex flex-col h-full lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
-        {/* Logo Area */}
-        <div className="h-24 flex items-center px-6">
+        {/* Logo Area (Mobile only close button banner) */}
+        <div className="h-16 sm:h-20 flex items-center px-4 sm:px-6 border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900 lg:hidden">
           <div className="flex items-center gap-3 w-full">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
-              <School size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Teachove</h1>
-              <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                Admin
-              </span>
-            </div>
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden ml-auto text-gray-400 hover:text-gray-600"
+              className="lg:hidden ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0 p-1"
             >
               <X size={20} />
             </button>
@@ -135,13 +134,13 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-4 pb-6 space-y-8 custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
           {menuGroups.map((group, groupIdx) => (
-            <div key={groupIdx}>
-              <h3 className="px-4 mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            <div key={groupIdx} className="mb-6">
+              <h3 className="px-6 mb-2 text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {group.title}
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-0.5 flex flex-col">
                 {group.items.map((item) => {
                   const active = isActive(item.path);
                   return (
@@ -149,26 +148,21 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
                       key={item.path}
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
-                      className={`relative group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm
+                      className={`relative flex items-center justify-between px-5 sm:px-6 py-2.5 sm:py-3 transition-colors duration-150 font-medium text-sm
                         ${active 
-                          ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-white shadow-sm shadow-indigo-100 dark:shadow-none' 
-                          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
+                          ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-l-4 border-indigo-600 dark:border-indigo-400' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200 border-l-4 border-transparent'
                         }
                       `}
                     >
                       <div className="flex items-center gap-3">
                         <item.icon 
-                          size={20} 
-                          className={`transition-colors duration-200 ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}
+                          size={18} 
+                          className={`${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`}
                           strokeWidth={active ? 2.5 : 2}
                         />
                         <span>{item.label}</span>
                       </div>
-                      
-                      {/* Subtle chevron for active/hover state */}
-                      {active && (
-                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                      )}
                     </Link>
                   );
                 })}
@@ -178,20 +172,19 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
         </nav>
 
         {/* Footer Card - Active plan details & expiry */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
-          <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 dark:from-indigo-900 dark:to-indigo-800 rounded-2xl p-4 text-white shadow-xl shadow-gray-200 dark:shadow-none">
-             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-white opacity-10 rounded-full blur-xl" />
-             <div className="flex items-center gap-3 relative z-10">
-               <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                  <Crown size={16} className="text-yellow-300" fill="currentColor" />
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900">
+          <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 flex flex-col">
+             <div className="flex items-center gap-2.5 mb-2.5">
+               <div className="w-7 h-7 rounded bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <Crown size={14} className="text-indigo-600 dark:text-indigo-400" strokeWidth={2.5} />
                </div>
                <div className="min-w-0 flex-1">
-                 <p className="text-xs font-bold truncate">
+                 <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
                    {currentSubscription?.isActive && (currentSubscription.planName || currentSubscription.totalSeats)
                      ? (currentSubscription.planName || 'Active Plan')
                      : 'Subscription'}
                  </p>
-                 <p className="text-[10px] text-gray-300">
+                 <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                    {currentSubscription?.isActive
                      ? currentSubscription.remainingDays != null && currentSubscription.remainingDays >= 0
                        ? `${currentSubscription.remainingDays} days remaining`
@@ -202,15 +195,12 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
                        ? 'Expired'
                        : 'No active plan'}
                  </p>
-                 {currentSubscription?.isActive && (currentSubscription.totalSeats ?? 0) > 0 && (
-                   <p className="text-[10px] text-gray-400 mt-0.5">{currentSubscription.totalSeats} students</p>
-                 )}
                </div>
              </div>
              <Link
                to="/school-admin/subscription-request"
                onClick={() => setSidebarOpen(false)}
-               className="mt-3 block w-full py-1.5 text-center text-[10px] font-bold uppercase tracking-wide bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+               className="block w-full py-1.5 text-center text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
              >
                {currentSubscription?.isActive ? 'Manage' : 'Subscribe'}
              </Link>

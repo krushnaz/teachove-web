@@ -162,9 +162,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           {/* Logo Upload Section */}
           <div className="mb-8">
             <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>School Logo</h3>
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
               <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                   {logoPreview ? (
                     <img 
                       src={logoPreview} 
@@ -185,7 +185,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   </button>
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col items-center sm:items-start w-full">
                 <label
                   htmlFor="logo-upload"
                   className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg cursor-pointer transition-colors ${
@@ -204,7 +204,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   onChange={handleLogoChange}
                   className="hidden"
                 />
-                <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-center sm:text-left`}>
                   {logoFile ? `Selected: ${logoFile.name}` : 'Choose an image file (JPG, PNG, etc.)'}
                 </p>
               </div>

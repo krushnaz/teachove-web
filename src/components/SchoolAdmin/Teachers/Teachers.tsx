@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { teacherService } from '../../../services/teacherService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Teacher } from '../../../models';
@@ -7,6 +6,20 @@ import { AddTeacherDrawer } from './index';
 import { schoolService } from '../../../services';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { 
+  Users, 
+  UserCheck, 
+  School, 
+  Search, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Mail, 
+  Phone, 
+  Shield,
+  MoreVertical,
+  AlertCircle
+} from 'lucide-react';
 
 const Teachers: React.FC = () => {
   const { user } = useAuth();
@@ -29,7 +42,7 @@ const Teachers: React.FC = () => {
   }, profilePicFile?: File) => {
     if (!user?.schoolId) return;
     
-    const schoolId = user.schoolId; // TypeScript now knows this is defined
+    const schoolId = user.schoolId;
     
     try {
       const teacherData = {
@@ -44,7 +57,6 @@ const Teachers: React.FC = () => {
 
       const response = await teacherService.addTeacher(teacherData, profilePicFile);
       
-      // Add the new teacher to the local state
       setTeachers(prev => [
         {
           teacherId: response.teacherId,
@@ -87,7 +99,6 @@ const Teachers: React.FC = () => {
         phoneNo: teacherData.phoneNo,
       }, profilePicFile);
       
-      // Update the teacher in local state
       setTeachers(prev => prev.map(t => 
         t.teacherId === teacherId 
           ? { 
@@ -133,7 +144,6 @@ const Teachers: React.FC = () => {
     setTeacherToDelete(null);
   };
 
-  // Fetch teachers on component mount
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
@@ -143,10 +153,9 @@ const Teachers: React.FC = () => {
         if (user?.schoolId) {
           const response = await teacherService.getTeachersBySchool(user.schoolId);
           if (response.teachers) {
-            // Map the API response to match the component's expected structure
             const mappedTeachers = response.teachers.map(teacher => ({
               ...teacher,
-              name: teacher.teacherName || teacher.name, // Use teacherName from API or fallback to name
+              name: teacher.teacherName || teacher.name,
               role: 'Teacher',
               schoolName: schoolName || 'N/A'
             }));
@@ -167,7 +176,7 @@ const Teachers: React.FC = () => {
     };
 
     fetchTeachers();
-  }, [user?.schoolId]);
+  }, [user?.schoolId, schoolName]);
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -184,37 +193,37 @@ const Teachers: React.FC = () => {
   }, [user?.schoolId]);
 
   const filteredTeachers = teachers.filter(teacher => {
-    const matchesSearch = teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (teacher.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (teacher.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (teacher.phoneNo && teacher.phoneNo.includes(searchTerm));
     return matchesSearch;
   });
 
-  // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading teachers...</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500 font-medium">Loading professionals...</p>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Teachers</h3>
-          <p className="text-gray-600">{error}</p>
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="max-w-md w-full text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Sync Error</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+            className="w-full py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20"
           >
-            Try Again
+            Reconnect
           </button>
         </div>
       </div>
@@ -222,152 +231,133 @@ const Teachers: React.FC = () => {
   }
 
   return (
-    <div>
-      <ToastContainer position="top-right" autoClose={3000} />
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a6 6 0 11-12 0 6 6 0 0112 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Teachers</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teacherCount}</p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+      
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-1 md:px-0">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Teachers Management</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage and monitor your academic staff across {schoolName || 'the school'}.</p>
         </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <button
+          onClick={() => {
+            setEditTeacher(null);
+            setDrawerOpen(true);
+          }}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all shadow-lg shadow-primary-600/20 active:scale-95"
+        >
+          <Plus size={20} />
+          <span>Add Teacher</span>
+        </button>
+      </div>
+
+      {/* Stats Section */}
+      <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 px-1 md:px-0">
+        {[
+          { label: 'Total Staff', value: teacherCount, icon: Users, color: 'blue' },
+          { label: 'Active Now', value: teachers.length, icon: UserCheck, color: 'emerald' },
+          { label: 'Academic Dept', value: schoolName || 'N/A', icon: School, color: 'indigo' },
+          { label: 'Growth', value: '+3 New', icon: Shield, color: 'amber' }
+        ].map((stat, i) => (
+          <div key={i} className="bg-white dark:bg-gray-800 p-2.5 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 transition-transform hover:translate-y-[-2px] h-full justify-between">
+            <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-${stat.color}-50 dark:bg-${stat.color}-900/20 text-${stat.color}-600 dark:text-${stat.color}-400 flex-shrink-0`}>
+              <stat.icon className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Teachers</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">School</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length > 0 ? teachers[0].schoolName : 'N/A'}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Teachers</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{teachers.length}</p>
+            <div className="min-w-0 w-full">
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">{stat.label}</p>
+              <p className="text-base sm:text-xl font-bold text-gray-900 dark:text-white truncate w-full">{stat.value}</p>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* Control Bar */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search by name, email or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border-none rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 transition-all"
+          />
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search by name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Teacher
-          </button>
-        </div>
-      </div>
-
-      {/* Teachers Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SR No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teacher</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+      {/* Content Area - Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden edge-to-edge">
+        <div className="overflow-x-auto overflow-y-hidden">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-gray-900/50">
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">SR</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Teacher Profile</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Contact Information</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Designation</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredTeachers.map((teacher, index) => (
-                <tr key={teacher.teacherId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{index + 1}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                <tr key={teacher.teacherId} className="group hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-400 dark:text-gray-500">{index + 1}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
                       {teacher.profilePic ? (
                         <img
                           src={teacher.profilePic}
                           alt={teacher.name}
-                          className="h-10 w-10 rounded-full object-cover"
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
                         />
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm">
-                          {teacher.name.charAt(0).toUpperCase()}
+                        <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-sm ring-2 ring-gray-100 dark:ring-gray-700">
+                          {teacher.name?.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{teacher.name}</div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{teacher.name}</span>
+                        <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">#{teacher.teacherId.slice(-6)}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.phoneNo || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{teacher.role}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300" onClick={() => handleEditClick(teacher)}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Mail size={14} className="flex-shrink-0" />
+                        <span className="text-sm truncate max-w-[180px]">{teacher.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Phone size={14} className="flex-shrink-0" />
+                        <span className="text-sm">{teacher.phoneNo || '---'}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                      <Shield size={12} />
+                      {teacher.role || 'Staff'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleEditClick(teacher)}
+                        className="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
+                        title="Edit Record"
+                      >
+                        <Edit2 size={18} />
                       </button>
-                      <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" onClick={() => handleDeleteClick(teacher)}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                      <button 
+                        onClick={() => handleDeleteClick(teacher)}
+                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                        title="Delete Member"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                      <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 md:hidden">
+                        <MoreVertical size={18} />
                       </button>
                     </div>
                   </td>
@@ -378,15 +368,18 @@ const Teachers: React.FC = () => {
         </div>
         
         {filteredTeachers.length === 0 && (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No teachers found</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Try adjusting your search criteria.</p>
+          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-4">
+              <Users size={40} className="text-gray-300 dark:text-gray-600" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Empty Roster</h3>
+            <p className="text-gray-500 dark:text-gray-400 max-w-xs mt-1">
+              No staff members match the current search criteria or are assigned currently.
+            </p>
           </div>
         )}
       </div>
+
       <AddTeacherDrawer
         open={drawerOpen}
         onClose={() => { setDrawerOpen(false); setEditTeacher(null); }}
@@ -396,24 +389,31 @@ const Teachers: React.FC = () => {
         schoolId={user?.schoolId || ''}
         teacher={editTeacher || undefined}
       />
-      {/* Confirmation Dialog */}
+
+      {/* Confirmation Modal */}
       {confirmDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Delete</h3>
-            <p className="mb-6 text-gray-700 dark:text-gray-300">Are you sure you want to delete <span className="font-bold">{teacherToDelete?.name}</span>?</p>
-            <div className="flex justify-end space-x-3">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 min-h-screen">
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={handleCancelDelete} />
+          <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100">
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mb-6">
+              <Trash2 size={28} />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Delete Member?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+              Are you sure you want to remove <span className="font-bold text-gray-900 dark:text-white">{teacherToDelete?.name}</span>? This action is permanent and cannot be reversed.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleCancelDelete}
-                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
+                className="flex-1 py-3 px-4 rounded-xl font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                Cancel
+                No, Keep
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="flex-1 py-3 px-4 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 active:scale-95"
               >
-                Delete
+                Yes, Delete
               </button>
             </div>
           </div>

@@ -33,6 +33,7 @@ export const API_CONFIG = {
       BY_SCHOOL: '/students/school/:schoolId',
       BY_CLASS: '/students/:schoolId/class/:classId',
       GET_WITH_CLASS: '/students/getStudentWithClass/:studentId',
+      PROMOTE_CLASS: '/students/promote-class',
     },
     TEACHERS: {
       LIST: '/teachers',
@@ -199,6 +200,7 @@ export const API_CONFIG = {
     STUDENT_RESULTS: {
       CREATE: "/student-results/",
       GET_BY_STUDENT_CLASS: "/student-results/:schoolId/student/:studentId/class/:classId",
+      GET_ALL_BY_STUDENT: "/student-results/:schoolId/student/:studentId/all",
       UPDATE: "/student-results/:schoolId/:resultId",
       DELETE: "/student-results/:schoolId/:resultId",
       DOWNLOAD: "/student-results/:schoolId/results/:resultId/download",

@@ -63,7 +63,12 @@ const TeacherAdminHeader: React.FC<TeacherAdminHeaderProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-primary-600'}`}>Teacher Admin</h1>
+            <img 
+              src="/icon.png" 
+              alt="TeachoVE Logo" 
+              className="h-8 w-auto object-contain flex-shrink-0"
+            />
+            <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>TeachoVE</h1>
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -92,9 +97,15 @@ const TeacherAdminHeader: React.FC<TeacherAdminHeaderProps> = ({
       {/* Desktop Header */}
       <div className={`hidden lg:block ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b px-6 py-4 shadow-sm`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h2>
-            <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>{subtitle}</span>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/icon.png" 
+              alt="TeachoVE Logo" 
+              className="h-12 w-auto object-contain flex-shrink-0"
+            />
+            <span className={`text-xl sm:text-2xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              TeachoVE
+            </span>
           </div>
           <div className="flex items-center space-x-4">
             <button

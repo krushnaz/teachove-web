@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-20 xl:px-24 relative z-10">
         
         {/* Top Navigation */}
-        <div className="absolute top-8 left-8 sm:left-12">
+        <div className="absolute top-6 sm:top-8 left-6 sm:left-12 z-20">
           <Link
             to="/"
             className={`group inline-flex items-center gap-2 text-sm font-semibold transition-colors ${
@@ -98,12 +98,21 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* Main Content Container (Wider) */}
-        <div className="w-full max-w-xl mx-auto mt-12 lg:mt-0">
+        <div className="w-full max-w-xl mx-auto mt-24 sm:mt-20 lg:mt-0">
           
+          {/* Brand Logo */}
+          <div className="flex flex-col items-center justify-center mb-8">
+            <img 
+              src="/icon.png" 
+              alt="TeachoVE Logo" 
+              className="h-28 sm:h-32 w-auto object-contain"
+            />
+          </div>
+
           {/* Header */}
-          <div className="mb-10">
-            <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              Welcome back
+          <div className="mb-10 text-center">
+            <h1 className={`text-3xl sm:text-4xl font-extrabold tracking-tight mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Empowering Education, Simplifying Management
             </h1>
             <p className={`text-lg ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Please enter your details to sign in.
@@ -175,12 +184,13 @@ const LoginPage: React.FC = () => {
                 <label className={`text-sm font-semibold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                   Password
                 </label>
-                <Link
-                  to="/forgot-password"
+                <button
+                  type="button"
+                  onClick={() => setShowCreateAccountDialog(true)}
                   className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
                 >
                   Forgot password?
-                </Link>
+                </button>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -277,9 +287,6 @@ const LoginPage: React.FC = () => {
 
         {/* Quote / Branding */}
         <div className="absolute bottom-0 left-0 right-0 p-16 z-30">
-           <div className="w-12 h-12 mb-6 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/40">
-              <School className="w-6 h-6 text-white" />
-           </div>
            <blockquote className="text-2xl font-medium text-white leading-relaxed mb-4">
              "Education is the passport to the future, for tomorrow belongs to those who prepare for it today."
            </blockquote>
@@ -291,52 +298,58 @@ const LoginPage: React.FC = () => {
 
       {/* Create Account Dialog */}
       {showCreateAccountDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className={`relative w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden ${
-            isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'
-          }`}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200">
+          <div className={`relative w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl transition-all duration-300 transform 
+            rounded-t-3xl sm:rounded-2xl translate-y-0 mb-0 animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95
+            ${isDarkMode ? 'bg-slate-900 border-t sm:border border-slate-800' : 'bg-white border-t sm:border border-slate-200'}
+          `}>
+            {/* Grab handle for bottom sheet on mobile */}
+            <div className="w-full flex justify-center pt-3 pb-1 sm:hidden">
+              <div className={`w-12 h-1.5 rounded-full ${isDarkMode ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+            </div>
+
             {/* Close Button */}
             <button
               onClick={() => setShowCreateAccountDialog(false)}
-              className={`absolute top-4 right-4 z-10 p-2 rounded-lg transition-colors ${
+              className={`absolute top-4 sm:top-6 right-4 sm:right-6 z-10 p-2 rounded-full transition-colors ${
                 isDarkMode 
-                  ? 'text-slate-400 hover:text-white hover:bg-slate-800' 
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800' 
+                  : 'bg-slate-100/50 text-slate-500 hover:text-slate-900 hover:bg-slate-200'
               }`}
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Header */}
-            <div className={`px-8 py-6 border-b ${
-              isDarkMode ? 'border-slate-800 bg-gradient-to-r from-indigo-600/10 to-purple-600/10' : 'border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50'
+            <div className={`px-6 sm:px-8 py-6 sm:py-8 border-b ${
+              isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/50'
             }`}>
-              <h2 className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                Get Started with TeachoVE
+              <h2 className={`text-2xl sm:text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Help & Support
               </h2>
               <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Follow these simple steps to create your account
+                Contact our team for account creation or credential recovery.
               </p>
             </div>
 
             {/* Steps Container */}
-            <div className="p-8">
+            <div className="p-6 sm:p-8">
               {/* Steps Progress Bar */}
-              <div className="relative mb-12">
-                <div className={`absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 ${
+              <div className="relative mb-10 sm:mb-12">
+                <div className={`absolute top-1/2 left-0 right-0 h-0.5 -translate-y-1/2 ${
                   isDarkMode ? 'bg-slate-800' : 'bg-slate-200'
                 }`} />
                 <div className="relative flex justify-between">
                   {/* Step 1 */}
-                  <div className="flex flex-col items-center z-10">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-lg ${
+                  <div className="flex flex-col items-center z-10 bg-inherit relative group">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-sm ${
                       isDarkMode 
-                        ? 'bg-indigo-600 border-4 border-slate-900' 
+                        ? 'bg-indigo-500 border-4 border-slate-900' 
                         : 'bg-indigo-600 border-4 border-white'
                     }`}>
-                      <Phone className="w-8 h-8 text-white" />
+                      <Phone className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                     </div>
-                    <span className={`text-xs font-semibold uppercase tracking-wider ${
+                    <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-inherit px-2 ${
                       isDarkMode ? 'text-slate-300' : 'text-slate-700'
                     }`}>
                       Step 1
@@ -344,32 +357,32 @@ const LoginPage: React.FC = () => {
                   </div>
 
                   {/* Step 2 */}
-                  <div className="flex flex-col items-center z-10">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-lg ${
+                  <div className="flex flex-col items-center z-10 bg-inherit relative group">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-sm ${
                       isDarkMode 
-                        ? 'bg-indigo-600 border-4 border-slate-900' 
-                        : 'bg-indigo-600 border-4 border-white'
+                        ? 'bg-slate-800 border-4 border-slate-900' 
+                        : 'bg-slate-100 border-4 border-white'
                     }`}>
-                      <UserCheck className="w-8 h-8 text-white" />
+                      <UserCheck className={`w-5 h-5 sm:w-7 sm:h-7 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                     </div>
-                    <span className={`text-xs font-semibold uppercase tracking-wider ${
-                      isDarkMode ? 'text-slate-300' : 'text-slate-700'
+                    <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-inherit px-2 ${
+                      isDarkMode ? 'text-slate-500' : 'text-slate-400'
                     }`}>
                       Step 2
                     </span>
                   </div>
 
                   {/* Step 3 */}
-                  <div className="flex flex-col items-center z-10">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-lg ${
+                  <div className="flex flex-col items-center z-10 bg-inherit relative group">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-2 sm:mb-3 shadow-sm ${
                       isDarkMode 
-                        ? 'bg-indigo-600 border-4 border-slate-900' 
-                        : 'bg-indigo-600 border-4 border-white'
+                        ? 'bg-slate-800 border-4 border-slate-900' 
+                        : 'bg-slate-100 border-4 border-white'
                     }`}>
-                      <Rocket className="w-8 h-8 text-white" />
+                      <Rocket className={`w-5 h-5 sm:w-7 sm:h-7 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                     </div>
-                    <span className={`text-xs font-semibold uppercase tracking-wider ${
-                      isDarkMode ? 'text-slate-300' : 'text-slate-700'
+                    <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-inherit px-2 ${
+                      isDarkMode ? 'text-slate-500' : 'text-slate-400'
                     }`}>
                       Step 3
                     </span>
@@ -378,105 +391,115 @@ const LoginPage: React.FC = () => {
               </div>
 
               {/* Steps Content */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 {/* Step 1: Contact Vedant Tech */}
-                <div className={`p-6 rounded-xl border-2 ${
+                <div className={`flex-1 p-5 sm:p-6 rounded-2xl border transition-all hover:shadow-md ${
                   isDarkMode 
-                    ? 'bg-slate-800/50 border-indigo-500/30' 
-                    : 'bg-indigo-50/50 border-indigo-200'
+                    ? 'bg-slate-800/40 border-slate-700/50 hover:border-indigo-500/50' 
+                    : 'bg-white border-slate-200 hover:border-indigo-200'
                 }`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${
-                      isDarkMode ? 'bg-indigo-600/20' : 'bg-indigo-100'
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-xl flex-shrink-0 ${
+                      isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
                     }`}>
-                      <Phone className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                      <Phone className="w-5 h-5" />
                     </div>
-                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                      Contact Vedant Tech
+                    <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      Contact Us
                     </h3>
                   </div>
-                  <p className={`text-sm mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Reach out to our team to get started with your account setup.
+                  <p className={`text-sm mb-4 leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Reach out to our team via phone or email for account access.
                   </p>
-                  <div className="space-y-3">
+                  <div className="space-y-2 mt-auto">
                     <a
                       href="mailto:vedanteducation.22@gmail.com"
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                         isDarkMode 
-                          ? 'bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white' 
-                          : 'bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700'
+                          ? 'bg-slate-900/50 hover:bg-slate-800 text-slate-300 hover:text-white border border-transparent hover:border-slate-700' 
+                          : 'bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-transparent hover:border-indigo-100'
                       }`}
                     >
-                      <Mail className={`w-4 h-4 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                      <span className="text-sm font-medium">vedanteducation.22@gmail.com</span>
+                      <Mail className="w-4 h-4 opacity-70" />
+                      <span className="text-sm font-medium truncate">vedanteducation@...</span>
                     </a>
                     <a
                       href="tel:+919766117311"
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                         isDarkMode 
-                          ? 'bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white' 
-                          : 'bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700'
+                          ? 'bg-slate-900/50 hover:bg-slate-800 text-slate-300 hover:text-white border border-transparent hover:border-slate-700' 
+                          : 'bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-transparent hover:border-indigo-100'
                       }`}
                     >
-                      <Phone className={`w-4 h-4 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                      <Phone className="w-4 h-4 opacity-70" />
                       <span className="text-sm font-medium">+91 9766117311</span>
                     </a>
                   </div>
                 </div>
 
                 {/* Step 2: Get Credentials */}
-                <div className={`p-6 rounded-xl border-2 ${
+                <div className={`flex-1 p-5 sm:p-6 rounded-2xl border transition-all hover:shadow-md ${
                   isDarkMode 
-                    ? 'bg-slate-800/50 border-indigo-500/30' 
-                    : 'bg-indigo-50/50 border-indigo-200'
+                    ? 'bg-slate-800/40 border-slate-700/50' 
+                    : 'bg-white border-slate-200'
                 }`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${
-                      isDarkMode ? 'bg-indigo-600/20' : 'bg-indigo-100'
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-xl flex-shrink-0 ${
+                      isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-600'
                     }`}>
-                      <UserCheck className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                      <UserCheck className="w-5 h-5" />
                     </div>
-                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                      Get Credentials
+                    <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      Get Verified
                     </h3>
                   </div>
-                  <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Our team will provide you with your login credentials and account details after verification.
+                  <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Our team will verify your school identity and directly provide login credentials.
                   </p>
                 </div>
 
                 {/* Step 3: Start Using TeachoVE */}
-                <div className={`p-6 rounded-xl border-2 ${
+                <div className={`flex-1 p-5 sm:p-6 rounded-2xl border transition-all hover:shadow-md ${
                   isDarkMode 
-                    ? 'bg-slate-800/50 border-indigo-500/30' 
-                    : 'bg-indigo-50/50 border-indigo-200'
+                    ? 'bg-slate-800/40 border-slate-700/50' 
+                    : 'bg-white border-slate-200'
                 }`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${
-                      isDarkMode ? 'bg-indigo-600/20' : 'bg-indigo-100'
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-xl flex-shrink-0 ${
+                      isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-600'
                     }`}>
-                      <Rocket className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                      <Rocket className="w-5 h-5" />
                     </div>
-                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                      Start Using TeachoVE
+                    <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      Access Portal
                     </h3>
                   </div>
-                  <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Once you receive your credentials, log in and start managing your school efficiently with TeachoVE.
+                  <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Once verified, use the dashboard credentials to log in and manage your tasks.
                   </p>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className={`mt-8 pt-6 border-t ${
-                isDarkMode ? 'border-slate-800' : 'border-slate-200'
+              <div className={`mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                isDarkMode ? 'border-slate-800' : 'border-slate-100'
               }`}>
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle2 className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                  <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Need help? Contact our support team anytime
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className={`w-5 h-5 ${isDarkMode ? 'text-emerald-500' : 'text-emerald-600'}`} />
+                  <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Need help? We're available 24/7
                   </p>
                 </div>
+                <button
+                  onClick={() => setShowCreateAccountDialog(false)}
+                  className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                    isDarkMode 
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white' 
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+                  }`}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

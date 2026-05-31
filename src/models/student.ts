@@ -13,7 +13,22 @@ export interface Student {
   profilePic?: string;
   admissionYear: string;
   isActive?: boolean;
-  rollNo?: string;
+  status?: string; // e.g., 'active', 'alumni'
+  rollNo?: string | number;
+  fatherName?: string;
+  fatherPhoneNo?: string;
+  motherName?: string;
+  dob?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  bloodGroup?: string;
+  address?: string;
+  permanentAddress?: string;
+  classHistory?: Array<{
+    classId: string;
+    class: string;
+    academicYear: string;
+  }>;
   createdAt?: {
     _seconds: number;
     _nanoseconds: number;

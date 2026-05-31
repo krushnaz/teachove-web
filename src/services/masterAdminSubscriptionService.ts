@@ -45,6 +45,19 @@ export interface SingleSubscriptionResponse {
   subscription: SubscriptionRequest;
 }
 
+export interface SalesRequest {
+  id: string;
+  schoolId: string;
+  schoolName: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  expectedStudentCount: number;
+  message: string;
+  status: 'pending' | 'contacted' | string;
+  createdAt?: number;
+}
+
 class MasterAdminSubscriptionService {
   // Get all subscription requests
   async getAllSubscriptionRequests(): Promise<SubscriptionResponse> {
@@ -59,6 +72,28 @@ class MasterAdminSubscriptionService {
     } catch (error: any) {
       console.error('Error fetching subscription requests:', error);
       throw new Error(error.message || 'Failed to fetch subscription requests');
+    }
+  }
+
+  // Fetch all sales requests for >500 students custom plans
+  async getSalesRequests(): Promise<SalesRequest[]> {
+    try {
+      const response = await apiHelper.get('/subscriptions/sales-requests') as { success: boolean; data: SalesRequest[] };
+      return response.success ? response.data : [];
+    } catch (error: any) {
+      console.error('Error fetching sales requests:', error);
+      return [];
+    }
+  }
+
+  // Update sales request status
+  async updateSalesRequestStatus(id: string, status: string): Promise<boolean> {
+    try {
+      const response = await apiHelper.put(`/subscriptions/sales-requests/${id}/status`, { status }) as { success: boolean };
+      return response.success;
+    } catch (error: any) {
+      console.error('Error updating sales request status:', error);
+      return false;
     }
   }
 
@@ -109,6 +144,30 @@ class MasterAdminSubscriptionService {
     } catch (error: any) {
       console.error('Error deleting subscription request:', error);
       throw new Error(error.message || 'Failed to delete subscription request');
+    }
+  }
+
+  // Create custom subscription
+  async createCustomSubscription(data: {
+    schoolId: string;
+    seats: number;
+    duration: string;
+    amount: number;
+    planType: string;
+  }): Promise<{ success: boolean; message: string; subscriptionId: string }> {
+    try {
+      const response = await apiHelper.post('/master-admin/subscriptions/custom', data) as {
+        success: boolean;
+        message: string;
+        subscriptionId: string;
+      };
+      if (response.success) {
+        return response;
+      }
+      throw new Error(response.message || 'Failed to create custom subscription');
+    } catch (error: any) {
+      console.error('Error creating custom subscription:', error);
+      throw new Error(error.message || 'Failed to create custom subscription');
     }
   }
 }

@@ -23,6 +23,7 @@ interface SubscriptionPlan {
   planName: string;
   description?: string;
   amount: number;
+  seats?: number;
   features?: string[];
   isActive: boolean;
   planType?: string;
@@ -42,6 +43,7 @@ const SubscriptionPlans: React.FC = () => {
     planName: '',
     description: '',
     amount: 0,
+    seats: 0,
     features: [],
     isActive: true,
     planType: '',
@@ -57,7 +59,15 @@ const SubscriptionPlans: React.FC = () => {
     try {
       setLoading(true);
       const fetchedPlans = await masterAdminService.getAllSubscriptionPlans();
-      setPlans(fetchedPlans);
+      const sortedPlans = [...fetchedPlans].sort((a, b) => {
+        const seatsA = a.seats || 0;
+        const seatsB = b.seats || 0;
+        if (seatsA === 0 && seatsB > 0) return 1;
+        if (seatsA > 0 && seatsB === 0) return -1;
+        if (seatsA > 0 && seatsB > 0) return seatsA - seatsB;
+        return (a.amount || 0) - (b.amount || 0);
+      });
+      setPlans(sortedPlans);
     } catch (error: any) {
       console.error('Error fetching subscription plans:', error);
       toast.error(error.message || 'Failed to load subscription plans');
@@ -88,7 +98,7 @@ const SubscriptionPlans: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.planName || !formData.amount || formData.amount <= 0) {
+    if (!formData.planName || formData.amount === undefined || formData.amount === null) {
       toast.error('Please fill in all required fields (Plan Name and Amount)');
       return;
     }
@@ -103,6 +113,7 @@ const SubscriptionPlans: React.FC = () => {
         planName: formData.planName!,
         description: formData.description || '',
         amount: formData.amount!,
+        seats: formData.seats || 0,
         features: formData.features || [],
         isActive: formData.isActive !== false,
         planType: formData.planType || formData.planName!,
@@ -116,6 +127,7 @@ const SubscriptionPlans: React.FC = () => {
         planName: '',
         description: '',
         amount: 0,
+        seats: 0,
         features: [],
         isActive: true,
         planType: '',
@@ -135,6 +147,7 @@ const SubscriptionPlans: React.FC = () => {
       planName: plan.planName,
       description: plan.description || '',
       amount: plan.amount,
+      seats: plan.seats || 0,
       features: plan.features || [],
       isActive: plan.isActive,
       planType: plan.planType || plan.planName,
@@ -213,6 +226,7 @@ const SubscriptionPlans: React.FC = () => {
                     planName: '',
                     description: '',
                     amount: 0,
+                    seats: 0,
                     features: [],
                     isActive: true,
                     planType: '',
@@ -290,8 +304,8 @@ const SubscriptionPlans: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      per user
+                    <p className={`text-sm mt-3 font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Student Limit: <span className="text-blue-500 font-bold">{plan.seats && plan.seats > 0 ? `${plan.seats} Students` : 'Unlimited / Custom'}</span>
                     </p>
                   </div>
 
@@ -453,6 +467,24 @@ const SubscriptionPlans: React.FC = () => {
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                       } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       placeholder="Enter amount"
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Student Limit (Seats) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.seats || 0}
+                      onChange={(e) => handleInputChange('seats', parseInt(e.target.value) || 0)}
+                      min="0"
+                      className={`w-full px-4 py-2 rounded-lg border ${
+                        isDarkMode
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      placeholder="e.g. 50, 100, 200 (use 0 for custom/unlimited)"
                     />
                   </div>
 

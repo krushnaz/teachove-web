@@ -62,54 +62,25 @@ const LeaveManagement: React.FC = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Pending Teacher Leaves</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>12</p>
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-2 sm:gap-6 mb-8">
+            {[
+              { label: 'Pending Teacher Leaves', value: '12', icon: UserCheck, color: 'yellow', text: 'text-yellow-400', textLight: 'text-yellow-600', bg: 'bg-yellow-900/20', bgLight: 'bg-yellow-50' },
+              { label: 'Approved This Month', value: '28', icon: Eye, color: 'green', text: 'text-green-400', textLight: 'text-green-600', bg: 'bg-green-900/20', bgLight: 'bg-green-50' },
+              { label: 'Student Leaves Today', value: '5', icon: Users, color: 'blue', text: 'text-blue-400', textLight: 'text-blue-600', bg: 'bg-blue-900/20', bgLight: 'bg-blue-50' },
+              { label: 'Total This Week', value: '45', icon: Calendar, color: 'purple', text: 'text-purple-400', textLight: 'text-purple-600', bg: 'bg-purple-900/20', bgLight: 'bg-purple-50' }
+            ].map((stat, i) => (
+              <div key={i} className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-2.5 sm:p-5 shadow-lg flex flex-col justify-between h-full`}>
+                <div className="flex justify-between items-start mb-2 sm:mb-3">
+                  <div className={`p-1.5 sm:p-3 rounded-lg ${isDarkMode ? stat.bg : stat.bgLight} ${isDarkMode ? stat.text : stat.textLight} flex items-center justify-center`}>
+                    <stat.icon className="w-4 h-4 sm:w-6 sm:h-6" />
+                  </div>
                 </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-yellow-900/20' : 'bg-yellow-50'}`}>
-                  <UserCheck className={`w-6 h-6 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                <div>
+                  <p className={`text-base sm:text-2xl font-bold ${isDarkMode ? stat.text : stat.textLight}`}>{stat.value}</p>
+                  <p className={`text-[10px] sm:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mt-0.5 truncate`}>{stat.label}</p>
                 </div>
               </div>
-            </div>
-
-            <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Approved This Month</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>28</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-green-900/20' : 'bg-green-50'}`}>
-                  <Eye className={`w-6 h-6 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-                </div>
-              </div>
-            </div>
-
-            <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Student Leaves Today</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>5</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
-                  <Users className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                </div>
-              </div>
-            </div>
-
-            <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Total This Week</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>45</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
-                  <Calendar className={`w-6 h-6 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 

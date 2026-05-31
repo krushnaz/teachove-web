@@ -116,6 +116,37 @@ class StudentService {
   }
 
   /**
+   * Promote students to the next class
+   */
+  async promoteStudents(data: {
+    schoolId: string;
+    currentClass: string;
+    nextClass: string | null;
+    academicYear: string;
+  }): Promise<{ message: string; totalPromoted: number }> {
+    try {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.PROMOTE_CLASS}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('Error promoting students:', error);
+      throw new Error(error.message || 'Failed to promote students');
+    }
+  }
+
+  /**
    * Create a new student
    */
   async createStudent(studentData: Partial<Student>, profilePicFile?: File): Promise<Student> {

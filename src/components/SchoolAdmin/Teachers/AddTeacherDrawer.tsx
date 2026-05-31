@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
-import { teacherService } from '../../../services/teacherService';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { 
+  X, 
+  User, 
+  Mail, 
+  Lock, 
+  Phone, 
+  Camera, 
+  Trash2, 
+  Plus, 
+  Check, 
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
 
 interface AddTeacherDrawerProps {
   open: boolean;
@@ -31,7 +43,7 @@ interface AddTeacherDrawerProps {
   };
 }
 
-const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAddTeacher, onEditTeacher, schoolName, schoolId, teacher }) => {
+const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAddTeacher, onEditTeacher, teacher }) => {
   const isEdit = !!teacher;
   const [form, setForm] = useState({
     teacherName: '',
@@ -43,7 +55,7 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       if (isEdit && teacher) {
         setForm({
@@ -52,9 +64,7 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
           password: teacher.password || '',
           phoneNo: teacher.phoneNo || '',
         });
-        if (teacher.profilePic) {
-          setPreviewUrl(teacher.profilePic);
-        }
+        setPreviewUrl(teacher.profilePic || '');
       } else {
         setForm({
           teacherName: '',
@@ -75,37 +85,33 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
         return;
       }
-      
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB');
+        toast.error('File size must be below 5MB');
         return;
       }
-
       setSelectedFile(file);
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const removeImage = () => {
+  const removeImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     setSelectedFile(null);
-    setPreviewUrl('');
-    // If editing and had original image, restore it
-    if (isEdit && teacher?.profilePic) {
-      setPreviewUrl(teacher.profilePic);
-    }
+    setPreviewUrl(isEdit ? (teacher?.profilePic || '') : '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.teacherName || !form.email || (!isEdit && !form.password)) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     setSubmitting(true);
     try {
       if (isEdit && teacher && onEditTeacher) {
@@ -118,164 +124,182 @@ const AddTeacherDrawer: React.FC<AddTeacherDrawerProps> = ({ open, onClose, onAd
         await onAddTeacher(form, selectedFile || undefined);
       }
     } catch (err) {
-      toast.error(isEdit ? 'Failed to update teacher.' : 'Failed to add teacher.');
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 transition-all duration-300 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
-      aria-hidden={!open}
-    >
+    <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-40 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] transition-opacity duration-300 ${
+          open ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
         onClick={onClose}
       />
+
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-900 shadow-xl transform transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 right-0 h-full w-full max-w-lg bg-white dark:bg-gray-900 z-[201] shadow-2xl transition-transform duration-500 ease-out transform ${
+          open ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{isEdit ? 'Edit Teacher' : 'Add Teacher'}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
-            aria-label="Close"
-          >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="p-6 space-y-6 max-h-full overflow-y-auto">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teacher Name</label>
-              <input
-                type="text"
-                name="teacherName"
-                value={form.teacherName}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter teacher name"
-              />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {isEdit ? 'Update Faculty' : 'Enroll New Teacher'}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {isEdit ? 'Modify existing teacher credentials' : 'Add a new member to the school staff'}
+              </p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter email address"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-              <input
-                type="tel"
-                name="phoneNo"
-                value={form.phoneNo}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter phone number"
-              />
-            </div>
-            {!isEdit && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="Enter password"
-                />
-              </div>
-            )}
-            
-            {/* Profile Picture Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Profile Picture</label>
-              
-              {/* Upload Area */}
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary-400 dark:hover:border-primary-500 transition-colors duration-200">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="profile-pic-upload"
-                />
-                <label
-                  htmlFor="profile-pic-upload"
-                  className="cursor-pointer block"
-                >
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {previewUrl ? 'Click to change image' : 'Click to upload profile picture'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">
-                      PNG, JPG, GIF up to 5MB
-                    </p>
+            <button
+              onClick={onClose}
+              className="p-2 bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl transition-all"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
+            <form id="teacher-form" onSubmit={handleSubmit} className="space-y-8">
+              {/* Profile Pic Section */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative group">
+                  <div className="w-28 h-28 rounded-3xl bg-primary-50 dark:bg-primary-900/20 border-2 border-dashed border-primary-200 dark:border-primary-800 flex items-center justify-center overflow-hidden transition-all group-hover:border-primary-400">
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera size={32} className="text-primary-400" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
                   </div>
-                </label>
+                  {previewUrl && (
+                    <button
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">Professional Photograph</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Recommended square format, max 5MB</p>
+                </div>
               </div>
 
-              {/* Image Preview */}
-              {previewUrl && (
-                <div className="mt-4 flex justify-center">
-                  <div className="relative">
-                    <img
-                      src={previewUrl}
-                      alt="Profile preview"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600 shadow-lg"
+              {/* Data Fields */}
+              <div className="grid grid-cols-1 gap-6">
+                {/* Full Name */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Full Identity</label>
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={20} />
+                    <input
+                      type="text"
+                      name="teacherName"
+                      value={form.teacherName}
+                      onChange={handleChange}
+                      placeholder="e.g. Dr. Robert Wilson"
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 transition-all outline-none"
                     />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 focus:outline-none shadow-lg"
-                    >
-                      ×
-                    </button>
                   </div>
                 </div>
-              )}
-            </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-md bg-primary-600 text-white font-semibold shadow hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
-                disabled={submitting}
-              >
-                {submitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update Teacher' : 'Add Teacher')}
-              </button>
-            </div>
-          </form>
+                {/* Email Address */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Work Email</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={20} />
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="teacher@institution.edu"
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Number */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Contact Number</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={20} />
+                    <input
+                      type="tel"
+                      name="phoneNo"
+                      value={form.phoneNo}
+                      onChange={handleChange}
+                      placeholder="+1 (000) 000-0000"
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Password (only if adding) */}
+                {!isEdit && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Secure Password</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={20} />
+                      <input
+                        type="password"
+                        name="password"
+                        value={form.password}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </form>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="px-8 py-6 border-t border-gray-100 dark:border-gray-800 flex gap-4">
+            <button
+              onClick={onClose}
+              className="flex-1 py-4 px-6 rounded-2xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              form="teacher-form"
+              type="submit"
+              disabled={submitting}
+              className="flex-[2] py-4 px-6 bg-primary-600 text-white rounded-2xl font-extrabold shadow-xl shadow-primary-600/30 hover:bg-primary-700 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  {isEdit ? <Check size={20} /> : <Plus size={20} />}
+                  <span>{isEdit ? 'Update Details' : 'Securely Add Staff'}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

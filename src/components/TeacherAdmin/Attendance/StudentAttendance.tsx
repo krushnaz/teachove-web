@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 interface AttendanceRecord {
   studentId: string;
   studentName: string;
-  rollNo: string;
+  rollNo: string | number;
   email: string;
   className: string;
   status: 'present' | 'absent';
@@ -343,7 +343,7 @@ const StudentAttendance: React.FC = () => {
         return {
           studentId: student.studentId,
           studentName: student.name,
-          rollNo: student.rollNo || '',
+          rollNo: student.rollNo ? String(student.rollNo) : '',
           email: student.email || '',
           className: student.className || '',
           status: existingRecord ? (existingRecord.isPresent ? 'present' : 'absent') : 'present'
@@ -362,7 +362,7 @@ const StudentAttendance: React.FC = () => {
       const attendanceRecords: AttendanceRecord[] = students.map(student => ({
         studentId: student.studentId,
         studentName: student.name,
-        rollNo: student.rollNo || '',
+        rollNo: student.rollNo ? String(student.rollNo) : '',
         email: student.email || '',
         className: student.className || '',
         status: 'present' as const
