@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import MasterAdminLayout from './Layout';
-import { masterAdminService, type EarningsPeriod, type EarningsByPeriodResponse } from '../../services/masterAdminService';
+import { masterAdminService, type EarningsPeriod, type EarningsByPeriodResponse, type ContactMessage } from '../../services/masterAdminService';
 import { 
   Shield, 
   Users, 
@@ -16,7 +16,11 @@ import {
   ArrowUpRight,
   ChevronRight,
   Calendar,
-  DollarSign
+  DollarSign,
+  Mail,
+  Check,
+  Trash2,
+  Clock
 } from 'lucide-react';
 
 const EARNINGS_PERIODS: { value: EarningsPeriod; label: string }[] = [
@@ -56,6 +60,43 @@ const MasterAdminDashboard: React.FC = () => {
   const [earningsLoading, setEarningsLoading] = useState(true);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(true);
+
+  const fetchContactMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const msgs = await masterAdminService.getAllContactMessages();
+      setContactMessages(msgs);
+    } catch (error) {
+      console.error('Error fetching contact messages:', error);
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: 'pending' | 'read' | 'resolved') => {
+    try {
+      await masterAdminService.updateContactMessageStatus(id, newStatus);
+      setContactMessages(prev =>
+        prev.map(msg => (msg.id === id ? { ...msg, status: newStatus } : msg))
+      );
+    } catch (error) {
+      console.error('Failed to update message status:', error);
+      alert('Failed to update message status.');
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    try {
+      await masterAdminService.deleteContactMessage(id);
+      setContactMessages(prev => prev.filter(msg => msg.id !== id));
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      alert('Failed to delete message.');
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +111,8 @@ const MasterAdminDashboard: React.FC = () => {
         
         setCounts(countsData);
         setFinance(financeData);
+        
+        await fetchContactMessages();
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -397,6 +440,134 @@ const MasterAdminDashboard: React.FC = () => {
               <QuickActionCard key={index} action={action} />
             ))}
           </div>
+        </div>
+
+        {/* Contact Messages Section */}
+        <div className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl border ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+            <div>
+              <h3 className={`text-lg sm:text-xl font-bold ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Get in Touch Messages
+              </h3>
+              <p className={`text-xs sm:text-sm mt-1 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                Review and manage inquiries submitted via the public landing page contact form.
+              </p>
+            </div>
+            <button
+              onClick={fetchContactMessages}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors self-start sm:self-auto ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 border-gray-600 text-white' 
+                  : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
+              }`}
+            >
+              Refresh
+            </button>
+          </div>
+
+          {messagesLoading ? (
+            <div className="flex flex-col gap-4 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={`h-24 w-full rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`} />
+              ))}
+            </div>
+          ) : contactMessages.length === 0 ? (
+            <div className={`p-8 text-center border-2 border-dashed rounded-xl ${
+              isDarkMode ? 'border-gray-700 text-gray-500' : 'border-gray-200 text-gray-400'
+            }`}>
+              <Mail className="mx-auto w-12 h-12 mb-3 opacity-50" />
+              <p className="font-semibold text-sm">No messages yet</p>
+              <p className="text-xs mt-1">Contact form submissions will appear here.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+              {contactMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`p-4 rounded-xl border transition-all hover:shadow-sm ${
+                    msg.status === 'pending'
+                      ? isDarkMode ? 'bg-gray-900/40 border-blue-500/30' : 'bg-blue-50/20 border-blue-100'
+                      : isDarkMode ? 'bg-gray-800/20 border-gray-700' : 'bg-gray-50/10 border-gray-200'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+                    <div>
+                      <h4 className={`font-bold text-sm sm:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {msg.schoolName}
+                      </h4>
+                      <p className={`text-xs font-medium mt-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {msg.schoolEmail}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                        msg.status === 'pending'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                          : msg.status === 'read'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                      }`}>
+                        {msg.status}
+                      </span>
+                      <span className={`text-[10px] sm:text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {msg.createdAt ? new Date(msg.createdAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <p className={`text-xs sm:text-sm whitespace-pre-wrap leading-relaxed ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {msg.message}
+                  </p>
+                  
+                  <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
+                    {msg.status === 'pending' && (
+                      <button
+                        onClick={() => handleUpdateStatus(msg.id!, 'read')}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+                          isDarkMode ? 'bg-yellow-900/30 text-yellow-400 hover:bg-yellow-900/50' : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                        }`}
+                      >
+                        <Clock size={12} />
+                        Mark Read
+                      </button>
+                    )}
+                    {msg.status !== 'resolved' && (
+                      <button
+                        onClick={() => handleUpdateStatus(msg.id!, 'resolved')}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+                          isDarkMode ? 'bg-green-900/30 text-green-400 hover:bg-green-900/50' : 'bg-green-50 text-green-700 hover:bg-green-100'
+                        }`}
+                      >
+                        <Check size={12} />
+                        Resolve
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteMessage(msg.id!)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+                        isDarkMode ? 'bg-rose-900/30 text-rose-400 hover:bg-rose-900/50' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+                      }`}
+                    >
+                      <Trash2 size={12} />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </MasterAdminLayout>

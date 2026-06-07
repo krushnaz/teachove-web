@@ -233,7 +233,7 @@ const SchoolAdminDashboard: React.FC = () => {
             {todayDate}
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-1.5">
-            Welcome, {schoolStats?.schoolName || 'Administrator'}
+            {schoolStats?.schoolName || 'Administrator'}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             Here is your daily overview. Stay updated with the latest alerts and management tasks.

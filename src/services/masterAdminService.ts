@@ -1,6 +1,15 @@
 import { API_CONFIG } from '../config/api';
 import { apiHelper } from '../utils/apiHelper';
 
+export interface ContactMessage {
+  id?: string;
+  schoolName: string;
+  schoolEmail: string;
+  message: string;
+  createdAt?: string;
+  status: 'pending' | 'read' | 'resolved';
+}
+
 interface UserCounts {
   schools: number;
   teachers: number;
@@ -273,6 +282,55 @@ class MasterAdminService {
       throw new Error('Failed to fetch current subscription plans');
     } catch (error: any) {
       console.error('Error fetching current subscription plans:', error);
+      throw error;
+    }
+  }
+
+  // Submit contact message (Public API)
+  async submitContactMessage(messageData: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>): Promise<any> {
+    try {
+      const response = await apiHelper.post('/master-admin/contact', messageData);
+      return response;
+    } catch (error) {
+      console.error('Error submitting contact message:', error);
+      throw error;
+    }
+  }
+
+  // Get all contact messages (Master Admin API)
+  async getAllContactMessages(): Promise<ContactMessage[]> {
+    try {
+      const response = await apiHelper.get('/master-admin/contact');
+      if (response.success && response.messages) {
+        return response.messages;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching contact messages:', error);
+      return [];
+    }
+  }
+
+  // Update contact message status (Master Admin API)
+  async updateContactMessageStatus(id: string, status: 'pending' | 'read' | 'resolved'): Promise<any> {
+    try {
+      const response = await apiHelper.put(`/master-admin/contact/${id}/status`, { status });
+      return response;
+    } catch (error) {
+      console.error('Error updating contact message status:', error);
+      throw error;
+    }
+  }
+
+  // Delete contact message (Master Admin API)
+  async deleteContactMessage(id: string): Promise<void> {
+    try {
+      const response = await apiHelper.delete(`/master-admin/contact/${id}`);
+      if (!response.success) {
+        throw new Error('Failed to delete contact message');
+      }
+    } catch (error) {
+      console.error('Error deleting contact message:', error);
       throw error;
     }
   }

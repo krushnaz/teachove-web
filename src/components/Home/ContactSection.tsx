@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Phone, Mail, CheckCircle } from 'lucide-react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useReveal } from './utils/useReveal';
+import { masterAdminService } from '../../services/masterAdminService';
 
 const ContactSection: React.FC = () => {
   const { isDarkMode } = useDarkMode();
@@ -12,6 +13,7 @@ const ContactSection: React.FC = () => {
     message: '',
   });
   const [showThankYou, setShowThankYou] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleContactFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -19,13 +21,22 @@ const ContactSection: React.FC = () => {
     setContactForm({ ...contactForm, [e.target.name]: e.target.value });
   };
 
-  const handleContactFormSubmit = (e: React.FormEvent) => {
+  const handleContactFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowThankYou(true);
-    setContactForm({ schoolName: '', schoolEmail: '', message: '' });
-    setTimeout(() => {
-      setShowThankYou(false);
-    }, 5000);
+    setIsSubmitting(true);
+    try {
+      await masterAdminService.submitContactMessage(contactForm);
+      setShowThankYou(true);
+      setContactForm({ schoolName: '', schoolEmail: '', message: '' });
+      setTimeout(() => {
+        setShowThankYou(false);
+      }, 5000);
+    } catch (error) {
+      console.error('Failed to submit contact message:', error);
+      alert('Failed to send your message. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -163,9 +174,12 @@ const ContactSection: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3.5 sm:py-4 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors active:scale-95 touch-manipulation min-h-[48px]"
+                  disabled={isSubmitting}
+                  className={`w-full py-3.5 sm:py-4 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors active:scale-95 touch-manipulation min-h-[48px] ${
+                    isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Send Message
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             )}
