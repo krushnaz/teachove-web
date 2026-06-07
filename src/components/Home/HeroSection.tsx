@@ -22,14 +22,6 @@ const HeroSection: React.FC = () => {
             : 'opacity-0 translate-y-10'
         }`}
       >
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 sm:mb-8 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
-          <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-blue-400">
-            Trusted by 500+ Schools Nationwide
-          </span>
-        </div>
-
         {/* Headline */}
         <h1
           className={`max-w-5xl mx-auto text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight ${
