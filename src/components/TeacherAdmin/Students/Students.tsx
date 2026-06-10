@@ -5,7 +5,10 @@ import { subscriptionService, CanAddStudentsResponse } from '../../../services/s
 import { useAuth } from '../../../contexts/AuthContext';
 import { Student } from '../../../models';
 import AddStudentDrawer from './AddStudentDrawer';
+import BulkUploadStudentsModal from '../../shared/BulkUploadStudentsModal';
+import SubscriptionStudentBlockModal from '../../shared/SubscriptionStudentBlockModal';
 import { toast } from 'react-toastify';
+import { classroomService } from '../../../services/classroomService';
 
 const Students: React.FC = () => {
   const { user } = useAuth();
@@ -22,6 +25,27 @@ const Students: React.FC = () => {
   const [subscriptionLimitOpen, setSubscriptionLimitOpen] = useState(false);
   const [subscriptionLimitData, setSubscriptionLimitData] = useState<CanAddStudentsResponse | null>(null);
   const [addStudentCheckLoading, setAddStudentCheckLoading] = useState(false);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+  const [teacherClassLabel, setTeacherClassLabel] = useState('My Class');
+
+  useEffect(() => {
+    const loadClassLabel = async () => {
+      if (!user?.schoolId || !user?.classId) {
+        setTeacherClassLabel('My Class');
+        return;
+      }
+      try {
+        const classData = await classroomService.getClassById(user.schoolId, user.classId);
+        const label = [classData.className, classData.section].filter(Boolean).join('-');
+        setTeacherClassLabel(label || 'My Class');
+      } catch (error) {
+        console.error('Failed to load teacher class details:', error);
+        setTeacherClassLabel('My Class');
+      }
+    };
+
+    loadClassLabel();
+  }, [user?.schoolId, user?.classId]);
 
   // Fetch students from teacher's class
   useEffect(() => {
@@ -179,6 +203,37 @@ const Students: React.FC = () => {
       setDrawerOpen(true);
     } finally {
       setAddStudentCheckLoading(false);
+    }
+  };
+
+  const handleBulkUploadClick = async () => {
+    if (!user?.schoolId || !user?.classId) return;
+    setAddStudentCheckLoading(true);
+    try {
+      const data = await subscriptionService.getCanAddStudents(user.schoolId);
+      if (data == null) {
+        toast.error('Could not verify subscription limit. Please try again.');
+        return;
+      }
+      if (!data.canAdd) {
+        setSubscriptionLimitData(data);
+        setSubscriptionLimitOpen(true);
+        return;
+      }
+      setBulkUploadOpen(true);
+    } finally {
+      setAddStudentCheckLoading(false);
+    }
+  };
+
+  const refreshStudents = async () => {
+    if (!user?.schoolId || !user?.classId) return;
+    const response = await studentService.getStudentsByClass(user.schoolId, user.classId);
+    if (response.success) {
+      const activeStudents = response.students.filter(
+        (student: Student & { status?: string }) => student.status !== 'alumni'
+      );
+      setStudents(activeStudents);
     }
   };
 
@@ -361,6 +416,13 @@ const Students: React.FC = () => {
           </div>
 
           <button
+            onClick={handleBulkUploadClick}
+            disabled={addStudentCheckLoading || !user?.classId}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed mr-2"
+          >
+            Upload Excel
+          </button>
+          <button
             onClick={handleAddStudentClick}
             disabled={addStudentCheckLoading}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -478,6 +540,16 @@ const Students: React.FC = () => {
         )}
       </div>
 
+      <BulkUploadStudentsModal
+        open={bulkUploadOpen}
+        onClose={() => setBulkUploadOpen(false)}
+        schoolId={user?.schoolId || ''}
+        onSuccess={refreshStudents}
+        fixedClassId={user?.classId}
+        fixedClassLabel={teacherClassLabel}
+        role="teacher"
+      />
+
       {/* Add Student Drawer */}
       <AddStudentDrawer
         open={drawerOpen}
@@ -498,48 +570,16 @@ const Students: React.FC = () => {
           profilePic: editingStudent.profilePic
         } : undefined}
         teacherClassId={user?.classId || ''}
-        teacherClassName={user?.className || 'My Class'}
+        teacherClassName={teacherClassLabel}
       />
 
-      {/* Subscription limit modal (block add when student count >= subscription slots) */}
       {subscriptionLimitOpen && subscriptionLimitData && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSubscriptionLimitOpen(false)} />
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-                <svg className="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Subscription limit reached</h3>
-                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                  Your school subscription does not allow adding more students. You have used{' '}
-                  <strong>{subscriptionLimitData.currentStudents}</strong> of{' '}
-                  <strong>{subscriptionLimitData.totalSubscribedSlots}</strong> student slots.
-                </p>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{subscriptionLimitData.message}</p>
-                <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setSubscriptionLimitOpen(false); navigate('/school-admin/subscription-request'); }}
-                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
-                  >
-                    Go to Subscriptions
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSubscriptionLimitOpen(false)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SubscriptionStudentBlockModal
+          open={subscriptionLimitOpen}
+          onClose={() => setSubscriptionLimitOpen(false)}
+          data={subscriptionLimitData}
+          role="teacher"
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

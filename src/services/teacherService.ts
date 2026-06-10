@@ -117,6 +117,8 @@ class TeacherService {
     teacherName?: string;
     email?: string;
     phoneNo?: string;
+    password?: string;
+    classId?: string;
     subjects?: string[];
     classesAssigned?: string[];
   }, profilePicFile?: File): Promise<any> {
@@ -130,6 +132,8 @@ class TeacherService {
       if (teacherData.teacherName) formData.append('teacherName', teacherData.teacherName);
       if (teacherData.email) formData.append('email', teacherData.email);
       if (teacherData.phoneNo) formData.append('phoneNo', teacherData.phoneNo);
+      if (teacherData.password) formData.append('password', teacherData.password);
+      if (teacherData.classId !== undefined) formData.append('classId', teacherData.classId);
       if (teacherData.subjects) formData.append('subjects', JSON.stringify(teacherData.subjects));
       if (teacherData.classesAssigned) formData.append('classesAssigned', JSON.stringify(teacherData.classesAssigned));
       
@@ -160,6 +164,7 @@ class TeacherService {
     email: string;
     phoneNo: string;
     password: string;
+    classId?: string;
     subjects?: string[];
     classesAssigned?: string[];
   }, profilePicFile?: File): Promise<any> {
@@ -176,6 +181,7 @@ class TeacherService {
       formData.append('password', teacherData.password);
       
       // Add optional fields
+      if (teacherData.classId) formData.append('classId', teacherData.classId);
       if (teacherData.subjects) formData.append('subjects', JSON.stringify(teacherData.subjects));
       if (teacherData.classesAssigned) formData.append('classesAssigned', JSON.stringify(teacherData.classesAssigned));
       

@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { classroomService } from '../../../services/classroomService';
 import { subscriptionService, CanAddStudentsResponse } from '../../../services/subscriptionService';
+import {
+  resolveBlockTitle,
+  resolveBlockMessage,
+  showSlotUsage,
+} from '../../../utils/subscriptionStudentGuard';
 import { useAuth } from '../../../contexts/AuthContext';
 
 interface AddStudentDrawerProps {
@@ -289,25 +294,17 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Subscription limit reached</h3>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {resolveBlockTitle(canAddStudents)}
+                      </h3>
                       <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                        Your school subscription does not allow adding more students. You have used{' '}
-                        <strong>{canAddStudents.currentStudents}</strong> of{' '}
-                        <strong>{canAddStudents.totalSubscribedSlots}</strong> student slots.
+                        {resolveBlockMessage(canAddStudents, 'teacher')}
                       </p>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        Contact your school admin or purchase more student slots to add students.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => { onClose(); navigate('/school-admin/subscription-request'); }}
-                        className="mt-4 inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Go to Subscriptions
-                      </button>
+                      {showSlotUsage(canAddStudents) && (
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                          Slots used: {canAddStudents.currentStudents} of {canAddStudents.totalSubscribedSlots}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

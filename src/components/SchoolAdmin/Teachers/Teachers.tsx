@@ -17,7 +17,6 @@ import {
   Mail, 
   Phone, 
   Shield,
-  MoreVertical,
   AlertCircle
 } from 'lucide-react';
 
@@ -39,6 +38,7 @@ const Teachers: React.FC = () => {
     email: string; 
     password: string; 
     phoneNo: string;
+    classId?: string;
   }, profilePicFile?: File) => {
     if (!user?.schoolId) return;
     
@@ -51,6 +51,7 @@ const Teachers: React.FC = () => {
         email: teacher.email,
         phoneNo: teacher.phoneNo,
         password: teacher.password,
+        classId: teacher.classId,
         subjects: [],
         classesAssigned: []
       };
@@ -65,6 +66,7 @@ const Teachers: React.FC = () => {
           password: teacher.password,
           phoneNo: teacher.phoneNo,
           profilePic: response.profilePic || '',
+          classId: teacher.classId,
           subjects: [],
           classesAssigned: [],
           schoolName: schoolName,
@@ -91,12 +93,16 @@ const Teachers: React.FC = () => {
     teacherName: string;
     email: string;
     phoneNo: string;
+    password?: string;
+    classId?: string;
   }, profilePicFile?: File) => {
     try {
       const response = await teacherService.editTeacher(teacherId, {
         teacherName: teacherData.teacherName,
         email: teacherData.email,
         phoneNo: teacherData.phoneNo,
+        classId: teacherData.classId ?? '',
+        ...(teacherData.password ? { password: teacherData.password } : {}),
       }, profilePicFile);
       
       setTeachers(prev => prev.map(t => 
@@ -106,6 +112,7 @@ const Teachers: React.FC = () => {
               name: teacherData.teacherName, 
               email: teacherData.email, 
               phoneNo: teacherData.phoneNo,
+              classId: teacherData.classId,
               profilePic: response.profilePic || t.profilePic
             }
           : t
@@ -341,7 +348,7 @@ const Teachers: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => handleEditClick(teacher)}
                         className="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all"
@@ -355,9 +362,6 @@ const Teachers: React.FC = () => {
                         title="Delete Member"
                       >
                         <Trash2 size={18} />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 md:hidden">
-                        <MoreVertical size={18} />
                       </button>
                     </div>
                   </td>

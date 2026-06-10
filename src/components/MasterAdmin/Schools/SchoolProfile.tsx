@@ -16,10 +16,12 @@ import {
   XCircle,
   BarChart3,
   TrendingUp,
-  Download
+  Download,
+  Upload
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import MasterAdminLayout from '../Layout';
+import BulkUploadStudentsModal from '../../shared/BulkUploadStudentsModal';
 
 interface SchoolStats {
   teacherCount: number;
@@ -606,24 +608,12 @@ const StudentsTab: React.FC<{
 }> = ({ students, loading, onRefresh, schoolId }) => {
   const { isDarkMode } = useDarkMode();
   const [downloading, setDownloading] = useState(false);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (students.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <GraduationCap className={`w-12 h-12 mx-auto mb-4 ${
-          isDarkMode ? 'text-gray-600' : 'text-gray-400'
-        }`} />
-        <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-          No students found for this school
-        </p>
       </div>
     );
   }
@@ -641,6 +631,74 @@ const StudentsTab: React.FC<{
     }
   };
 
+  const actionButtons = (
+    <div className="flex flex-col sm:flex-row gap-2">
+      <button
+        onClick={() => setBulkUploadOpen(true)}
+        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px] ${
+          isDarkMode
+            ? 'bg-indigo-700 hover:bg-indigo-600 text-white'
+            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+        }`}
+      >
+        <Upload className="w-4 h-4 flex-shrink-0" />
+        Upload Excel
+      </button>
+      <button
+        onClick={handleDownload}
+        disabled={downloading || students.length === 0}
+        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px] ${
+          isDarkMode
+            ? 'bg-green-700 hover:bg-green-600 text-white'
+            : 'bg-green-600 hover:bg-green-700 text-white'
+        }`}
+      >
+        <Download className="w-4 h-4 flex-shrink-0" />
+        {downloading ? 'Downloading...' : 'Download Excel'}
+      </button>
+      <button
+        onClick={onRefresh}
+        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px] ${
+          isDarkMode
+            ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+        }`}
+      >
+        Refresh
+      </button>
+    </div>
+  );
+
+  if (students.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            Students (0)
+          </h3>
+          {actionButtons}
+        </div>
+        <div className="text-center py-12">
+          <GraduationCap className={`w-12 h-12 mx-auto mb-4 ${
+            isDarkMode ? 'text-gray-600' : 'text-gray-400'
+          }`} />
+          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+            No students found for this school
+          </p>
+          <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+            Upload an Excel file to add students class-wise
+          </p>
+        </div>
+        <BulkUploadStudentsModal
+          open={bulkUploadOpen}
+          onClose={() => setBulkUploadOpen(false)}
+          schoolId={schoolId}
+          onSuccess={onRefresh}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
@@ -649,30 +707,7 @@ const StudentsTab: React.FC<{
         }`}>
           Students ({students.length})
         </h3>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={handleDownload}
-            disabled={downloading || students.length === 0}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px] ${
-              isDarkMode
-                ? 'bg-green-700 hover:bg-green-600 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            <Download className="w-4 h-4 flex-shrink-0" />
-            {downloading ? 'Downloading...' : 'Download Excel'}
-          </button>
-          <button
-            onClick={onRefresh}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px] ${
-              isDarkMode
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
-          >
-            Refresh
-          </button>
-        </div>
+        {actionButtons}
       </div>
 
       <div className="overflow-x-auto -mx-3 sm:mx-0">
@@ -736,6 +771,13 @@ const StudentsTab: React.FC<{
           </tbody>
         </table>
       </div>
+
+      <BulkUploadStudentsModal
+        open={bulkUploadOpen}
+        onClose={() => setBulkUploadOpen(false)}
+        schoolId={schoolId}
+        onSuccess={onRefresh}
+      />
     </div>
   );
 };

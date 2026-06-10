@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { classroomService, Classroom } from '../../../services/classroomService';
 import { subscriptionService, CanAddStudentsResponse } from '../../../services/subscriptionService';
+import {
+  resolveBlockTitle,
+  resolveBlockMessage,
+  showSlotUsage,
+  getPurchaseButtonLabel,
+} from '../../../utils/subscriptionStudentGuard';
 import { useAuth } from '../../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { X, User, Mail, Phone, Lock, Calendar, ClipboardList, Camera, AlertCircle, Sparkles, Plus, ChevronRight } from 'lucide-react';
@@ -182,7 +188,7 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
     e.preventDefault();
     
     if (!isEdit && canAddStudents && !canAddStudents.canAdd) {
-      toast.error('Subscription limit reached. Purchase more student slots to add students.');
+      toast.error(resolveBlockMessage(canAddStudents, 'school'));
       return;
     }
 
@@ -284,16 +290,22 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300">Limit Reached</h4>
+                      <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300">
+                        {resolveBlockTitle(canAddStudents!)}
+                      </h4>
                       <p className="text-xs text-amber-800 dark:text-amber-400 mt-1">
-                        You've used {canAddStudents?.currentStudents} of {canAddStudents?.totalSubscribedSlots} slots. 
-                        Please upgrade to add more students.
+                        {resolveBlockMessage(canAddStudents!, 'school')}
                       </p>
+                      {showSlotUsage(canAddStudents!) && (
+                        <p className="text-xs text-amber-800 dark:text-amber-400 mt-1">
+                          Slots used: {canAddStudents?.currentStudents} of {canAddStudents?.totalSubscribedSlots}
+                        </p>
+                      )}
                       <button
                         onClick={() => { onClose(); navigate('/school-admin/subscription-request'); }}
                         className="mt-3 text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 hover:underline"
                       >
-                        Upgrade Now
+                        {getPurchaseButtonLabel(canAddStudents!)}
                       </button>
                     </div>
                   </div>

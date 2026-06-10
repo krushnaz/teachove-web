@@ -10,6 +10,7 @@ export interface Teacher {
   profilePic?: string;
   subjects: string[];
   classesAssigned: string[];
+  classId?: string;
   schoolName: string;
   role: string;
   schoolId: string;

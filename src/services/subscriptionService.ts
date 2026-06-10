@@ -1,9 +1,13 @@
 import { apiClient } from '../config/axios';
 import { API_CONFIG } from '../config/api';
 
+export type CanAddStudentsStatus = 'can_add' | 'no_plan' | 'expired' | 'limit_reached';
+
 // Can-add-students response (for add-student guard)
 export interface CanAddStudentsResponse {
   canAdd: boolean;
+  status?: CanAddStudentsStatus;
+  title?: string;
   currentStudents: number;
   totalSubscribedSlots: number;
   remainingSlots: number;

@@ -2,6 +2,40 @@ import { API_CONFIG } from '../config/api';
 import { apiHelper } from '../utils/apiHelper';
 import { Student, StudentsResponse } from '../models/student';
 
+export interface BulkUploadStudentError {
+  row: number;
+  rollNo?: string | null;
+  phoneNo?: string | null;
+  message: string;
+}
+
+export interface BulkUploadStudentsResponse {
+  message: string;
+  totalRows?: number;
+  successCount: number;
+  failedCount: number;
+  classId?: string;
+  className?: string | null;
+  section?: string | null;
+  added?: Array<{
+    row: number;
+    studentId: string;
+    name: string;
+    rollNo: string;
+  }>;
+  errors?: BulkUploadStudentError[];
+}
+
+export class BulkUploadError extends Error {
+  errors?: BulkUploadStudentError[];
+
+  constructor(message: string, errors?: BulkUploadStudentError[]) {
+    super(message);
+    this.name = 'BulkUploadError';
+    this.errors = errors;
+  }
+}
+
 export interface Subject {
   subjectName: string;
   teacherId: string;
@@ -143,6 +177,76 @@ class StudentService {
     } catch (error: any) {
       console.error('Error promoting students:', error);
       throw new Error(error.message || 'Failed to promote students');
+    }
+  }
+
+  /**
+   * Download bulk upload Excel template
+   */
+  async downloadBulkUploadTemplate(): Promise<void> {
+    try {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.BULK_UPLOAD_TEMPLATE}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'student_bulk_upload_template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error: any) {
+      console.error('Error downloading template:', error);
+      throw new Error(error.message || 'Failed to download template');
+    }
+  }
+
+  /**
+   * Bulk upload students from Excel for a class
+   */
+  async bulkUploadStudents(data: {
+    schoolId: string;
+    classId: string;
+    admissionYear: string;
+    defaultPassword: string;
+    file: File;
+  }): Promise<BulkUploadStudentsResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('schoolId', data.schoolId);
+      formData.append('classId', data.classId);
+      formData.append('admissionYear', data.admissionYear);
+      formData.append('defaultPassword', data.defaultPassword);
+      formData.append('file', data.file);
+
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STUDENTS.BULK_UPLOAD}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new BulkUploadError(
+          result.message || `Upload failed (status ${response.status})`,
+          result.errors
+        );
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error('Error bulk uploading students:', error);
+      if (error instanceof BulkUploadError) {
+        throw error;
+      }
+      throw new BulkUploadError(error.message || 'Failed to upload students');
     }
   }
 

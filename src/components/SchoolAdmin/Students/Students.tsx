@@ -6,6 +6,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { Student } from '../../../models';
 import AddStudentDrawer from './AddStudentDrawer';
+import BulkUploadStudentsModal from '../../shared/BulkUploadStudentsModal';
+import SubscriptionStudentBlockModal from '../../shared/SubscriptionStudentBlockModal';
 import { toast } from 'react-toastify';
 import { 
   Users, 
@@ -13,6 +15,7 @@ import {
   School, 
   Calendar, 
   Search, 
+  Upload,
   Plus, 
   Edit3, 
   Trash2, 
@@ -43,6 +46,7 @@ const Students: React.FC = () => {
   const [subscriptionLimitOpen, setSubscriptionLimitOpen] = useState(false);
   const [subscriptionLimitData, setSubscriptionLimitData] = useState<CanAddStudentsResponse | null>(null);
   const [addStudentCheckLoading, setAddStudentCheckLoading] = useState(false);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
   // Fetch students on component mount
   useEffect(() => {
@@ -201,6 +205,37 @@ const Students: React.FC = () => {
     }
   };
 
+  const handleBulkUploadClick = async () => {
+    if (!user?.schoolId) return;
+    setAddStudentCheckLoading(true);
+    try {
+      const data = await subscriptionService.getCanAddStudents(user.schoolId);
+      if (data == null) {
+        toast.error('Could not verify subscription limit. Please try again.');
+        return;
+      }
+      if (!data.canAdd) {
+        setSubscriptionLimitData(data);
+        setSubscriptionLimitOpen(true);
+        return;
+      }
+      setBulkUploadOpen(true);
+    } finally {
+      setAddStudentCheckLoading(false);
+    }
+  };
+
+  const refreshStudents = async () => {
+    if (!user?.schoolId) return;
+    const response = await studentService.getStudentsBySchool(user.schoolId);
+    if (response.success) {
+      const activeStudents = response.students.filter(
+        (student: Student & { status?: string }) => student.status !== 'alumni'
+      );
+      setStudents(activeStudents);
+    }
+  };
+
   // Handler for opening edit student drawer
   const handleEditStudentClick = (student: Student) => {
     setEditingStudent(student);
@@ -352,6 +387,18 @@ const Students: React.FC = () => {
                   <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <span>Promote Students</span>
+              </button>
+              <button
+                onClick={handleBulkUploadClick}
+                disabled={addStudentCheckLoading}
+                className={`px-4 py-2.5 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 border ${
+                  isDarkMode
+                    ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                } disabled:opacity-70 disabled:cursor-not-allowed`}
+              >
+                <Upload className="w-4 h-4" />
+                <span>Upload Excel</span>
               </button>
               <button
                 onClick={handleAddStudentClick}
@@ -625,6 +672,18 @@ const Students: React.FC = () => {
         </div>
       </div>
 
+      <BulkUploadStudentsModal
+        open={bulkUploadOpen}
+        onClose={() => setBulkUploadOpen(false)}
+        schoolId={user?.schoolId || ''}
+        onSuccess={refreshStudents}
+        role="school"
+        onPurchaseSubscription={() => {
+          setBulkUploadOpen(false);
+          navigate('/school-admin/subscription-request');
+        }}
+      />
+
       {/* Add Student Drawer */}
       <AddStudentDrawer
         open={drawerOpen}
@@ -637,51 +696,18 @@ const Students: React.FC = () => {
         student={editingStudent || undefined}
       />
 
-      {/* Subscription limit modal */}
+      {/* Subscription block modal */}
       {subscriptionLimitOpen && subscriptionLimitData && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={() => setSubscriptionLimitOpen(false)} />
-          <div className={`relative w-full max-w-lg transform transition-all overflow-hidden rounded-md border shadow-2xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Subscription Limit Reached</h3>
-                  <div className={`mt-3 space-y-3 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    <p>
-                      Your current subscription does not allow adding more students. You have used{' '}
-                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{subscriptionLimitData.currentStudents}</span> of{' '}
-                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{subscriptionLimitData.totalSubscribedSlots}</span> student slots.
-                    </p>
-                    <div className={`p-3 rounded-md border ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200 italic'}`}>
-                      "{subscriptionLimitData.message}"
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-8 flex flex-col-reverse sm:flex-row justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSubscriptionLimitOpen(false)}
-                  className={`px-4 py-2.5 text-sm font-bold uppercase tracking-wider rounded transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setSubscriptionLimitOpen(false); navigate('/school-admin/subscription-request'); }}
-                  className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold uppercase tracking-wider rounded hover:bg-indigo-700 shadow-sm transition-all"
-                >
-                  Purchase Slots
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SubscriptionStudentBlockModal
+          open={subscriptionLimitOpen}
+          onClose={() => setSubscriptionLimitOpen(false)}
+          data={subscriptionLimitData}
+          role="school"
+          onPurchase={() => {
+            setSubscriptionLimitOpen(false);
+            navigate('/school-admin/subscription-request');
+          }}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

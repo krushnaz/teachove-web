@@ -31,6 +31,8 @@ export const API_CONFIG = {
       BY_CLASS: '/students/:schoolId/class/:classId',
       GET_WITH_CLASS: '/students/getStudentWithClass/:studentId',
       PROMOTE_CLASS: '/students/promote-class',
+      BULK_UPLOAD: '/students/bulk-upload',
+      BULK_UPLOAD_TEMPLATE: '/students/bulk-upload/template',
     },
     TEACHERS: {
       LIST: '/teachers',
