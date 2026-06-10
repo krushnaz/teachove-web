@@ -65,6 +65,7 @@ const HeroSection: React.FC = () => {
         </div>
 
         {/* Stats Grid */}
+        {/*
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
           {[
             { label: 'Schools', value: '500+', icon: Activity },
@@ -92,6 +93,7 @@ const HeroSection: React.FC = () => {
             </div>
           ))}
         </div>
+        */}
       </div>
     </section>
   );
