@@ -283,7 +283,7 @@ const BulkUploadStudentsModal: React.FC<BulkUploadStudentsModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           <div className={`p-4 rounded-md border text-sm ${isDarkMode ? 'bg-gray-900/50 border-gray-700 text-gray-300' : 'bg-indigo-50 border-indigo-100 text-indigo-900'}`}>
             <p className="font-semibold mb-1">Excel columns</p>
-            <p>Name, Roll No, Email, Phone No, Password (all required in Excel)</p>
+            <p>Name, Roll No, Phone No required. Email optional. Password uses form default if blank in Excel.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
