@@ -1,7 +1,7 @@
 import { apiClient } from '../config/axios';
 import { API_CONFIG } from '../config/api';
 
-export type CanAddStudentsStatus = 'can_add' | 'no_plan' | 'expired' | 'limit_reached';
+export type CanAddStudentsStatus = 'can_add' | 'no_plan' | 'expired' | 'limit_reached' | 'free_trial';
 
 // Can-add-students response (for add-student guard)
 export interface CanAddStudentsResponse {
@@ -12,6 +12,7 @@ export interface CanAddStudentsResponse {
   totalSubscribedSlots: number;
   remainingSlots: number;
   message: string;
+  isFreeTrial?: boolean;
 }
 
 // Current subscription details (for sidebar & subscription page)

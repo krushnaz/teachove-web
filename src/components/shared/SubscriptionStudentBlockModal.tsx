@@ -8,6 +8,7 @@ import {
   resolveBlockMessage,
   showSlotUsage,
   getPurchaseButtonLabel,
+  CanAddStudentsStatus,
 } from '../../utils/subscriptionStudentGuard';
 
 interface SubscriptionStudentBlockModalProps {
@@ -32,14 +33,25 @@ const SubscriptionStudentBlockModal: React.FC<SubscriptionStudentBlockModalProps
   const status = resolveCanAddStatus(data);
   const title = resolveBlockTitle(data);
   const message = resolveBlockMessage(data, role);
-  const showPurchase = role === 'school' && onPurchase && status !== 'can_add';
+  const showPurchase =
+    role === 'school' && onPurchase && status !== 'can_add' && status !== 'free_trial';
 
-  const iconConfig = {
+  const iconConfigMap: Record<
+    CanAddStudentsStatus,
+    { Icon: typeof AlertCircle; bg: string; color: string }
+  > = {
     no_plan: { Icon: ShoppingCart, bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
     expired: { Icon: Clock, bg: 'bg-red-100 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
     limit_reached: { Icon: AlertCircle, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
     can_add: { Icon: AlertCircle, bg: 'bg-amber-100 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400' },
-  }[status] || { Icon: XCircle, bg: 'bg-gray-100 dark:bg-gray-800', color: 'text-gray-600' };
+    free_trial: { Icon: AlertCircle, bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' },
+  };
+
+  const iconConfig = iconConfigMap[status] ?? {
+    Icon: XCircle,
+    bg: 'bg-gray-100 dark:bg-gray-800',
+    color: 'text-gray-600',
+  };
 
   const { Icon, bg, color } = iconConfig;
 

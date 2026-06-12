@@ -39,14 +39,14 @@ const AppsSection: React.FC = () => {
     <section
       id="apps"
       ref={appsReveal.elementRef}
-      className={`py-16 sm:py-20 lg:py-32 ${
+      className={`pt-10 sm:pt-12 lg:pt-16 pb-16 sm:pb-20 lg:pb-24 ${
         isDarkMode ? 'bg-slate-950' : 'bg-gray-50'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div
-          className={`text-center mb-12 sm:mb-16 lg:mb-20 transition-all duration-1000 ease-out ${
+          className={`text-center mb-10 sm:mb-12 lg:mb-14 transition-all duration-1000 ease-out ${
             appsReveal.revealed
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'

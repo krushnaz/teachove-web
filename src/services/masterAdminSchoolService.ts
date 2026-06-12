@@ -17,6 +17,8 @@ export interface School {
   pincode?: string;
   line1?: string;
   isActive?: boolean;
+  isFreeTrial?: boolean;
+  freeTrialUpdatedAt?: any;
   createdAt?: any;
   updatedAt?: any;
 }
@@ -303,6 +305,37 @@ class MasterAdminSchoolService {
       console.error('Error downloading students Excel:', error);
       throw new Error(error.message || 'Failed to download students Excel');
     }
+  }
+
+  async getFreeTrialStatus(schoolId: string): Promise<{ isFreeTrial: boolean }> {
+    const response = await apiHelper.get(
+      `/master-admin/schools/${schoolId}/free-trial`
+    ) as { success: boolean; isFreeTrial?: boolean; message?: string };
+
+    if (response.success) {
+      return { isFreeTrial: response.isFreeTrial === true };
+    }
+
+    throw new Error(response.message || 'Failed to fetch free trial status');
+  }
+
+  async toggleFreeTrial(
+    schoolId: string,
+    isFreeTrial: boolean
+  ): Promise<{ isFreeTrial: boolean; message: string }> {
+    const response = await apiHelper.put(
+      `/master-admin/schools/${schoolId}/toggle-free-trial`,
+      { isFreeTrial }
+    ) as { success: boolean; isFreeTrial?: boolean; message?: string };
+
+    if (response.success) {
+      return {
+        isFreeTrial: response.isFreeTrial === true,
+        message: response.message || 'Free trial updated',
+      };
+    }
+
+    throw new Error(response.message || 'Failed to update free trial');
   }
 }
 

@@ -17,7 +17,8 @@ import {
   BarChart3,
   TrendingUp,
   Download,
-  Upload
+  Upload,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import MasterAdminLayout from '../Layout';
@@ -61,6 +62,8 @@ const SchoolProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [isFreeTrial, setIsFreeTrial] = useState(false);
+  const [togglingFreeTrial, setTogglingFreeTrial] = useState(false);
 
   useEffect(() => {
     if (schoolId) {
@@ -85,11 +88,30 @@ const SchoolProfile: React.FC = () => {
       const response = await masterAdminSchoolService.getSchoolProfileWithStats(schoolId);
       setSchool(response.school);
       setStats(response.stats);
+      setIsFreeTrial(response.school.isFreeTrial === true);
     } catch (error: any) {
       console.error('Error fetching school profile:', error);
       toast.error(error.message || 'Failed to load school profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleFreeTrial = async () => {
+    if (!schoolId || togglingFreeTrial) return;
+
+    const nextValue = !isFreeTrial;
+    try {
+      setTogglingFreeTrial(true);
+      const result = await masterAdminSchoolService.toggleFreeTrial(schoolId, nextValue);
+      setIsFreeTrial(result.isFreeTrial);
+      setSchool((prev) => (prev ? { ...prev, isFreeTrial: result.isFreeTrial } : prev));
+      toast.success(result.message);
+    } catch (error: any) {
+      console.error('Error toggling free trial:', error);
+      toast.error(error.message || 'Failed to update free trial');
+    } finally {
+      setTogglingFreeTrial(false);
     }
   };
 
@@ -210,6 +232,49 @@ const SchoolProfile: React.FC = () => {
                     Inactive
                   </span>
                 )}
+                {isFreeTrial && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                    <Sparkles className="w-4 h-4" />
+                    Free Trial
+                  </span>
+                )}
+              </div>
+              <div className={`mt-4 p-4 rounded-lg border ${
+                isDarkMode ? 'bg-gray-900/40 border-gray-700' : 'bg-indigo-50/60 border-indigo-100'
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Free Trial Access
+                    </p>
+                    <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      When enabled, this school can use all modules and add students without subscription limits.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleToggleFreeTrial}
+                    disabled={togglingFreeTrial}
+                    className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 ${
+                      isFreeTrial
+                        ? 'bg-amber-500'
+                        : isDarkMode
+                          ? 'bg-gray-600'
+                          : 'bg-gray-300'
+                    }`}
+                    aria-pressed={isFreeTrial}
+                    aria-label="Toggle free trial"
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                        isFreeTrial ? 'translate-x-7' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className={`text-xs mt-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Status: {isFreeTrial ? 'ON — subscription checks bypassed' : 'OFF — normal subscription rules apply'}
+                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-4">
                 <div className="flex items-center gap-2">

@@ -1,8 +1,9 @@
 import { CanAddStudentsResponse } from '../services/subscriptionService';
 
-export type CanAddStudentsStatus = 'can_add' | 'no_plan' | 'expired' | 'limit_reached';
+export type CanAddStudentsStatus = 'can_add' | 'no_plan' | 'expired' | 'limit_reached' | 'free_trial';
 
 export function resolveCanAddStatus(data: CanAddStudentsResponse): CanAddStudentsStatus {
+  if (data.status === 'free_trial' || data.isFreeTrial) return 'free_trial';
   if (data.status) return data.status;
   if (data.totalSubscribedSlots === 0) return 'no_plan';
   if (data.message?.toLowerCase().includes('expired')) return 'expired';

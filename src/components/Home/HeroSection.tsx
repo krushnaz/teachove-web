@@ -11,7 +11,7 @@ const HeroSection: React.FC = () => {
   return (
     <section
       ref={heroReveal.elementRef}
-      className={`relative pt-24 sm:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-24 px-4 ${
+      className={`relative pt-20 sm:pt-24 lg:pt-28 pb-8 sm:pb-10 lg:pb-12 px-4 ${
         isDarkMode ? 'bg-slate-900' : 'bg-white'
       }`}
     >
@@ -44,7 +44,7 @@ const HeroSection: React.FC = () => {
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-row items-center justify-center gap-4 mb-12 sm:mb-16 lg:mb-20 max-w-none mx-auto px-4 sm:px-0">
+        <div className="flex flex-row items-center justify-center gap-4 max-w-none mx-auto px-4 sm:px-0">
           <Link
             to="/login"
             className="px-6 sm:px-8 py-3.5 sm:py-4 text-base sm:text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all rounded-full active:scale-95 touch-manipulation min-h-[48px] flex items-center justify-center whitespace-nowrap"
