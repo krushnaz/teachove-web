@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import type { QuestionPaper } from '../../../services/masterAdminQuestionPapersService';
+import { MAX_PDF_SIZE_MB, validatePdfFile } from '../../../utils/uploadLimits';
 
 interface PaperModalProps {
   isOpen: boolean;
@@ -16,11 +17,13 @@ const PaperModal: React.FC<PaperModalProps> = ({ isOpen, mode, initial, loading,
   const { isDarkMode } = useDarkMode();
   const [name, setName] = useState('');
   const [pdf, setPdf] = useState<File | null>(null);
+  const [fileError, setFileError] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
     setName(initial?.name || '');
     setPdf(null);
+    setFileError('');
   }, [isOpen, initial]);
 
   if (!isOpen) return null;
@@ -31,6 +34,14 @@ const PaperModal: React.FC<PaperModalProps> = ({ isOpen, mode, initial, loading,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pdf) {
+      const validationError = validatePdfFile(pdf);
+      if (validationError) {
+        setFileError(validationError);
+        return;
+      }
+    }
+    setFileError('');
     await onSubmit({
       name: nameVisible ? name : undefined,
       pdf,
@@ -80,11 +91,19 @@ const PaperModal: React.FC<PaperModalProps> = ({ isOpen, mode, initial, loading,
               type="file"
               accept="application/pdf"
               required={pdfRequired}
-              onChange={(e) => setPdf(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setPdf(file);
+                setFileError(file ? validatePdfFile(file) || '' : '');
+              }}
               className={`w-full px-4 py-2 rounded-lg border transition-colors ${
                 isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
               }`}
             />
+            <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              PDF only, max {MAX_PDF_SIZE_MB}MB.
+            </p>
+            {fileError && <p className="mt-1 text-xs text-red-500">{fileError}</p>}
             {mode === 'rename' && (
               <p className={`mt-1 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Only name will be updated.</p>
             )}

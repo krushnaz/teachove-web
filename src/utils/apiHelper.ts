@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios';
 import { apiClient } from '../config/axios';
+import { MAX_PDF_SIZE_MB } from './uploadLimits';
 
 function extractResponseData(error: unknown): any | null {
   if (error instanceof AxiosError && error.response?.data) {
@@ -22,6 +23,34 @@ function throwHttpError(responseData: any, status?: number): never {
   throw error;
 }
 
+function rethrowApiError(error: unknown): never {
+  if (error instanceof AxiosError) {
+    if (error.response?.status === 413) {
+      throw new Error(
+        error.response.data?.message ||
+          `File is too large. Maximum upload size is ${MAX_PDF_SIZE_MB}MB.`
+      );
+    }
+
+    const responseData = extractResponseData(error);
+    if (responseData && shouldReturnApiError(responseData)) {
+      throw new Error(responseData.message || 'Request failed');
+    }
+    if (responseData) {
+      throwHttpError(responseData, error.response?.status);
+    }
+
+    if (!error.response) {
+      throw new Error(
+        'Upload failed. The file may be too large for the server — try a smaller PDF or contact support.'
+      );
+    }
+  }
+
+  console.error('API request failed:', error);
+  throw error instanceof Error ? error : new Error('Request failed');
+}
+
 async function request<T>(method: 'get' | 'post' | 'put' | 'delete' | 'patch', endpoint: string, data?: any): Promise<T> {
   try {
     const response = await apiClient.request<T>({ method, url: endpoint, data });
@@ -36,8 +65,7 @@ async function request<T>(method: 'get' | 'post' | 'put' | 'delete' | 'patch', e
       throwHttpError(responseData, (error as AxiosError).response?.status);
     }
 
-    console.error('API request failed:', error);
-    throw error;
+    rethrowApiError(error);
   }
 }
 
@@ -60,8 +88,7 @@ export const apiHelper = {
       if (responseData) {
         throwHttpError(responseData, (error as AxiosError).response?.status);
       }
-      console.error('API request failed:', error);
-      throw error;
+      rethrowApiError(error);
     }
   },
 
@@ -77,8 +104,7 @@ export const apiHelper = {
       if (responseData) {
         throwHttpError(responseData, (error as AxiosError).response?.status);
       }
-      console.error('API request failed:', error);
-      throw error;
+      rethrowApiError(error);
     }
   },
 };
