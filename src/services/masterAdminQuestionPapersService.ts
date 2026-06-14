@@ -1,4 +1,3 @@
-import { apiClient } from '../config/axios';
 import { apiHelper } from '../utils/apiHelper';
 
 export type QuestionPaperType = 'Unit Test 1' | 'Unit Test 2' | 'First Term' | 'Second Term';
@@ -32,6 +31,23 @@ class MasterAdminQuestionPapersService {
     const res = (await apiHelper.get('/master-admin/question-papers/classes')) as ApiResponse<{ classes: QPClass[] }>;
     if (!res.success) throw new Error(res.message || 'Failed to fetch classes');
     return res.classes || [];
+  }
+
+  async createClass(payload: { className: string }): Promise<QPClass> {
+    const res = (await apiHelper.post('/master-admin/ve-books/classes', payload)) as ApiResponse<{ class: QPClass }>;
+    if (!res.success) throw new Error(res.message || 'Failed to create class');
+    return res.class;
+  }
+
+  async updateClass(classId: string, payload: { className: string }): Promise<QPClass> {
+    const res = (await apiHelper.put(`/master-admin/ve-books/classes/${classId}`, payload)) as ApiResponse<{ class: QPClass }>;
+    if (!res.success) throw new Error(res.message || 'Failed to update class');
+    return res.class;
+  }
+
+  async deleteClass(classId: string): Promise<void> {
+    const res = (await apiHelper.delete(`/master-admin/ve-books/classes/${classId}`)) as ApiResponse<{}>;
+    if (!res.success) throw new Error(res.message || 'Failed to delete class');
   }
 
   async getPapers(classId: string, type: string): Promise<QuestionPaper[]> {

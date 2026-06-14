@@ -143,6 +143,9 @@ const VEBooks: React.FC = () => {
 
   const openDelete = (cfg: Omit<typeof deleteModal, 'open'>) => setDeleteModal({ ...cfg, open: true });
 
+  const actionBtn =
+    'inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px]';
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -231,7 +234,7 @@ const VEBooks: React.FC = () => {
                 {filteredClasses.map((c) => (
                   <div
                     key={c.classId}
-                    className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                    className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${
                       isDarkMode ? 'hover:bg-gray-700/40' : 'hover:bg-gray-50'
                     }`}
                   >
@@ -240,22 +243,22 @@ const VEBooks: React.FC = () => {
                         setSelectedClassId(c.classId);
                         setBookSearch('');
                       }}
-                      className="text-left min-w-0"
+                      className="text-left min-w-0 flex-1 touch-manipulation"
                       title="Open class"
                     >
                       <p className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{c.className}</p>
                       <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>ID: {c.classId}</p>
                     </button>
 
-                    <div className="flex items-center gap-2 justify-end flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap sm:justify-end">
                       <button
                         onClick={() => {
                           setClassModalMode('edit');
                           setEditingClass(c);
                           setClassModalOpen(true);
                         }}
-                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800'
+                        className={`${actionBtn} ${
+                          isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
                         }`}
                       >
                         <Edit className="w-4 h-4" /> Edit
@@ -284,11 +287,11 @@ const VEBooks: React.FC = () => {
                             },
                           })
                         }
-                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`${actionBtn} ${
                           isDarkMode ? 'bg-red-900/30 hover:bg-red-900/40 text-red-200' : 'bg-red-50 hover:bg-red-100 text-red-700'
                         }`}
                       >
-                        <Trash2 className="w-4 h-4" /> Delete class
+                        <Trash2 className="w-4 h-4" /> Delete
                       </button>
                     </div>
                   </div>
@@ -324,14 +327,14 @@ const VEBooks: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <div className="relative">
+                <div className="flex flex-col gap-3 w-full lg:w-auto">
+                  <div className="relative w-full sm:w-64">
                     <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                     <input
                       value={bookSearch}
                       onChange={(e) => setBookSearch(e.target.value)}
                       placeholder="Search books..."
-                      className={`pl-9 pr-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`w-full pl-9 pr-3 py-2.5 rounded-lg border text-sm transition-colors ${
                         isDarkMode
                           ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-indigo-500'
                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500'
@@ -339,35 +342,37 @@ const VEBooks: React.FC = () => {
                     />
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setSubjectModalMode('add');
-                      setEditingSubject(null);
-                      setSubjectModalOpen(true);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Subject
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMergeModalMode('add');
-                      setEditingMergeBook(null);
-                      setMergeModalOpen(true);
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-900 hover:bg-black text-white'
-                    }`}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Merge Book
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <button
+                      onClick={() => {
+                        setSubjectModalMode('add');
+                        setEditingSubject(null);
+                        setSubjectModalOpen(true);
+                      }}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white touch-manipulation min-h-[44px] w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Subject
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMergeModalMode('add');
+                        setEditingMergeBook(null);
+                        setMergeModalOpen(true);
+                      }}
+                      className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] w-full sm:w-auto ${
+                        isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-900 hover:bg-black text-white'
+                      }`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Merge Book
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-5 space-y-8">
+            <div className="p-4 sm:p-5 space-y-8">
               {actionLoading === 'load-class-content' ? (
                 <div className="flex items-center justify-center h-40">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
@@ -390,7 +395,7 @@ const VEBooks: React.FC = () => {
                         {filteredSubjects.map((s) => (
                           <div
                             key={s.subjectId}
-                            className={`p-4 rounded-xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                            className={`p-4 rounded-xl border flex flex-col gap-4 ${
                               isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50 border-gray-200'
                             }`}
                           >
@@ -399,32 +404,32 @@ const VEBooks: React.FC = () => {
                               <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Book ID: {s.subjectId}</p>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                               {s.coverPageUrl ? (
                                 <a
                                   href={s.coverPageUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                    isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800'
+                                  className={`${actionBtn} ${
+                                    isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
                                   }`}
                                 >
-                                  <ImageIcon className="w-4 h-4" /> View cover
+                                  <ImageIcon className="w-4 h-4" /> Cover
                                 </a>
                               ) : null}
 
                               <button
-                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                className={`${actionBtn} ${
                                   isDarkMode ? 'bg-indigo-900/20 hover:bg-indigo-900/30 text-indigo-200' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
                                 }`}
                                 onClick={() => setPdfPreview({ open: true, title: s.subjectName, url: s.pdfUrl })}
                               >
-                                <Eye className="w-4 h-4" /> Preview PDF
+                                <Eye className="w-4 h-4" /> Preview
                               </button>
 
                               <button
-                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800'
+                                className={`${actionBtn} ${
+                                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
                                 }`}
                                 onClick={() => {
                                   setSubjectModalMode('edit');
@@ -437,7 +442,7 @@ const VEBooks: React.FC = () => {
 
                               {s.coverPageUrl ? (
                                 <button
-                                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  className={`${actionBtn} ${
                                     isDarkMode ? 'bg-orange-900/20 hover:bg-orange-900/30 text-orange-200' : 'bg-orange-50 hover:bg-orange-100 text-orange-700'
                                   }`}
                                   onClick={() =>
@@ -463,12 +468,12 @@ const VEBooks: React.FC = () => {
                                     })
                                   }
                                 >
-                                  <Trash2 className="w-4 h-4" /> Delete cover page
+                                  <Trash2 className="w-4 h-4" /> Del cover
                                 </button>
                               ) : null}
 
                               <button
-                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                className={`${actionBtn} col-span-2 sm:col-span-1 ${
                                   isDarkMode ? 'bg-red-900/30 hover:bg-red-900/40 text-red-200' : 'bg-red-50 hover:bg-red-100 text-red-700'
                                 }`}
                                 onClick={() =>
@@ -494,7 +499,7 @@ const VEBooks: React.FC = () => {
                                   })
                                 }
                               >
-                                <Trash2 className="w-4 h-4" /> Delete book
+                                <Trash2 className="w-4 h-4" /> Delete
                               </button>
                             </div>
                           </div>
@@ -519,7 +524,7 @@ const VEBooks: React.FC = () => {
                         {filteredMergeBooks.map((m) => (
                           <div
                             key={m.mergeBookId}
-                            className={`p-4 rounded-xl border flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                            className={`p-4 rounded-xl border flex flex-col gap-4 ${
                               isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50 border-gray-200'
                             }`}
                           >
@@ -528,19 +533,19 @@ const VEBooks: React.FC = () => {
                               <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Book ID: {m.mergeBookId}</p>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                               <button
-                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                className={`${actionBtn} ${
                                   isDarkMode ? 'bg-indigo-900/20 hover:bg-indigo-900/30 text-indigo-200' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
                                 }`}
                                 onClick={() => setPdfPreview({ open: true, title: m.mergeBookName, url: m.pdfUrl })}
                               >
-                                <Eye className="w-4 h-4" /> Preview PDF
+                                <Eye className="w-4 h-4" /> Preview
                               </button>
 
                               <button
-                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800'
+                                className={`${actionBtn} ${
+                                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
                                 }`}
                                 onClick={() => {
                                   setMergeModalMode('edit');
@@ -552,7 +557,7 @@ const VEBooks: React.FC = () => {
                               </button>
 
                               <button
-                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                className={`${actionBtn} col-span-2 sm:col-span-1 ${
                                   isDarkMode ? 'bg-red-900/30 hover:bg-red-900/40 text-red-200' : 'bg-red-50 hover:bg-red-100 text-red-700'
                                 }`}
                                 onClick={() =>
@@ -578,7 +583,7 @@ const VEBooks: React.FC = () => {
                                   })
                                 }
                               >
-                                <Trash2 className="w-4 h-4" /> Delete book
+                                <Trash2 className="w-4 h-4" /> Delete
                               </button>
                             </div>
                           </div>
