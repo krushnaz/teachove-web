@@ -10,6 +10,7 @@ const ContactSection: React.FC = () => {
   const [contactForm, setContactForm] = useState({
     schoolName: '',
     schoolEmail: '',
+    mobileNumber: '',
     message: '',
   });
   const [showThankYou, setShowThankYou] = useState(false);
@@ -27,7 +28,7 @@ const ContactSection: React.FC = () => {
     try {
       await masterAdminService.submitContactMessage(contactForm);
       setShowThankYou(true);
-      setContactForm({ schoolName: '', schoolEmail: '', message: '' });
+      setContactForm({ schoolName: '', schoolEmail: '', mobileNumber: '', message: '' });
       setTimeout(() => {
         setShowThankYou(false);
       }, 5000);
@@ -149,6 +150,30 @@ const ContactSection: React.FC = () => {
                       placeholder="school@example.com"
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className={`text-sm font-semibold ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}
+                  >
+                    Mobile Number
+                  </label>
+                  <input
+                    name="mobileNumber"
+                    type="tel"
+                    value={contactForm.mobileNumber}
+                    onChange={handleContactFormChange}
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9+\s-]{10,15}"
+                    className={`w-full px-4 py-3 rounded-lg border transition-all outline-none focus:ring-2 focus:ring-blue-500 ${
+                      isDarkMode
+                        ? 'bg-slate-900 border-slate-700 text-white placeholder-gray-500'
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                    }`}
+                    placeholder="10-digit mobile number"
+                  />
                 </div>
                 <div className="space-y-2">
                   <label

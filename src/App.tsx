@@ -58,7 +58,7 @@ import { StudentExamTimetable } from './components/Students/ExamTimetable';
 import { StudentProfile } from './components/Students/Profile';
 import { StudentFees } from './components/Students/Fees';
 import { StudentLeaves } from './components/Students/Leaves';
-import { MasterAdminLogin, MasterAdminDashboard } from './components/MasterAdmin';
+import { MasterAdminLogin, MasterAdminDashboard, GetInTouchMessages, SubscriptionLedger } from './components/MasterAdmin';
 import MasterAdminLayout from './components/MasterAdmin/Layout';
 import { Schools } from './components/MasterAdmin/Schools';
 import SchoolProfile from './components/MasterAdmin/Schools/SchoolProfile';
@@ -173,6 +173,22 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="master_admin">
                     <MasterAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/get-in-touch"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <GetInTouchMessages />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/ledger"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <SubscriptionLedger />
                   </ProtectedRoute>
                 }
               />

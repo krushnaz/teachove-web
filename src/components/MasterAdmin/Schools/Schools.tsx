@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { masterAdminSchoolService, School } from '../../../services/masterAdminSchoolService';
+import { masterAdminSubscriptionService, SubscriptionRequest } from '../../../services/masterAdminSubscriptionService';
+import { buildSchoolPlanMap } from '../../../utils/schoolPlanHelpers';
 import { 
   Plus, 
   Search, 
-  Edit, 
-  Trash2, 
-  Power, 
-  PowerOff,
   School as SchoolIcon,
-  Eye,
   CheckCircle,
   XCircle,
-  MoreVertical
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import AddSchoolModal from './AddSchoolModal';
 import EditSchoolModal from './EditSchoolModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import SchoolActionsMenu from './SchoolActionsMenu';
+import SchoolPlanBadge from './SchoolPlanBadge';
 
 // Logo Cell Component
 const SchoolLogoCell: React.FC<{ school: School }> = ({ school }) => {
@@ -58,6 +57,7 @@ const Schools: React.FC = () => {
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [schools, setSchools] = useState<School[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -65,6 +65,7 @@ const Schools: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSchools();
@@ -73,8 +74,12 @@ const Schools: React.FC = () => {
   const fetchSchools = async () => {
     try {
       setLoading(true);
-      const data = await masterAdminSchoolService.getSchools();
-      setSchools(data);
+      const [schoolData, subResponse] = await Promise.all([
+        masterAdminSchoolService.getSchools(),
+        masterAdminSubscriptionService.getAllSubscriptionRequests(),
+      ]);
+      setSchools(schoolData);
+      setSubscriptions(subResponse.subscriptions || []);
     } catch (error: any) {
       console.error('Error fetching schools:', error);
       toast.error(error.message || 'Failed to load schools');
@@ -82,6 +87,8 @@ const Schools: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const planMap = useMemo(() => buildSchoolPlanMap(schools, subscriptions), [schools, subscriptions]);
 
   const handleAddSchool = async (schoolData: Partial<School>) => {
     try {
@@ -163,7 +170,6 @@ const Schools: React.FC = () => {
 
   const filteredSchools = schools.filter(school =>
     school.schoolName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    school.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     school.phoneNo?.includes(searchTerm)
   );
 
@@ -207,7 +213,7 @@ const Schools: React.FC = () => {
         }`} />
         <input
           type="text"
-          placeholder="Search schools by name, email, or phone..."
+          placeholder="Search schools by name or phone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
@@ -237,7 +243,7 @@ const Schools: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <table className="w-full min-w-[700px]">
+            <table className="w-full min-w-[640px]">
               <thead className={`${
                 isDarkMode ? 'bg-gray-900 border-b border-gray-700' : 'bg-gray-50 border-b border-gray-200'
               }`}>
@@ -252,22 +258,12 @@ const Schools: React.FC = () => {
                   }`}>
                     School Name
                   </th>
-                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden md:table-cell ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
-                    Email
-                  </th>
-                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden lg:table-cell ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Phone
                   </th>
-                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden xl:table-cell ${
-                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
-                    Location
-                  </th>
-                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden lg:table-cell ${
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden md:table-cell ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Academic Year
@@ -276,6 +272,11 @@ const Schools: React.FC = () => {
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     Status
+                  </th>
+                  <th className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold uppercase tracking-wider hidden lg:table-cell ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    Plan
                   </th>
                   <th className={`px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold uppercase tracking-wider ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -290,6 +291,7 @@ const Schools: React.FC = () => {
                 {filteredSchools.map((school) => {
                   const schoolId = school.id || school.schoolId || '';
                   const isToggleLoading = actionLoading === `toggle-${schoolId}`;
+                  const plan = planMap.get(schoolId) || { status: 'none' as const, planLabel: 'No Plan' };
                   
                   return (
                     <tr
@@ -299,39 +301,35 @@ const Schools: React.FC = () => {
                           navigate(`/master-admin/schools/${schoolId}`);
                         }
                       }}
-                      className={`transition-colors cursor-pointer hover:${
-                        isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+                      className={`transition-colors cursor-pointer ${
+                        isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'
                       }`}
                     >
-                      {/* Logo */}
                       <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <SchoolLogoCell school={school} />
                       </td>
-                      {/* School Name */}
                       <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap ${
                         isDarkMode ? 'text-white' : 'text-gray-900'
                       }`}>
-                        <span className="font-medium">{school.schoolName}</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium">{school.schoolName}</span>
+                          <div className="flex flex-wrap items-center gap-1.5 lg:hidden">
+                            <SchoolPlanBadge plan={plan} compact />
+                            {school.isFreeTrial && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                <Sparkles className="h-2.5 w-2.5" />
+                                Trial
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {school.phoneNo || '-'}
                       </td>
                       <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        {school.email}
-                      </td>
-                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        {school.phoneNo}
-                      </td>
-                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden xl:table-cell ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      }`}>
-                        {school.city && school.state 
-                          ? `${school.city}, ${school.state}`
-                          : school.city || school.state || '-'
-                        }
-                      </td>
-                      <td className={`px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {school.currentAcademicYear || '-'}
@@ -349,83 +347,46 @@ const Schools: React.FC = () => {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden lg:table-cell">
+                        <div className="flex flex-col gap-1">
+                          <SchoolPlanBadge plan={plan} />
+                          {school.isFreeTrial && (
+                            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                              <Sparkles className="h-2.5 w-2.5" />
+                              Free Trial
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1 sm:gap-2">
-                          {/* View Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const schoolId = school.id || school.schoolId || '';
-                              navigate(`/master-admin/schools/${schoolId}`);
+                        <div className="flex items-center justify-center">
+                          <SchoolActionsMenu
+                            school={school}
+                            isOpen={openMenuId === schoolId}
+                            isToggleLoading={isToggleLoading}
+                            onToggle={() => setOpenMenuId(openMenuId === schoolId ? null : schoolId)}
+                            onClose={() => setOpenMenuId(null)}
+                            onView={() => {
+                              setOpenMenuId(null);
+                              openViewModal(school);
                             }}
-                            className={`p-2 rounded-lg transition-colors ${
-                              isDarkMode
-                                ? 'text-gray-400 hover:bg-gray-700 hover:text-blue-400'
-                                : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'
-                            }`}
-                            title="View Profile"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-
-                          {/* Edit Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onViewPlans={() => {
+                              setOpenMenuId(null);
+                              navigate(`/master-admin/schools/${schoolId}`, { state: { tab: 'plans' } });
+                            }}
+                            onEdit={() => {
+                              setOpenMenuId(null);
                               openEditModal(school);
                             }}
-                            className={`p-2 rounded-lg transition-colors ${
-                              isDarkMode
-                                ? 'text-gray-400 hover:bg-gray-700 hover:text-indigo-400'
-                                : 'text-gray-500 hover:bg-gray-100 hover:text-indigo-600'
-                            }`}
-                            title="Edit School"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-
-                          {/* Activate/Deactivate Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onToggleActivation={() => {
+                              setOpenMenuId(null);
                               handleToggleActivation(school);
                             }}
-                            disabled={isToggleLoading}
-                            className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
-                              school.isActive
-                                ? isDarkMode
-                                  ? 'text-orange-400 hover:bg-gray-700 hover:text-orange-300'
-                                  : 'text-orange-600 hover:bg-orange-50'
-                                : isDarkMode
-                                  ? 'text-green-400 hover:bg-gray-700 hover:text-green-300'
-                                  : 'text-green-600 hover:bg-green-50'
-                            }`}
-                            title={school.isActive ? 'Deactivate School' : 'Activate School'}
-                          >
-                            {isToggleLoading ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                            ) : school.isActive ? (
-                              <PowerOff className="w-4 h-4" />
-                            ) : (
-                              <Power className="w-4 h-4" />
-                            )}
-                          </button>
-
-                          {/* Delete Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onDelete={() => {
+                              setOpenMenuId(null);
                               openDeleteModal(school);
                             }}
-                            className={`p-2 rounded-lg transition-colors ${
-                              isDarkMode
-                                ? 'text-gray-400 hover:bg-gray-700 hover:text-red-400'
-                                : 'text-gray-500 hover:bg-gray-100 hover:text-red-600'
-                            }`}
-                            title="Delete School"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          />
                         </div>
                       </td>
                     </tr>

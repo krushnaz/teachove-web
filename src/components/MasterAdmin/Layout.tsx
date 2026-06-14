@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import MasterAdminSidebar from './Sidebar';
 import MasterAdminHeader from './Header';
+import { useMasterAdminPushNotifications } from './hooks/useMasterAdminPushNotifications';
 
 interface MasterAdminLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ const MasterAdminLayout: React.FC<MasterAdminLayoutProps> = ({
 }) => {
   const { isDarkMode } = useDarkMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useMasterAdminPushNotifications();
 
   return (
     <div className={`min-h-screen h-screen flex flex-col ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>

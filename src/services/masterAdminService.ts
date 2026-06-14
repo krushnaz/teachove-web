@@ -5,6 +5,7 @@ export interface ContactMessage {
   id?: string;
   schoolName: string;
   schoolEmail: string;
+  mobileNumber?: string;
   message: string;
   createdAt?: string;
   status: 'pending' | 'read' | 'resolved';
@@ -30,6 +31,38 @@ export interface EarningsByPeriodResponse {
   period: string;
   startDate: string;
   endDate: string;
+}
+
+export interface SubscriptionLedgerEntry {
+  id: string;
+  schoolId?: string | null;
+  schoolName?: string;
+  subscriptionId?: string;
+  planId?: string | null;
+  planName?: string | null;
+  seats?: number;
+  durationDays?: number;
+  paidAmount?: number;
+  gatewayFee?: number;
+  gstOnGatewayFee?: number;
+  netAmount?: number;
+  currency?: string;
+  razorpay_payment_id?: string;
+  razorpay_order_id?: string;
+  purchasedAt?: string | null;
+}
+
+export interface SubscriptionLedgerSummary {
+  totalGross: number;
+  totalGatewayFee: number;
+  totalGstOnGatewayFee: number;
+  totalNet: number;
+}
+
+export interface SubscriptionLedgerResponse {
+  items: SubscriptionLedgerEntry[];
+  count: number;
+  summary: SubscriptionLedgerSummary;
 }
 
 interface SubscriptionPlan {
@@ -172,6 +205,40 @@ class MasterAdminService {
         period,
         startDate: '',
         endDate: '',
+      };
+    }
+  }
+
+  async getSubscriptionLedger(limit = 100): Promise<SubscriptionLedgerResponse> {
+    try {
+      const response = await apiHelper.get(
+        `/master-admin/finance/subscription-ledger?limit=${Math.min(limit, 200)}`
+      );
+
+      if (response.success) {
+        return {
+          items: response.items || [],
+          count: response.count ?? 0,
+          summary: response.summary || {
+            totalGross: 0,
+            totalGatewayFee: 0,
+            totalGstOnGatewayFee: 0,
+            totalNet: 0,
+          },
+        };
+      }
+
+      return {
+        items: [],
+        count: 0,
+        summary: { totalGross: 0, totalGatewayFee: 0, totalGstOnGatewayFee: 0, totalNet: 0 },
+      };
+    } catch (error) {
+      console.error('Error fetching subscription ledger:', error);
+      return {
+        items: [],
+        count: 0,
+        summary: { totalGross: 0, totalGatewayFee: 0, totalGstOnGatewayFee: 0, totalNet: 0 },
       };
     }
   }

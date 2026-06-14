@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { masterAdminSchoolService, School } from '../../../services/masterAdminSchoolService';
+import { masterAdminSubscriptionService, SubscriptionRequest } from '../../../services/masterAdminSubscriptionService';
+import { getSchoolPurchasedPlanSummary } from '../../../utils/schoolPlanHelpers';
 import { 
   ArrowLeft,
   School as SchoolIcon,
@@ -18,11 +20,16 @@ import {
   TrendingUp,
   Download,
   Upload,
-  Sparkles
+  Sparkles,
+  Crown,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import MasterAdminLayout from '../Layout';
 import BulkUploadStudentsModal from '../../shared/BulkUploadStudentsModal';
+import SchoolPlanBadge from './SchoolPlanBadge';
+import SchoolSubscriptionSection from './SchoolSubscriptionSection';
+
+type ProfileTab = 'overview' | 'plans' | 'teachers' | 'students' | 'analysis';
 
 interface SchoolStats {
   teacherCount: number;
@@ -53,17 +60,26 @@ interface Student {
 const SchoolProfile: React.FC = () => {
   const { schoolId } = useParams<{ schoolId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDarkMode } = useDarkMode();
-  const [activeTab, setActiveTab] = useState<'overview' | 'teachers' | 'students' | 'analysis'>('overview');
+  const initialTab = (location.state as { tab?: ProfileTab } | null)?.tab;
+  const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab || 'overview');
   const [school, setSchool] = useState<School | null>(null);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionRequest[]>([]);
   const [stats, setStats] = useState<SchoolStats>({ teacherCount: 0, studentCount: 0 });
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [isFreeTrial, setIsFreeTrial] = useState(false);
   const [togglingFreeTrial, setTogglingFreeTrial] = useState(false);
+
+  const planSummary = useMemo(
+    () => (school ? getSchoolPurchasedPlanSummary(school.id || school.schoolId || '', subscriptions) : { status: 'none' as const, planLabel: 'No Plan' }),
+    [school, subscriptions]
+  );
 
   useEffect(() => {
     if (schoolId) {
@@ -85,15 +101,21 @@ const SchoolProfile: React.FC = () => {
     
     try {
       setLoading(true);
-      const response = await masterAdminSchoolService.getSchoolProfileWithStats(schoolId);
+      setLoadingSubscriptions(true);
+      const [response, subs] = await Promise.all([
+        masterAdminSchoolService.getSchoolProfileWithStats(schoolId),
+        masterAdminSubscriptionService.getSubscriptionsForSchool(schoolId),
+      ]);
       setSchool(response.school);
       setStats(response.stats);
+      setSubscriptions(subs);
       setIsFreeTrial(response.school.isFreeTrial === true);
     } catch (error: any) {
       console.error('Error fetching school profile:', error);
       toast.error(error.message || 'Failed to load school profile');
     } finally {
       setLoading(false);
+      setLoadingSubscriptions(false);
     }
   };
 
@@ -167,6 +189,7 @@ const SchoolProfile: React.FC = () => {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: SchoolIcon },
+    { id: 'plans', label: 'Plans', icon: Crown },
     { id: 'teachers', label: 'Teachers', icon: Users },
     { id: 'students', label: 'Students', icon: GraduationCap },
     { id: 'analysis', label: 'Analysis', icon: BarChart3 },
@@ -232,49 +255,13 @@ const SchoolProfile: React.FC = () => {
                     Inactive
                   </span>
                 )}
+                <SchoolPlanBadge plan={planSummary} />
                 {isFreeTrial && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                     <Sparkles className="w-4 h-4" />
                     Free Trial
                   </span>
                 )}
-              </div>
-              <div className={`mt-4 p-4 rounded-lg border ${
-                isDarkMode ? 'bg-gray-900/40 border-gray-700' : 'bg-indigo-50/60 border-indigo-100'
-              }`}>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Free Trial Access
-                    </p>
-                    <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      When enabled, this school can use all modules and add students without subscription limits.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleToggleFreeTrial}
-                    disabled={togglingFreeTrial}
-                    className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 ${
-                      isFreeTrial
-                        ? 'bg-amber-500'
-                        : isDarkMode
-                          ? 'bg-gray-600'
-                          : 'bg-gray-300'
-                    }`}
-                    aria-pressed={isFreeTrial}
-                    aria-label="Toggle free trial"
-                  >
-                    <span
-                      className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
-                        isFreeTrial ? 'translate-x-7' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-                <p className={`text-xs mt-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  Status: {isFreeTrial ? 'ON — subscription checks bypassed' : 'OFF — normal subscription rules apply'}
-                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-4">
                 <div className="flex items-center gap-2">
@@ -394,7 +381,21 @@ const SchoolProfile: React.FC = () => {
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'overview' && (
-              <OverviewTab school={school} stats={stats} />
+              <OverviewTab
+                school={school}
+                stats={stats}
+                isFreeTrial={isFreeTrial}
+                togglingFreeTrial={togglingFreeTrial}
+                onToggleFreeTrial={handleToggleFreeTrial}
+              />
+            )}
+
+            {activeTab === 'plans' && (
+              <SchoolSubscriptionSection
+                school={school}
+                subscriptions={subscriptions}
+                loading={loadingSubscriptions}
+              />
             )}
 
             {activeTab === 'teachers' && (
@@ -426,11 +427,55 @@ const SchoolProfile: React.FC = () => {
 };
 
 // Overview Tab Component
-const OverviewTab: React.FC<{ school: School; stats: SchoolStats }> = ({ school, stats }) => {
+const OverviewTab: React.FC<{
+  school: School;
+  stats: SchoolStats;
+  isFreeTrial: boolean;
+  togglingFreeTrial: boolean;
+  onToggleFreeTrial: () => void;
+}> = ({ school, stats, isFreeTrial, togglingFreeTrial, onToggleFreeTrial }) => {
   const { isDarkMode } = useDarkMode();
 
   return (
     <div className="space-y-6">
+      <div className={`rounded-lg border p-4 ${
+        isDarkMode ? 'bg-gray-900/40 border-gray-700' : 'bg-indigo-50/60 border-indigo-100'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Free Trial Access
+            </p>
+            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              When enabled, this school can use all modules and add students without subscription limits.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onToggleFreeTrial}
+            disabled={togglingFreeTrial}
+            className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 ${
+              isFreeTrial
+                ? 'bg-amber-500'
+                : isDarkMode
+                  ? 'bg-gray-600'
+                  : 'bg-gray-300'
+            }`}
+            aria-pressed={isFreeTrial}
+            aria-label="Toggle free trial"
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                isFreeTrial ? 'translate-x-7' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        <p className={`text-xs mt-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+          Status: {isFreeTrial ? 'ON — subscription checks bypassed' : 'OFF — normal subscription rules apply'}
+        </p>
+      </div>
+
       {/* School Profile Information */}
       <div>
         <h3 className={`text-xl font-bold mb-4 ${

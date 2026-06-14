@@ -9,24 +9,34 @@ import {
 import { toast } from 'react-toastify';
 import {
   BookOpen,
+  ChevronRight,
+  Edit,
+  Eye,
+  FileText,
+  Image as ImageIcon,
   Layers,
   Plus,
-  Search,
-  Edit,
   Trash2,
-  Eye,
-  ArrowLeft,
-  Image as ImageIcon,
-  FileText,
 } from 'lucide-react';
 import ClassModal from './ClassModal';
 import SubjectModal from './SubjectModal';
 import MergeBookModal from './MergeBookModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import PdfPreviewModal from './PdfPreviewModal';
+import {
+  ClassAvatar,
+  LibraryEmptyState,
+  LibraryLoading,
+  LibraryPageHeader,
+  LibraryPanel,
+  LibrarySearchField,
+  LibraryStatPill,
+  useLibraryTheme,
+} from '../shared/contentLibraryUi';
 
 const VEBooks: React.FC = () => {
   const { isDarkMode } = useDarkMode();
+  const t = useLibraryTheme(isDarkMode);
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -42,7 +52,6 @@ const VEBooks: React.FC = () => {
   const [subjects, setSubjects] = useState<VEBookSubject[]>([]);
   const [mergeBooks, setMergeBooks] = useState<VEBookMergeBook[]>([]);
 
-  // Modals
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [classModalMode, setClassModalMode] = useState<'add' | 'edit'>('add');
   const [editingClass, setEditingClass] = useState<VEBookClass | null>(null);
@@ -74,7 +83,10 @@ const VEBooks: React.FC = () => {
     (async () => {
       try {
         setLoading(true);
-        const [cls, tot] = await Promise.all([masterAdminVEBooksService.getClasses(), masterAdminVEBooksService.getTotals()]);
+        const [cls, tot] = await Promise.all([
+          masterAdminVEBooksService.getClasses(),
+          masterAdminVEBooksService.getTotals(),
+        ]);
         setClasses(cls);
         setTotals(tot);
       } catch (e: any) {
@@ -105,11 +117,16 @@ const VEBooks: React.FC = () => {
   }, [selectedClassId]);
 
   const refreshClassesAndTotals = async () => {
-    const [cls, tot] = await Promise.all([masterAdminVEBooksService.getClasses(), masterAdminVEBooksService.getTotals()]);
+    const [cls, tot] = await Promise.all([
+      masterAdminVEBooksService.getClasses(),
+      masterAdminVEBooksService.getTotals(),
+    ]);
     setClasses(cls);
     setTotals(tot);
     if (selectedClassId && !cls.find((c) => c.classId === selectedClassId)) {
-      setSelectedClassId(cls[0]?.classId || '');
+      setSelectedClassId('');
+      setSubjects([]);
+      setMergeBooks([]);
     }
   };
 
@@ -143,133 +160,203 @@ const VEBooks: React.FC = () => {
 
   const openDelete = (cfg: Omit<typeof deleteModal, 'open'>) => setDeleteModal({ ...cfg, open: true });
 
-  const actionBtn =
-    'inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors touch-manipulation min-h-[44px]';
+  const renderBookActions = (
+    actions: { label: string; icon: React.ReactNode; onClick: () => void; variant: 'accent' | 'secondary' | 'danger' | 'warning'; span?: number }[]
+  ) => (
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      {actions.map((action) => (
+        <button
+          key={action.label}
+          type="button"
+          className={`${
+            action.variant === 'accent'
+              ? t.accentBtn
+              : action.variant === 'danger'
+                ? t.dangerBtn
+                : action.variant === 'warning'
+                  ? isDarkMode
+                    ? 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-200 transition hover:bg-amber-500/20'
+                    : 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100'
+                  : t.secondaryBtn
+          } ${action.span === 2 ? 'col-span-2 sm:col-span-1' : ''}`}
+          onClick={action.onClick}
+        >
+          {action.icon} {action.label}
+        </button>
+      ))}
+    </div>
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className={t.page}>
+        <LibraryLoading />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vedant Education Books</h1>
-          <p className={`mt-1 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Manage classes, subjects PDFs, cover pages, and merged books.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          <div className={`px-4 py-2 rounded-xl border ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
-            <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span className={`text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  Subjects: <b>{totals?.totalSubjects ?? 0}</b>
-                </span>
+    <div className={t.page}>
+      <LibraryPageHeader
+        isDarkMode={isDarkMode}
+        title={selectedClassId ? selectedClass?.className || 'Class Books' : 'Vedant Education Books'}
+        subtitle={
+          selectedClassId
+            ? 'Manage subject PDFs, covers, and merged books'
+            : 'Upload and organize digital books by class'
+        }
+        onBack={
+          selectedClassId
+            ? () => {
+                setSelectedClassId('');
+                setSubjects([]);
+                setMergeBooks([]);
+                setBookSearch('');
+              }
+            : undefined
+        }
+        actions={
+          !selectedClassId ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <LibraryStatPill
+                  isDarkMode={isDarkMode}
+                  icon={FileText}
+                  label="Subjects"
+                  value={totals?.totalSubjects ?? 0}
+                />
+                <LibraryStatPill
+                  isDarkMode={isDarkMode}
+                  icon={Layers}
+                  label="Merged"
+                  value={totals?.totalMergedBooks ?? 0}
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span className={`text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                  Merged: <b>{totals?.totalMergedBooks ?? 0}</b>
-                </span>
-              </div>
+              <button
+                type="button"
+                className={`${t.primaryBtn} w-full sm:w-auto`}
+                onClick={() => {
+                  setClassModalMode('add');
+                  setEditingClass(null);
+                  setClassModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" /> Add Class
+              </button>
+            </>
+          ) : (
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <button
+                type="button"
+                className={`${t.primaryBtn} w-full sm:w-auto`}
+                onClick={() => {
+                  setSubjectModalMode('add');
+                  setEditingSubject(null);
+                  setSubjectModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" /> Add Subject
+              </button>
+              <button
+                type="button"
+                className={`${t.secondaryBtn} w-full sm:w-auto`}
+                onClick={() => {
+                  setMergeModalMode('add');
+                  setEditingMergeBook(null);
+                  setMergeModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" /> Add Merge Book
+              </button>
             </div>
-          </div>
+          )
+        }
+      />
 
-          <button
-            onClick={() => {
-              setClassModalMode('add');
-              setEditingClass(null);
-              setClassModalOpen(true);
-            }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white touch-manipulation min-h-[44px]"
-          >
-            <Plus className="w-5 h-5 flex-shrink-0" />
-            Add Class
-          </button>
-        </div>
-      </div>
-
-      {/* Hierarchy */}
       {!selectedClassId ? (
         <div className="space-y-4">
-          <div className="relative">
-            <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-            <input
-              value={classSearch}
-              onChange={(e) => setClassSearch(e.target.value)}
-              placeholder="Search classes..."
-              className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
-                isDarkMode
-                  ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500'
-              }`}
-            />
-          </div>
+          <LibrarySearchField
+            isDarkMode={isDarkMode}
+            value={classSearch}
+            onChange={setClassSearch}
+            placeholder="Search classes..."
+          />
 
-          <div className={`rounded-xl border overflow-hidden ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className={`px-5 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <h2 className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Classes</h2>
-                </div>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{filteredClasses.length}</span>
-              </div>
-            </div>
-
+          <LibraryPanel isDarkMode={isDarkMode} title="Classes" icon={BookOpen} count={filteredClasses.length}>
             {filteredClasses.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>No classes found.</p>
-              </div>
+              <LibraryEmptyState
+                isDarkMode={isDarkMode}
+                icon={BookOpen}
+                message="No classes yet. Add a class to start uploading books."
+                action={
+                  <button
+                    type="button"
+                    className={t.primaryBtn}
+                    onClick={() => {
+                      setClassModalMode('add');
+                      setEditingClass(null);
+                      setClassModalOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" /> Add Class
+                  </button>
+                }
+              />
             ) : (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className={`divide-y ${isDarkMode ? 'divide-gray-700/60' : 'divide-gray-100'}`}>
                 {filteredClasses.map((c) => (
                   <div
                     key={c.classId}
-                    className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${
-                      isDarkMode ? 'hover:bg-gray-700/40' : 'hover:bg-gray-50'
+                    className={`flex flex-col gap-3 px-4 py-4 transition sm:flex-row sm:items-center sm:justify-between sm:px-5 ${
+                      isDarkMode ? 'hover:bg-gray-700/20' : 'hover:bg-gray-50/80'
                     }`}
                   >
                     <button
+                      type="button"
                       onClick={() => {
                         setSelectedClassId(c.classId);
                         setBookSearch('');
                       }}
-                      className="text-left min-w-0 flex-1 touch-manipulation"
-                      title="Open class"
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <p className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{c.className}</p>
-                      <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>ID: {c.classId}</p>
+                      <ClassAvatar name={c.className} isDarkMode={isDarkMode} />
+                      <div className="min-w-0">
+                        <p className={`truncate font-medium ${t.title}`}>{c.className}</p>
+                        <p className={`truncate text-xs ${t.muted}`}>{c.classId}</p>
+                      </div>
+                      <ChevronRight className={`ml-auto h-4 w-4 flex-shrink-0 sm:hidden ${t.muted}`} />
                     </button>
 
-                    <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button
+                        type="button"
+                        className={t.accentBtn}
+                        onClick={() => {
+                          setSelectedClassId(c.classId);
+                          setBookSearch('');
+                        }}
+                      >
+                        <BookOpen className="h-4 w-4" /> Open
+                      </button>
+                      <button
+                        type="button"
+                        className={t.secondaryBtn}
                         onClick={() => {
                           setClassModalMode('edit');
                           setEditingClass(c);
                           setClassModalOpen(true);
                         }}
-                        className={`${actionBtn} ${
-                          isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
-                        }`}
                       >
-                        <Edit className="w-4 h-4" /> Edit
+                        <Edit className="h-4 w-4" /> Edit
                       </button>
-
                       <button
+                        type="button"
+                        className={t.dangerBtn}
                         onClick={() =>
                           openDelete({
                             title: 'Delete Class',
                             description:
-                              'This will delete the class and all its subjects + merged books (including PDFs/covers in storage). This action cannot be undone.',
+                              'This will delete the class and all its subjects and merged books, including stored PDFs and covers.',
                             confirmText: 'Delete class',
                             loadingKey: `delete-class-${c.classId}`,
                             onConfirm: async () => {
@@ -287,318 +374,245 @@ const VEBooks: React.FC = () => {
                             },
                           })
                         }
-                        className={`${actionBtn} ${
-                          isDarkMode ? 'bg-red-900/30 hover:bg-red-900/40 text-red-200' : 'bg-red-50 hover:bg-red-100 text-red-700'
-                        }`}
                       >
-                        <Trash2 className="w-4 h-4" /> Delete
+                        <Trash2 className="h-4 w-4" /> Delete
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </LibraryPanel>
         </div>
       ) : (
         <div className="space-y-4">
-          <div className={`rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className={`px-4 sm:px-5 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-start gap-3 min-w-0">
-                  <button
-                    onClick={() => {
-                      setSelectedClassId('');
-                      setSubjects([]);
-                      setMergeBooks([]);
-                      setBookSearch('');
-                    }}
-                    className={`p-2.5 rounded-lg transition-colors flex-shrink-0 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                      isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
-                    }`}
-                    title="Back to classes"
-                    aria-label="Back to classes"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <div className="min-w-0">
-                    <h2 className={`font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{selectedClass?.className}</h2>
-                    <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Class ID: {selectedClassId}</p>
-                  </div>
-                </div>
+          <LibrarySearchField
+            isDarkMode={isDarkMode}
+            value={bookSearch}
+            onChange={setBookSearch}
+            placeholder="Search subjects or merged books..."
+          />
 
-                <div className="flex flex-col gap-3 w-full lg:w-auto">
-                  <div className="relative w-full sm:w-64">
-                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <input
-                      value={bookSearch}
-                      onChange={(e) => setBookSearch(e.target.value)}
-                      placeholder="Search books..."
-                      className={`w-full pl-9 pr-3 py-2.5 rounded-lg border text-sm transition-colors ${
-                        isDarkMode
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-indigo-500'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500'
-                      }`}
+          {actionLoading === 'load-class-content' ? (
+            <LibraryLoading />
+          ) : (
+            <>
+              <LibraryPanel isDarkMode={isDarkMode} title="Subjects" icon={FileText} count={filteredSubjects.length}>
+                <div className={t.panelBody}>
+                  {filteredSubjects.length === 0 ? (
+                    <LibraryEmptyState
+                      isDarkMode={isDarkMode}
+                      icon={FileText}
+                      message="No subjects in this class yet."
+                      action={
+                        <button
+                          type="button"
+                          className={t.primaryBtn}
+                          onClick={() => {
+                            setSubjectModalMode('add');
+                            setEditingSubject(null);
+                            setSubjectModalOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4" /> Add Subject
+                        </button>
+                      }
                     />
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <button
-                      onClick={() => {
-                        setSubjectModalMode('add');
-                        setEditingSubject(null);
-                        setSubjectModalOpen(true);
-                      }}
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white touch-manipulation min-h-[44px] w-full sm:w-auto"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Subject
-                    </button>
-                    <button
-                      onClick={() => {
-                        setMergeModalMode('add');
-                        setEditingMergeBook(null);
-                        setMergeModalOpen(true);
-                      }}
-                      className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors touch-manipulation min-h-[44px] w-full sm:w-auto ${
-                        isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-900 hover:bg-black text-white'
-                      }`}
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Merge Book
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-5 space-y-8">
-              {actionLoading === 'load-class-content' ? (
-                <div className="flex items-center justify-center h-40">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-                </div>
-              ) : (
-                <>
-                  {/* Subjects */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Subjects</h3>
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{subjects.length}</span>
-                    </div>
-
-                    {filteredSubjects.length === 0 ? (
-                      <div className="text-center py-10">
-                        <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>No subjects found.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {filteredSubjects.map((s) => (
-                          <div
-                            key={s.subjectId}
-                            className={`p-4 rounded-xl border flex flex-col gap-4 ${
-                              isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50 border-gray-200'
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <p className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{s.subjectName}</p>
-                              <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Book ID: {s.subjectId}</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredSubjects.map((s) => (
+                        <div key={s.subjectId} className={t.itemCard}>
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
+                              <FileText className="h-4 w-4 text-indigo-500" />
                             </div>
-
-                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                              {s.coverPageUrl ? (
-                                <a
-                                  href={s.coverPageUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={`${actionBtn} ${
-                                    isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
-                                  }`}
-                                >
-                                  <ImageIcon className="w-4 h-4" /> Cover
-                                </a>
-                              ) : null}
-
-                              <button
-                                className={`${actionBtn} ${
-                                  isDarkMode ? 'bg-indigo-900/20 hover:bg-indigo-900/30 text-indigo-200' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
-                                }`}
-                                onClick={() => setPdfPreview({ open: true, title: s.subjectName, url: s.pdfUrl })}
-                              >
-                                <Eye className="w-4 h-4" /> Preview
-                              </button>
-
-                              <button
-                                className={`${actionBtn} ${
-                                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
-                                }`}
-                                onClick={() => {
-                                  setSubjectModalMode('edit');
-                                  setEditingSubject(s);
-                                  setSubjectModalOpen(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4" /> Edit
-                              </button>
-
-                              {s.coverPageUrl ? (
-                                <button
-                                  className={`${actionBtn} ${
-                                    isDarkMode ? 'bg-orange-900/20 hover:bg-orange-900/30 text-orange-200' : 'bg-orange-50 hover:bg-orange-100 text-orange-700'
-                                  }`}
-                                  onClick={() =>
-                                    openDelete({
-                                      title: 'Delete Cover Page',
-                                      description: 'This will remove the cover image for this subject.',
-                                      confirmText: 'Delete cover page',
-                                      loadingKey: `delete-cover-${s.subjectId}`,
-                                      onConfirm: async () => {
-                                        try {
-                                          setActionLoading(`delete-cover-${s.subjectId}`);
-                                          await masterAdminVEBooksService.deleteSubjectCover(selectedClassId, s.subjectId);
-                                          toast.success('Cover page deleted');
-                                          setDeleteModal((d) => ({ ...d, open: false }));
-                                          await refreshSelectedClassLists();
-                                          await refreshClassesAndTotals();
-                                        } catch (e: any) {
-                                          toast.error(e.message || 'Failed to delete cover page');
-                                        } finally {
-                                          setActionLoading(null);
-                                        }
-                                      },
-                                    })
-                                  }
-                                >
-                                  <Trash2 className="w-4 h-4" /> Del cover
-                                </button>
-                              ) : null}
-
-                              <button
-                                className={`${actionBtn} col-span-2 sm:col-span-1 ${
-                                  isDarkMode ? 'bg-red-900/30 hover:bg-red-900/40 text-red-200' : 'bg-red-50 hover:bg-red-100 text-red-700'
-                                }`}
-                                onClick={() =>
-                                  openDelete({
-                                    title: 'Delete Book',
-                                    description: 'This will delete the subject book and its PDF (and cover if present).',
-                                    confirmText: 'Delete book',
-                                    loadingKey: `delete-subject-${s.subjectId}`,
-                                    onConfirm: async () => {
-                                      try {
-                                        setActionLoading(`delete-subject-${s.subjectId}`);
-                                        await masterAdminVEBooksService.deleteSubject(selectedClassId, s.subjectId);
-                                        toast.success('Book deleted');
-                                        setDeleteModal((d) => ({ ...d, open: false }));
-                                        await refreshSelectedClassLists();
-                                        await refreshClassesAndTotals();
-                                      } catch (e: any) {
-                                        toast.error(e.message || 'Failed to delete book');
-                                      } finally {
-                                        setActionLoading(null);
-                                      }
-                                    },
-                                  })
-                                }
-                              >
-                                <Trash2 className="w-4 h-4" /> Delete
-                              </button>
+                            <div className="min-w-0 flex-1">
+                              <p className={`truncate font-medium ${t.title}`}>{s.subjectName}</p>
+                              <p className={`truncate text-xs ${t.muted}`}>{s.subjectId}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Merge Books */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Merged Books</h3>
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{mergeBooks.length}</span>
+                          {renderBookActions([
+                            ...(s.coverPageUrl
+                              ? [
+                                  {
+                                    label: 'Cover',
+                                    icon: <ImageIcon className="h-4 w-4" />,
+                                    onClick: () => window.open(s.coverPageUrl!, '_blank'),
+                                    variant: 'secondary' as const,
+                                  },
+                                ]
+                              : []),
+                            {
+                              label: 'Preview',
+                              icon: <Eye className="h-4 w-4" />,
+                              onClick: () => setPdfPreview({ open: true, title: s.subjectName, url: s.pdfUrl }),
+                              variant: 'accent',
+                            },
+                            {
+                              label: 'Edit',
+                              icon: <Edit className="h-4 w-4" />,
+                              onClick: () => {
+                                setSubjectModalMode('edit');
+                                setEditingSubject(s);
+                                setSubjectModalOpen(true);
+                              },
+                              variant: 'secondary',
+                            },
+                            ...(s.coverPageUrl
+                              ? [
+                                  {
+                                    label: 'Del cover',
+                                    icon: <Trash2 className="h-4 w-4" />,
+                                    onClick: () =>
+                                      openDelete({
+                                        title: 'Delete Cover Page',
+                                        description: 'This will remove the cover image for this subject.',
+                                        confirmText: 'Delete cover',
+                                        loadingKey: `delete-cover-${s.subjectId}`,
+                                        onConfirm: async () => {
+                                          try {
+                                            setActionLoading(`delete-cover-${s.subjectId}`);
+                                            await masterAdminVEBooksService.deleteSubjectCover(selectedClassId, s.subjectId);
+                                            toast.success('Cover deleted');
+                                            setDeleteModal((d) => ({ ...d, open: false }));
+                                            await refreshSelectedClassLists();
+                                            await refreshClassesAndTotals();
+                                          } catch (e: any) {
+                                            toast.error(e.message || 'Failed to delete cover');
+                                          } finally {
+                                            setActionLoading(null);
+                                          }
+                                        },
+                                      }),
+                                    variant: 'warning' as const,
+                                  },
+                                ]
+                              : []),
+                            {
+                              label: 'Delete',
+                              icon: <Trash2 className="h-4 w-4" />,
+                              onClick: () =>
+                                openDelete({
+                                  title: 'Delete Subject',
+                                  description: 'This will delete the subject PDF and cover (if any).',
+                                  confirmText: 'Delete subject',
+                                  loadingKey: `delete-subject-${s.subjectId}`,
+                                  onConfirm: async () => {
+                                    try {
+                                      setActionLoading(`delete-subject-${s.subjectId}`);
+                                      await masterAdminVEBooksService.deleteSubject(selectedClassId, s.subjectId);
+                                      toast.success('Subject deleted');
+                                      setDeleteModal((d) => ({ ...d, open: false }));
+                                      await refreshSelectedClassLists();
+                                      await refreshClassesAndTotals();
+                                    } catch (e: any) {
+                                      toast.error(e.message || 'Failed to delete subject');
+                                    } finally {
+                                      setActionLoading(null);
+                                    }
+                                  },
+                                }),
+                              variant: 'danger',
+                              span: 2,
+                            },
+                          ])}
+                        </div>
+                      ))}
                     </div>
+                  )}
+                </div>
+              </LibraryPanel>
 
-                    {filteredMergeBooks.length === 0 ? (
-                      <div className="text-center py-10">
-                        <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>No merged books found.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {filteredMergeBooks.map((m) => (
-                          <div
-                            key={m.mergeBookId}
-                            className={`p-4 rounded-xl border flex flex-col gap-4 ${
-                              isDarkMode ? 'bg-gray-900/30 border-gray-700' : 'bg-gray-50 border-gray-200'
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <p className={`font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{m.mergeBookName}</p>
-                              <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Book ID: {m.mergeBookId}</p>
+              <LibraryPanel isDarkMode={isDarkMode} title="Merged Books" icon={Layers} count={filteredMergeBooks.length}>
+                <div className={t.panelBody}>
+                  {filteredMergeBooks.length === 0 ? (
+                    <LibraryEmptyState
+                      isDarkMode={isDarkMode}
+                      icon={Layers}
+                      message="No merged books in this class yet."
+                      action={
+                        <button
+                          type="button"
+                          className={t.secondaryBtn}
+                          onClick={() => {
+                            setMergeModalMode('add');
+                            setEditingMergeBook(null);
+                            setMergeModalOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4" /> Add Merge Book
+                        </button>
+                      }
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredMergeBooks.map((m) => (
+                        <div key={m.mergeBookId} className={t.itemCard}>
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
+                              <Layers className="h-4 w-4 text-violet-500" />
                             </div>
-
-                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                              <button
-                                className={`${actionBtn} ${
-                                  isDarkMode ? 'bg-indigo-900/20 hover:bg-indigo-900/30 text-indigo-200' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
-                                }`}
-                                onClick={() => setPdfPreview({ open: true, title: m.mergeBookName, url: m.pdfUrl })}
-                              >
-                                <Eye className="w-4 h-4" /> Preview
-                              </button>
-
-                              <button
-                                className={`${actionBtn} ${
-                                  isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-200'
-                                }`}
-                                onClick={() => {
-                                  setMergeModalMode('edit');
-                                  setEditingMergeBook(m);
-                                  setMergeModalOpen(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4" /> Edit
-                              </button>
-
-                              <button
-                                className={`${actionBtn} col-span-2 sm:col-span-1 ${
-                                  isDarkMode ? 'bg-red-900/30 hover:bg-red-900/40 text-red-200' : 'bg-red-50 hover:bg-red-100 text-red-700'
-                                }`}
-                                onClick={() =>
-                                  openDelete({
-                                    title: 'Delete Book',
-                                    description: 'This will delete the merged book and its PDF.',
-                                    confirmText: 'Delete book',
-                                    loadingKey: `delete-merge-${m.mergeBookId}`,
-                                    onConfirm: async () => {
-                                      try {
-                                        setActionLoading(`delete-merge-${m.mergeBookId}`);
-                                        await masterAdminVEBooksService.deleteMergeBook(selectedClassId, m.mergeBookId);
-                                        toast.success('Book deleted');
-                                        setDeleteModal((d) => ({ ...d, open: false }));
-                                        await refreshSelectedClassLists();
-                                        await refreshClassesAndTotals();
-                                      } catch (e: any) {
-                                        toast.error(e.message || 'Failed to delete book');
-                                      } finally {
-                                        setActionLoading(null);
-                                      }
-                                    },
-                                  })
-                                }
-                              >
-                                <Trash2 className="w-4 h-4" /> Delete
-                              </button>
+                            <div className="min-w-0 flex-1">
+                              <p className={`truncate font-medium ${t.title}`}>{m.mergeBookName}</p>
+                              <p className={`truncate text-xs ${t.muted}`}>{m.mergeBookId}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+                          {renderBookActions([
+                            {
+                              label: 'Preview',
+                              icon: <Eye className="h-4 w-4" />,
+                              onClick: () => setPdfPreview({ open: true, title: m.mergeBookName, url: m.pdfUrl }),
+                              variant: 'accent',
+                            },
+                            {
+                              label: 'Edit',
+                              icon: <Edit className="h-4 w-4" />,
+                              onClick: () => {
+                                setMergeModalMode('edit');
+                                setEditingMergeBook(m);
+                                setMergeModalOpen(true);
+                              },
+                              variant: 'secondary',
+                            },
+                            {
+                              label: 'Delete',
+                              icon: <Trash2 className="h-4 w-4" />,
+                              onClick: () =>
+                                openDelete({
+                                  title: 'Delete Merged Book',
+                                  description: 'This will delete the merged book and its PDF.',
+                                  confirmText: 'Delete book',
+                                  loadingKey: `delete-merge-${m.mergeBookId}`,
+                                  onConfirm: async () => {
+                                    try {
+                                      setActionLoading(`delete-merge-${m.mergeBookId}`);
+                                      await masterAdminVEBooksService.deleteMergeBook(selectedClassId, m.mergeBookId);
+                                      toast.success('Book deleted');
+                                      setDeleteModal((d) => ({ ...d, open: false }));
+                                      await refreshSelectedClassLists();
+                                      await refreshClassesAndTotals();
+                                    } catch (e: any) {
+                                      toast.error(e.message || 'Failed to delete book');
+                                    } finally {
+                                      setActionLoading(null);
+                                    }
+                                  },
+                                }),
+                              variant: 'danger',
+                              span: 2,
+                            },
+                          ])}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </LibraryPanel>
+            </>
+          )}
         </div>
       )}
 
-      {/* Modals */}
       <ClassModal
         isOpen={classModalOpen}
         mode={classModalMode}
@@ -723,4 +737,3 @@ const VEBooks: React.FC = () => {
 };
 
 export default VEBooks;
-

@@ -11,7 +11,9 @@ import {
   Settings,
   Database,
   Calendar,
-  DollarSign
+  DollarSign,
+  Mail,
+  Receipt,
 } from 'lucide-react';
 
 interface MasterAdminSidebarProps {
@@ -34,6 +36,8 @@ const MasterAdminSidebar: React.FC<MasterAdminSidebarProps> = ({ sidebarOpen, se
       title: "Overview",
       items: [
         { path: '/master-admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/master-admin/ledger', label: 'Transaction Ledger', icon: Receipt },
+        { path: '/master-admin/get-in-touch', label: 'Get in Touch', icon: Mail },
       ]
     },
     {

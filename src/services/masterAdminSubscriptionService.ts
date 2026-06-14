@@ -101,16 +101,22 @@ class MasterAdminSubscriptionService {
   async getSubscriptionById(subscriptionId: string): Promise<SingleSubscriptionResponse> {
     try {
       const response = await apiHelper.get(`/master-admin/subscriptions/${subscriptionId}`) as SingleSubscriptionResponse;
-      
+
       if (response.success) {
         return response;
       }
-      
+
       throw new Error('Failed to fetch subscription');
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
       throw new Error(error.message || 'Failed to fetch subscription');
     }
+  }
+
+  async getSubscriptionsForSchool(schoolId: string): Promise<SubscriptionRequest[]> {
+    const response = await this.getAllSubscriptionRequests();
+    const id = schoolId.trim();
+    return (response.subscriptions || []).filter((sub) => (sub.school_id || '').trim() === id);
   }
 
   // Update subscription status

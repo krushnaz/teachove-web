@@ -29,8 +29,8 @@ const ClassModal: React.FC<ClassModalProps> = ({ isOpen, mode, initial, loading,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
-      <div className={`relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 backdrop-blur-[2px] sm:p-4">
+      <div className={`relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-xl ${isDarkMode ? 'bg-gray-800 border border-gray-700/80' : 'bg-white border border-gray-200/80'}`}>
         <div className={`flex items-center justify-between p-4 sm:p-6 border-b sticky top-0 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <h2 className={`text-lg sm:text-2xl font-bold truncate pr-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             {mode === 'add' ? 'Add Class' : 'Edit Class'}
@@ -54,10 +54,10 @@ const ClassModal: React.FC<ClassModalProps> = ({ isOpen, mode, initial, loading,
               required
               value={className}
               onChange={(e) => setClassName(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border transition-colors ${
+              className={`w-full rounded-xl border px-4 py-2.5 transition focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${
                 isDarkMode
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                  ? 'bg-gray-900/40 border-gray-600 text-white placeholder-gray-500 focus:border-indigo-500'
+                  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:bg-white'
               }`}
               placeholder="e.g. Class 10"
             />
@@ -76,7 +76,7 @@ const ClassModal: React.FC<ClassModalProps> = ({ isOpen, mode, initial, loading,
             <button
               type="submit"
               disabled={loading}
-              className={`px-4 py-2.5 sm:py-2 rounded-lg font-medium text-white transition-colors touch-manipulation min-h-[44px] ${
+              className={`px-4 py-2.5 sm:py-2 rounded-xl font-medium text-white transition-colors touch-manipulation min-h-[44px] shadow-sm ${
                 loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
             >
