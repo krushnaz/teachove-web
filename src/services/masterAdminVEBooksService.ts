@@ -1,4 +1,3 @@
-import { API_CONFIG } from '../config/api';
 import { apiHelper } from '../utils/apiHelper';
 
 export interface VEBookClass {
@@ -31,27 +30,6 @@ type ApiResponse<T> = {
   success: boolean;
   message?: string;
 } & T;
-
-async function requestMultipart<T>(
-  endpoint: string,
-  options: {
-    method: 'POST' | 'PUT' | 'DELETE';
-    formData?: FormData;
-  }
-): Promise<T> {
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-  const res = await fetch(url, {
-    method: options.method,
-    body: options.formData,
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = data?.message || `HTTP error! status: ${res.status}`;
-    throw new Error(msg);
-  }
-  return data as T;
-}
 
 class MasterAdminVEBooksService {
   // Totals
@@ -113,9 +91,9 @@ class MasterAdminVEBooksService {
     fd.append('pdf', input.pdf);
     if (input.cover) fd.append('cover', input.cover);
 
-    const res = await requestMultipart<ApiResponse<{ subject: VEBookSubject }>>(
+    const res = await apiHelper.postFormData<ApiResponse<{ subject: VEBookSubject }>>(
       `/master-admin/ve-books/classes/${input.classId}/subjects`,
-      { method: 'POST', formData: fd }
+      fd
     );
     if (!res.success) throw new Error(res.message || 'Failed to create subject');
     return res.subject;
@@ -133,9 +111,9 @@ class MasterAdminVEBooksService {
     if (input.pdf) fd.append('pdf', input.pdf);
     if (input.cover) fd.append('cover', input.cover);
 
-    const res = await requestMultipart<ApiResponse<{ subject: VEBookSubject }>>(
+    const res = await apiHelper.putFormData<ApiResponse<{ subject: VEBookSubject }>>(
       `/master-admin/ve-books/classes/${input.classId}/subjects/${input.subjectId}`,
-      { method: 'PUT', formData: fd }
+      fd
     );
     if (!res.success) throw new Error(res.message || 'Failed to update subject');
     return res.subject;
@@ -169,9 +147,9 @@ class MasterAdminVEBooksService {
     fd.append('mergeBookName', input.mergeBookName);
     fd.append('pdf', input.pdf);
 
-    const res = await requestMultipart<ApiResponse<{ mergeBook: VEBookMergeBook }>>(
+    const res = await apiHelper.postFormData<ApiResponse<{ mergeBook: VEBookMergeBook }>>(
       `/master-admin/ve-books/classes/${input.classId}/mergeBooks`,
-      { method: 'POST', formData: fd }
+      fd
     );
     if (!res.success) throw new Error(res.message || 'Failed to create merge book');
     return res.mergeBook;
@@ -187,9 +165,9 @@ class MasterAdminVEBooksService {
     if (input.mergeBookName) fd.append('mergeBookName', input.mergeBookName);
     if (input.pdf) fd.append('pdf', input.pdf);
 
-    const res = await requestMultipart<ApiResponse<{ mergeBook: VEBookMergeBook }>>(
+    const res = await apiHelper.putFormData<ApiResponse<{ mergeBook: VEBookMergeBook }>>(
       `/master-admin/ve-books/classes/${input.classId}/mergeBooks/${input.mergeBookId}`,
-      { method: 'PUT', formData: fd }
+      fd
     );
     if (!res.success) throw new Error(res.message || 'Failed to update merge book');
     return res.mergeBook;
@@ -205,4 +183,3 @@ class MasterAdminVEBooksService {
 
 export const masterAdminVEBooksService = new MasterAdminVEBooksService();
 export default MasterAdminVEBooksService;
-

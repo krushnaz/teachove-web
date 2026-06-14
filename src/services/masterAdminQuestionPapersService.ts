@@ -1,4 +1,4 @@
-import { API_CONFIG } from '../config/api';
+import { apiClient } from '../config/axios';
 import { apiHelper } from '../utils/apiHelper';
 
 export type QuestionPaperType = 'Unit Test 1' | 'Unit Test 2' | 'First Term' | 'Second Term';
@@ -27,16 +27,6 @@ type ApiResponse<T> = {
   message?: string;
 } & T;
 
-async function requestMultipart<T>(endpoint: string, options: { method: 'POST' | 'PUT'; formData: FormData }): Promise<T> {
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-  const res = await fetch(url, { method: options.method, body: options.formData });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data?.message || `HTTP error! status: ${res.status}`);
-  }
-  return data as T;
-}
-
 class MasterAdminQuestionPapersService {
   async getClasses(): Promise<QPClass[]> {
     const res = (await apiHelper.get('/master-admin/question-papers/classes')) as ApiResponse<{ classes: QPClass[] }>;
@@ -59,9 +49,9 @@ class MasterAdminQuestionPapersService {
     fd.append('name', input.name);
     fd.append('pdf', input.pdf);
 
-    const res = await requestMultipart<ApiResponse<{ paper: QuestionPaper }>>(
+    const res = await apiHelper.postFormData<ApiResponse<{ paper: QuestionPaper }>>(
       `/master-admin/question-papers/classes/${input.classId}/types/${encodedType}/papers`,
-      { method: 'POST', formData: fd }
+      fd
     );
     if (!res.success) throw new Error(res.message || 'Failed to upload paper');
     return res.paper;
@@ -79,9 +69,9 @@ class MasterAdminQuestionPapersService {
     if (input.name) fd.append('name', input.name);
     if (input.pdf) fd.append('pdf', input.pdf);
 
-    const res = await requestMultipart<ApiResponse<{ paper: QuestionPaper }>>(
+    const res = await apiHelper.putFormData<ApiResponse<{ paper: QuestionPaper }>>(
       `/master-admin/question-papers/classes/${input.classId}/types/${encodedType}/papers/${input.paperId}`,
-      { method: 'PUT', formData: fd }
+      fd
     );
     if (!res.success) throw new Error(res.message || 'Failed to update paper');
     return res.paper;
@@ -98,4 +88,3 @@ class MasterAdminQuestionPapersService {
 
 export const masterAdminQuestionPapersService = new MasterAdminQuestionPapersService();
 export default MasterAdminQuestionPapersService;
-
