@@ -62,6 +62,57 @@ export interface MigrationLogEntry {
   module?: string;
   message: string;
   stats?: any;
+  discrepancies?: any;
+  postAnalysis?: any;
+  postDiscrepancies?: any;
+}
+
+export interface FeeMigrationSchool {
+  schoolId: string;
+  schoolName: string;
+  currentAcademicYear?: string | null;
+  isActive?: boolean;
+}
+
+export interface FeeMigrationAnalysis {
+  schoolId: string;
+  schoolName: string;
+  yearId: string;
+  currentAcademicYear?: string;
+  availableYears: string[];
+  legacy: Record<string, { recordCount: number; totalAmount: number; studentCount: number }>;
+  engine: {
+    paymentCount: number;
+    assignmentCount: number;
+    totalPaid: number;
+    byFeeType: Record<string, { count: number; totalPaid: number }>;
+  };
+  discrepancies: Array<{
+    feeTypeCode: string;
+    feeTypeName: string;
+    feeTypeId: string | null;
+    legacyRecords: number;
+    legacyTotalAmount: number;
+    enginePayments: number;
+    engineTotalPaid: number;
+    deltaAmount: number;
+    needsMigration: boolean;
+  }>;
+  summary: {
+    legacyPaymentTotal: number;
+    engineTotalPaid: number;
+    deltaTotal: number;
+    needsMigration: boolean;
+    feeTypesInCatalog: number;
+  };
+}
+
+export interface FeeMigrationOptions {
+  feeTypeCodes: string[];
+  presets: Array<{ code: string; name: string; legacyTabName?: string }>;
+  modes: Array<{ id: string; label: string; description: string; recommended?: boolean }>;
+  legacyPaths: string[];
+  targetPaths: string[];
 }
 
 class MasterAdminMigrationService {
@@ -125,6 +176,56 @@ class MasterAdminMigrationService {
   async getRunLogs(runId: string): Promise<MigrationLogEntry[]> {
     const res = (await apiHelper.get(`/master-admin/migrations/runs/${runId}/logs`)) as any;
     return res.logs || [];
+  }
+
+  // --- Fees engine migration ---
+  async getFeeMigrationSchools(): Promise<FeeMigrationSchool[]> {
+    const res = (await apiHelper.get('/master-admin/migrations/fees/schools')) as any;
+    return res.schools || [];
+  }
+
+  async getFeeMigrationOptions(): Promise<FeeMigrationOptions> {
+    const res = (await apiHelper.get('/master-admin/migrations/fees/options')) as any;
+    return res;
+  }
+
+  async getSchoolAcademicYears(schoolId: string): Promise<{ years: string[]; currentYear: string | null }> {
+    const res = (await apiHelper.get(`/master-admin/migrations/fees/schools/${schoolId}/years`)) as any;
+    return { years: res.years || [], currentYear: res.currentYear || null };
+  }
+
+  async analyzeSchoolFees(schoolId: string, yearId?: string): Promise<FeeMigrationAnalysis> {
+    const res = (await apiHelper.post(`/master-admin/migrations/fees/schools/${schoolId}/analyze`, {
+      yearId,
+    })) as any;
+    if (!res.success) throw new Error(res.message || 'Analysis failed');
+    return res as FeeMigrationAnalysis;
+  }
+
+  async startFeeMigration(input: {
+    schoolId: string;
+    yearId?: string;
+    dryRun?: boolean;
+    skipExisting?: boolean;
+    feeTypeCodes?: string[];
+    syncFeeSettings?: boolean;
+    analyzeOnly?: boolean;
+  }): Promise<{ runId?: string; analyzeOnly?: boolean } & Partial<FeeMigrationAnalysis>> {
+    const res = (await apiHelper.post(`/master-admin/migrations/fees/schools/${input.schoolId}/start`, {
+      yearId: input.yearId,
+      dryRun: input.dryRun,
+      skipExisting: input.skipExisting,
+      feeTypeCodes: input.feeTypeCodes,
+      syncFeeSettings: input.syncFeeSettings,
+      analyzeOnly: input.analyzeOnly,
+    })) as any;
+    if (!res.success) throw new Error(res.message || 'Failed to start fees migration');
+    return res;
+  }
+
+  async getFeeMigrationRuns(schoolId: string): Promise<MigrationRun[]> {
+    const res = (await apiHelper.get(`/master-admin/migrations/fees/schools/${schoolId}/runs`)) as any;
+    return res.runs || [];
   }
 }
 

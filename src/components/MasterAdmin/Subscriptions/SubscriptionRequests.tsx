@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
-import { masterAdminSubscriptionService, SubscriptionRequest, SalesRequest } from '../../../services/masterAdminSubscriptionService';
+import { masterAdminSubscriptionService, SubscriptionRequest, SalesRequest, SchoolCustomPlan } from '../../../services/masterAdminSubscriptionService';
 import { masterAdminService, type EarningsPeriod, type EarningsByPeriodResponse } from '../../../services/masterAdminService';
 import { masterAdminSchoolService, School } from '../../../services/masterAdminSchoolService';
 import {
@@ -46,13 +46,18 @@ const SubscriptionPurchases: React.FC = () => {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'sales'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'sales' | 'custom_plans'>('subscriptions');
   const [updatingSalesId, setUpdatingSalesId] = useState<string | null>(null);
+  const [schoolCustomPlans, setSchoolCustomPlans] = useState<SchoolCustomPlan[]>([]);
+  const [cancellingPlanId, setCancellingPlanId] = useState<string | null>(null);
 
   // Custom Pricing State
   const [schools, setSchools] = useState<School[]>([]);
   const [customModalOpen, setCustomModalOpen] = useState(false);
   const [selectedSchoolId, setSelectedSchoolId] = useState('');
+  const [customSchoolName, setCustomSchoolName] = useState('');
+  const [customSalesRequestId, setCustomSalesRequestId] = useState('');
+  const [customPlanName, setCustomPlanName] = useState('Custom Enterprise Plan');
   const [customSeats, setCustomSeats] = useState(100);
   const [customDuration, setCustomDuration] = useState('monthly');
   const [customAmount, setCustomAmount] = useState('');
@@ -73,6 +78,34 @@ const SubscriptionPurchases: React.FC = () => {
     }
   };
 
+  const openCustomPlanModal = (opts?: {
+    schoolId?: string;
+    schoolName?: string;
+    seats?: number;
+    salesRequestId?: string;
+  }) => {
+    setSelectedSchoolId(opts?.schoolId || '');
+    setCustomSchoolName(opts?.schoolName || '');
+    setCustomSalesRequestId(opts?.salesRequestId || '');
+    setCustomSeats(opts?.seats || 100);
+    setCustomPlanName('Custom Enterprise Plan');
+    setCustomDuration('monthly');
+    setCustomAmount('');
+    setCustomPlanType('Both');
+    setCustomModalOpen(true);
+  };
+
+  const resetCustomPlanForm = () => {
+    setSelectedSchoolId('');
+    setCustomSchoolName('');
+    setCustomSalesRequestId('');
+    setCustomPlanName('Custom Enterprise Plan');
+    setCustomSeats(100);
+    setCustomDuration('monthly');
+    setCustomAmount('');
+    setCustomPlanType('Both');
+  };
+
   const handleCreateCustomSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSchoolId) {
@@ -90,30 +123,45 @@ const SubscriptionPurchases: React.FC = () => {
 
     setCustomSubmitting(true);
     try {
+      const school = schools.find((s) => (s.schoolId || s.id) === selectedSchoolId);
       const res = await masterAdminSubscriptionService.createCustomSubscription({
         schoolId: selectedSchoolId,
+        schoolName: customSchoolName || school?.schoolName || '',
         seats: Number(customSeats),
         duration: customDuration,
         amount: Number(customAmount),
         planType: customPlanType,
+        planName: customPlanName.trim() || 'Custom Enterprise Plan',
+        salesRequestId: customSalesRequestId || undefined,
       });
 
       if (res.success) {
-        toast.success('Custom plan created and activated successfully!');
+        toast.success('Custom plan created! School admin can now purchase it.');
         setCustomModalOpen(false);
-        // Reset form
-        setSelectedSchoolId('');
-        setCustomSeats(100);
-        setCustomDuration('monthly');
-        setCustomAmount('');
-        setCustomPlanType('Both');
-        // Refresh lists
+        resetCustomPlanForm();
         fetchSubscriptions();
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create custom subscription');
+      toast.error(err.message || 'Failed to create custom plan');
     } finally {
       setCustomSubmitting(false);
+    }
+  };
+
+  const handleCancelCustomPlan = async (planId: string) => {
+    setCancellingPlanId(planId);
+    try {
+      const success = await masterAdminSubscriptionService.cancelSchoolCustomPlan(planId);
+      if (success) {
+        toast.success('Custom plan cancelled');
+        setSchoolCustomPlans((prev) => prev.filter((p) => p.id !== planId));
+      } else {
+        toast.error('Failed to cancel custom plan');
+      }
+    } catch {
+      toast.error('Failed to cancel custom plan');
+    } finally {
+      setCancellingPlanId(null);
     }
   };
 
@@ -142,15 +190,17 @@ const SubscriptionPurchases: React.FC = () => {
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
-      const [response, salesResponse] = await Promise.all([
+      const [response, salesResponse, customPlansResponse] = await Promise.all([
         masterAdminSubscriptionService.getAllSubscriptionRequests(),
-        masterAdminSubscriptionService.getSalesRequests()
+        masterAdminSubscriptionService.getSalesRequests(),
+        masterAdminSubscriptionService.getSchoolCustomPlans(),
       ]);
       const validSubscriptions = (response.subscriptions || []).filter(
         (sub: SubscriptionRequest) => sub != null && (sub.id || sub.subscriptionId)
       );
       setSubscriptions(validSubscriptions);
       setSalesRequests(salesResponse || []);
+      setSchoolCustomPlans(customPlansResponse || []);
     } catch (error: any) {
       console.error('Error fetching subscriptions:', error);
       toast.error(error.message || 'Failed to load subscription requests');
@@ -370,7 +420,7 @@ const SubscriptionPurchases: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => setCustomModalOpen(true)}
+            onClick={() => openCustomPlanModal()}
             className="px-5 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg hover:shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
           >
             <Crown className="w-4 h-4" />
@@ -402,6 +452,21 @@ const SubscriptionPurchases: React.FC = () => {
             {salesRequests.filter(r => r.status === 'pending').length > 0 && (
               <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">
                 {salesRequests.filter(r => r.status === 'pending').length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('custom_plans')}
+            className={`px-6 py-3 font-semibold text-sm transition-all border-b-2 flex items-center gap-2 ${
+              activeTab === 'custom_plans'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+            }`}
+          >
+            Custom Plan Offers
+            {schoolCustomPlans.filter(p => p.status === 'pending_purchase').length > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
+                {schoolCustomPlans.filter(p => p.status === 'pending_purchase').length}
               </span>
             )}
           </button>
@@ -573,7 +638,7 @@ const SubscriptionPurchases: React.FC = () => {
                 </table>
               </div>
             )
-          ) : (
+          ) : activeTab === 'sales' ? (
             filteredSalesRequests.length === 0 ? (
               <div className={`text-center py-12 ${
                 isDarkMode ? 'bg-gray-800' : 'bg-white'
@@ -620,17 +685,105 @@ const SubscriptionPurchases: React.FC = () => {
                           {req.createdAt ? new Date(req.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {req.status === 'contacted' ? (
+                          <div className="flex flex-col gap-2">
+                            {req.status === 'plan_created' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
+                                <Crown className="w-3.5 h-3.5" /> Plan Created
+                              </span>
+                            ) : req.status === 'contacted' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                <CheckCircle className="w-3.5 h-3.5" /> Called / Contacted
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleUpdateSalesStatus(req.id, 'contacted')}
+                                disabled={updatingSalesId === req.id}
+                                className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-colors flex items-center gap-1"
+                              >
+                                <Clock className="w-3.5 h-3.5 animate-pulse" /> Pending Call
+                              </button>
+                            )}
+                            {req.status !== 'plan_created' && (
+                              <button
+                                type="button"
+                                onClick={() => openCustomPlanModal({
+                                  schoolId: req.schoolId,
+                                  schoolName: req.schoolName,
+                                  seats: req.expectedStudentCount,
+                                  salesRequestId: req.id,
+                                })}
+                                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-colors"
+                              >
+                                Create Custom Plan
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          ) : (
+            schoolCustomPlans.length === 0 ? (
+              <div className={`text-center py-12 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <Crown className={`w-12 h-12 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                <p className={`text-lg font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  No custom plan offers yet
+                </p>
+                <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Create a custom plan from a sales enquiry or using Add Custom Plan.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className={`${isDarkMode ? 'bg-gray-900 border-b border-gray-700' : 'bg-gray-50 border-b border-gray-200'}`}>
+                    <tr>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>School</th>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Plan</th>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Seats</th>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Amount</th>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Duration</th>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Status</th>
+                      <th className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                    {schoolCustomPlans.map((plan) => (
+                      <tr key={plan.id} className={isDarkMode ? 'hover:bg-gray-700/30' : 'hover:bg-gray-50'}>
+                        <td className={`px-6 py-4 font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {plan.schoolName || plan.schoolId}
+                        </td>
+                        <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{plan.planName}</td>
+                        <td className={`px-6 py-4 font-bold text-indigo-600 dark:text-indigo-400`}>{plan.seats}</td>
+                        <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>₹{plan.amount.toLocaleString('en-IN')}</td>
+                        <td className={`px-6 py-4 capitalize ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{plan.duration}</td>
+                        <td className="px-6 py-4">
+                          {plan.status === 'pending_purchase' ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                              <Clock className="w-3.5 h-3.5" /> Awaiting Purchase
+                            </span>
+                          ) : plan.status === 'purchased' ? (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                              <CheckCircle className="w-3.5 h-3.5" /> Called / Contacted
+                              <CheckCircle className="w-3.5 h-3.5" /> Purchased
                             </span>
                           ) : (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                              <XCircle className="w-3.5 h-3.5" /> {plan.status}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {plan.status === 'pending_purchase' && (
                             <button
-                              onClick={() => handleUpdateSalesStatus(req.id, 'contacted')}
-                              disabled={updatingSalesId === req.id}
-                              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-colors flex items-center gap-1"
+                              type="button"
+                              onClick={() => handleCancelCustomPlan(plan.id)}
+                              disabled={cancellingPlanId === plan.id}
+                              className="px-3.5 py-1.5 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 text-xs font-bold"
                             >
-                              <Clock className="w-3.5 h-3.5 animate-pulse" /> Pending Call
+                              Cancel
                             </button>
                           )}
                         </td>
@@ -656,7 +809,7 @@ const SubscriptionPurchases: React.FC = () => {
               <div>
                 <h3 className="text-xl font-bold text-gray-900">Add Custom Plan</h3>
                 <p className="text-sm mt-1 text-gray-500">
-                  Select a school and configure custom seat-based pricing.
+                  Create a school-specific plan. The school admin can purchase it from their subscription page.
                 </p>
               </div>
               <button 
@@ -689,6 +842,20 @@ const SubscriptionPurchases: React.FC = () => {
                     );
                   })}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1 text-gray-500">
+                  Plan Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={customPlanName}
+                  onChange={(e) => setCustomPlanName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border bg-white border-gray-300 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="e.g. Custom Enterprise Plan"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -770,7 +937,7 @@ const SubscriptionPurchases: React.FC = () => {
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Creating...
                   </>
-                ) : 'Activate Plan'}
+                ) : 'Create Plan for School'}
               </button>
             </div>
           </form>

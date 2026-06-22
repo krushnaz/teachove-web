@@ -180,12 +180,16 @@ const SchoolAdminSidebar: React.FC<SchoolAdminSidebarProps> = ({ sidebarOpen, se
                </div>
                <div className="min-w-0 flex-1">
                  <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                   {currentSubscription?.isActive && (currentSubscription.planName || currentSubscription.totalSeats)
-                     ? (currentSubscription.planName || 'Active Plan')
-                     : 'Subscription'}
+                   {currentSubscription?.isFreeTrial || currentSubscription?.planName === 'Free Trial'
+                     ? 'Free Trial'
+                     : currentSubscription?.isActive && (currentSubscription.planName || currentSubscription.totalSeats)
+                       ? (currentSubscription.planName || 'Active Plan')
+                       : 'Subscription'}
                  </p>
                  <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                   {currentSubscription?.isActive
+                   {currentSubscription?.isFreeTrial || currentSubscription?.planName === 'Free Trial'
+                     ? 'Unlimited access'
+                     : currentSubscription?.isActive
                      ? currentSubscription.remainingDays != null && currentSubscription.remainingDays >= 0
                        ? `${currentSubscription.remainingDays} days remaining`
                        : formatExpiry(currentSubscription.expiryAt)

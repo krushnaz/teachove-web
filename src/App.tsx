@@ -28,6 +28,7 @@ import {
 } from './components/SchoolAdmin';
 import { ExamTimetable as SchoolExamTimetable } from './components/SchoolAdmin/Exams';
 import SchoolAdminLayout from './components/SchoolAdmin/Layout';
+import FeesDashboard from './components/SchoolAdmin/StudentFees/FeesDashboard';
 
 import {
   TeacherAdminLayout,
@@ -69,6 +70,7 @@ import { VEBooks } from './components/MasterAdmin/VEBooks';
 import { MasterAdminQuestionPapers } from './components/MasterAdmin/QuestionPapers';
 import { ManageMigration } from './components/MasterAdmin/Migration';
 import AcademicYears from './components/MasterAdmin/AcademicYears/AcademicYears';
+import FeeTypes from './components/MasterAdmin/FeeTypes/FeeTypes';
 import PageNotFound from './components/PageNotFound';
 
 function App() {
@@ -103,6 +105,7 @@ function App() {
                         <Route path="attendance" element={<SchoolAdminAttendance />} />
                         <Route path="classroom" element={<SchoolAdminClassroom />} />
                         <Route path="exams" element={<SchoolExamTimetable />} />
+                        <Route path="fees/dashboard" element={<FeesDashboard />} />
                         <Route path="fees" element={<SchoolAdminStudentFees />} />
                         <Route path="announcements" element={<SchoolAdminAnnouncements />} />
                         <Route path="events" element={<SchoolAdminEvents />} />
@@ -284,6 +287,16 @@ function App() {
                   <ProtectedRoute requiredRole="master_admin">
                     <MasterAdminLayout title="Academic Years">
                       <AcademicYears />
+                    </MasterAdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/fee-types"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <MasterAdminLayout title="Fee Types">
+                      <FeeTypes />
                     </MasterAdminLayout>
                   </ProtectedRoute>
                 }

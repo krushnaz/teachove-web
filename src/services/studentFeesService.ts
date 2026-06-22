@@ -52,14 +52,45 @@ export interface StudentPaymentsSummaryResponse {
   totalPaid: number;
   remainingAmount: number;
   students: StudentSummaryRow[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}
+
+export interface StudentListQuery {
+  yearId: string;
+  lite?: boolean;
+  page?: number;
+  limit?: number;
+  search?: string;
+  classId?: string;
+  status?: string;
 }
 
 export const studentFeesService = {
-  async getSummaryBySchool(schoolId: string, yearId: string): Promise<StudentPaymentsSummaryResponse> {
+  async getSummaryBySchool(
+    schoolId: string,
+    query: StudentListQuery | string
+  ): Promise<StudentPaymentsSummaryResponse> {
     const endpoint = API_CONFIG.ENDPOINTS.STUDENT_PAYMENTS.SUMMARY_BY_SCHOOL
-      .replace(':schoolId', schoolId)
-      .replace(':yearId', yearId);
-    const response = await apiClient.get(endpoint);
+      .replace(':schoolId', schoolId);
+    const params =
+      typeof query === 'string'
+        ? { yearId: query }
+        : {
+            yearId: query.yearId,
+            lite: query.lite ? 'true' : undefined,
+            page: query.page,
+            limit: query.limit,
+            search: query.search || undefined,
+            classId: query.classId || undefined,
+            status: query.status || undefined,
+          };
+    const response = await apiClient.get(endpoint, { params });
     return response.data as StudentPaymentsSummaryResponse;
   },
 
@@ -89,37 +120,33 @@ export const studentFeesService = {
 
   async addPayment(yearId: string, paymentData: AddPaymentRequest): Promise<AddPaymentResponse> {
     const endpoint = API_CONFIG.ENDPOINTS.STUDENT_PAYMENTS.ADD_PAYMENT
-      .replace(':schoolId', paymentData.schoolId)
-      .replace(':yearId', yearId);
-    const response = await apiClient.post(endpoint, paymentData);
+      .replace(':schoolId', paymentData.schoolId);
+    const response = await apiClient.post(endpoint, { ...paymentData, yearId });
     return response.data as AddPaymentResponse;
   },
 
   async getStudentPayments(schoolId: string, yearId: string, studentId: string): Promise<Payment[]> {
     const endpoint = API_CONFIG.ENDPOINTS.STUDENT_PAYMENTS.GET_STUDENT_PAYMENTS
       .replace(':schoolId', schoolId)
-      .replace(':yearId', yearId)
       .replace(':studentId', studentId);
-    const response = await apiClient.get(endpoint);
+    const response = await apiClient.get(endpoint, { params: { yearId } });
     return response.data.payments || [];
   },
 
   async deletePayments(schoolId: string, yearId: string, studentId: string, paymentIds: string[]): Promise<{ message: string; deletedIds: string[] }> {
     const endpoint = API_CONFIG.ENDPOINTS.STUDENT_PAYMENTS.DELETE_PAYMENTS
       .replace(':schoolId', schoolId)
-      .replace(':yearId', yearId)
       .replace(':studentId', studentId);
-    const response = await apiClient.delete(endpoint, { data: { paymentIds } });
+    const response = await apiClient.delete(endpoint, { data: { paymentIds, yearId } });
     return response.data;
   },
 
   async updatePayment(schoolId: string, yearId: string, studentId: string, paymentId: string, paymentData: Omit<AddPaymentRequest, 'schoolId'>): Promise<{ message: string }> {
     const endpoint = API_CONFIG.ENDPOINTS.STUDENT_PAYMENTS.UPDATE_PAYMENT
       .replace(':schoolId', schoolId)
-      .replace(':yearId', yearId)
       .replace(':studentId', studentId)
       .replace(':paymentId', paymentId);
-    const response = await apiClient.put(endpoint, { ...paymentData, schoolId });
+    const response = await apiClient.put(endpoint, { ...paymentData, schoolId, yearId });
     return response.data;
   },
 
@@ -212,7 +239,7 @@ export const studentFeesService = {
     }
   },
 
-  async getMiscFeeSummary(schoolId: string, feeType: 'Admission' | 'Uniform' | 'Bag' | 'Book') {
+  async getMiscFeeSummary(schoolId: string, feeType: 'Admission' | 'Uniform' | 'Bag' | 'Book', yearId: string) {
     // 1. Fetch all students
     const studentsRes = await apiClient.get(API_CONFIG.ENDPOINTS.STUDENTS.BY_SCHOOL.replace(':schoolId', schoolId));
     let students = studentsRes.data?.data || studentsRes.data || [];
@@ -224,22 +251,28 @@ export const studentFeesService = {
     let feesMap: Record<string, any[]> = {};
 
     if (feeType === 'Admission') {
-      const summaryRes = await apiClient.get(API_CONFIG.ENDPOINTS.MISC_FEES.ADMISSION.replace(':schoolId', schoolId).replace('/:studentId', '/summary'));
-      return summaryRes.data; // Already correctly formatted by backend!
+      const summaryRes = await apiClient.get(
+        API_CONFIG.ENDPOINTS.MISC_FEES.ADMISSION.replace(':schoolId', schoolId).replace('/:studentId', '/summary'),
+        { params: { yearId } }
+      );
+      return summaryRes.data;
     } else if (feeType === 'Book') {
-      const summaryRes = await apiClient.get(API_CONFIG.ENDPOINTS.MISC_FEES.BOOK.replace(':schoolId', schoolId));
+      const summaryRes = await apiClient.get(
+        API_CONFIG.ENDPOINTS.MISC_FEES.BOOK.replace(':schoolId', schoolId),
+        { params: { yearId } }
+      );
       let mappedStudents = summaryRes.data?.students || [];
       totalCollected = mappedStudents.reduce((acc: number, s: any) => acc + (s.totalPaid || 0), 0);
       return { totalCollected, students: mappedStudents };
     } else if (feeType === 'Uniform') {
-      const req = await apiClient.get(API_CONFIG.ENDPOINTS.MISC_FEES.UNIFORM, { params: { schoolId } });
+      const req = await apiClient.get(API_CONFIG.ENDPOINTS.MISC_FEES.UNIFORM, { params: { schoolId, yearId } });
       const records = req.data?.data || [];
       records.forEach((r: any) => {
         if (!feesMap[r.studentId]) feesMap[r.studentId] = [];
         feesMap[r.studentId].push(r);
       });
     } else if (feeType === 'Bag') {
-      const req = await apiClient.get(API_CONFIG.ENDPOINTS.MISC_FEES.BAG, { params: { schoolId } });
+      const req = await apiClient.get(API_CONFIG.ENDPOINTS.MISC_FEES.BAG, { params: { schoolId, yearId } });
       const records = req.data?.data || [];
       records.forEach((r: any) => {
         if (!feesMap[r.studentId]) feesMap[r.studentId] = [];

@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Search, PlayCircle, RefreshCw, ClipboardList } from 'lucide-react';
+import { Search, PlayCircle, RefreshCw, ClipboardList, Database, Receipt } from 'lucide-react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { masterAdminMigrationService, LegacySchool, MigrationRun } from '../../../services/masterAdminMigrationService';
 import StartMigrationModal from './StartMigrationModal';
+import FeesMigrationTab from './FeesMigrationTab';
+
+type MigrationTab = 'school' | 'fees';
 
 const ManageMigration: React.FC = () => {
   const { isDarkMode } = useDarkMode();
+  const [activeTab, setActiveTab] = useState<MigrationTab>('fees');
   const [loading, setLoading] = useState(true);
   const [schools, setSchools] = useState<LegacySchool[]>([]);
   const [search, setSearch] = useState('');
@@ -99,19 +103,54 @@ const ManageMigration: React.FC = () => {
         <div className="min-w-0">
           <h1 className={`text-2xl sm:text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Manage Migration</h1>
           <p className={`mt-1 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Migrate old Firebase-only school data into new paths (safe copy + logs).
+            Migrate legacy school data and unified student fees (safe copy + logs).
           </p>
         </div>
+        {activeTab === 'school' && (
+          <button
+            onClick={fetchSchools}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors w-full sm:w-auto touch-manipulation min-h-[44px] ${
+              isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-gray-100' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+            }`}
+          >
+            <RefreshCw className="w-4 h-4 flex-shrink-0" /> Refresh
+          </button>
+        )}
+      </div>
+
+      <div className={`flex flex-wrap gap-2 p-1 rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
         <button
-          onClick={fetchSchools}
-          className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors w-full sm:w-auto touch-manipulation min-h-[44px] ${
-            isDarkMode ? 'bg-gray-800 hover:bg-gray-700 text-gray-100' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+          type="button"
+          onClick={() => setActiveTab('fees')}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'fees'
+              ? 'bg-indigo-600 text-white shadow'
+              : isDarkMode
+                ? 'text-gray-300 hover:bg-gray-700'
+                : 'text-gray-700 hover:bg-white'
           }`}
         >
-          <RefreshCw className="w-4 h-4 flex-shrink-0" /> Refresh
+          <Receipt className="w-4 h-4" /> Fees migration
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('school')}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'school'
+              ? 'bg-indigo-600 text-white shadow'
+              : isDarkMode
+                ? 'text-gray-300 hover:bg-gray-700'
+                : 'text-gray-700 hover:bg-white'
+          }`}
+        >
+          <Database className="w-4 h-4" /> School migration
         </button>
       </div>
 
+      {activeTab === 'fees' ? (
+        <FeesMigrationTab />
+      ) : (
+        <>
       <div className="relative">
         <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
         <input
@@ -299,6 +338,8 @@ const ManageMigration: React.FC = () => {
             setLogs([]);
           }}
         />
+      )}
+        </>
       )}
     </div>
   );

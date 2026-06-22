@@ -54,8 +54,27 @@ export interface SalesRequest {
   email: string;
   expectedStudentCount: number;
   message: string;
-  status: 'pending' | 'contacted' | string;
+  status: 'pending' | 'contacted' | 'plan_created' | string;
+  customPlanId?: string;
   createdAt?: number;
+}
+
+export interface SchoolCustomPlan {
+  id: string;
+  schoolId: string;
+  schoolName?: string;
+  salesRequestId?: string | null;
+  planName: string;
+  description?: string;
+  seats: number;
+  amount: number;
+  duration: string;
+  planType?: string;
+  features?: string[];
+  status: 'pending_purchase' | 'purchased' | 'cancelled' | string;
+  isActive?: boolean;
+  isCustomPlan?: boolean;
+  createdAt?: FirestoreTimestamp;
 }
 
 class MasterAdminSubscriptionService {
@@ -153,27 +172,56 @@ class MasterAdminSubscriptionService {
     }
   }
 
-  // Create custom subscription
+  // Create custom plan offer for a school (school admin purchases via Razorpay)
   async createCustomSubscription(data: {
     schoolId: string;
     seats: number;
     duration: string;
     amount: number;
     planType: string;
-  }): Promise<{ success: boolean; message: string; subscriptionId: string }> {
+    schoolName?: string;
+    description?: string;
+    salesRequestId?: string;
+    planName?: string;
+  }): Promise<{ success: boolean; message: string; planId: string }> {
     try {
       const response = await apiHelper.post('/master-admin/subscriptions/custom', data) as {
         success: boolean;
         message: string;
-        subscriptionId: string;
+        planId: string;
       };
       if (response.success) {
         return response;
       }
-      throw new Error(response.message || 'Failed to create custom subscription');
+      throw new Error(response.message || 'Failed to create custom plan');
     } catch (error: any) {
       console.error('Error creating custom subscription:', error);
-      throw new Error(error.message || 'Failed to create custom subscription');
+      throw new Error(error.message || 'Failed to create custom plan');
+    }
+  }
+
+  async getSchoolCustomPlans(): Promise<SchoolCustomPlan[]> {
+    try {
+      const response = await apiHelper.get('/master-admin/subscriptions/school-custom-plans') as {
+        success: boolean;
+        plans: SchoolCustomPlan[];
+      };
+      return response.success ? response.plans || [] : [];
+    } catch (error: any) {
+      console.error('Error fetching school custom plans:', error);
+      return [];
+    }
+  }
+
+  async cancelSchoolCustomPlan(planId: string): Promise<boolean> {
+    try {
+      const response = await apiHelper.delete(`/master-admin/subscriptions/school-custom-plans/${planId}`) as {
+        success: boolean;
+      };
+      return response.success;
+    } catch (error: any) {
+      console.error('Error cancelling school custom plan:', error);
+      return false;
     }
   }
 }

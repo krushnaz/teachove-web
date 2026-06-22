@@ -13,10 +13,40 @@ interface StudentFeeRow {
   status: 'paid' | 'unpaid' | 'partially paid';
   totalFees: number;
   paidFees: number;
-  classId: string; // Add this field
+  classId: string;
 }
 
-const SchoolFeesTab: React.FC = () => {
+interface SchoolFeesTabProps {
+  yearId: string;
+}
+
+async function fetchAllSchoolFeeSummaries(schoolId: string, yearId: string) {
+  const limit = 100;
+  let page = 1;
+  let allStudents: StudentSummaryRow[] = [];
+  let totalFees = 0;
+  let totalPaid = 0;
+  let remainingAmount = 0;
+
+  while (true) {
+    const summary = await studentFeesService.getSummaryBySchool(schoolId, {
+      yearId,
+      lite: true,
+      page,
+      limit,
+    });
+    totalFees = summary.totalFees || 0;
+    totalPaid = summary.totalPaid || 0;
+    remainingAmount = summary.remainingAmount || 0;
+    allStudents = allStudents.concat(summary.students || []);
+    if (!summary.pagination?.hasMore) break;
+    page += 1;
+  }
+
+  return { totalFees, totalPaid, remainingAmount, students: allStudents };
+}
+
+const SchoolFeesTab: React.FC<SchoolFeesTabProps> = ({ yearId }) => {
   const { isDarkMode } = useDarkMode();
   const { user } = useAuth();
 
@@ -58,7 +88,6 @@ const SchoolFeesTab: React.FC = () => {
 
   // Get schoolId from authenticated user
   const schoolId = user?.schoolId;
-  const yearId = (user as any)?.yearId || '2025-2026';
 
   useEffect(() => {
     if (!schoolId) return;
@@ -69,7 +98,7 @@ const SchoolFeesTab: React.FC = () => {
         setLoadError(null);
         const [classes, summary] = await Promise.all([
           classroomService.getClassesBySchoolId(schoolId, yearId),
-          studentFeesService.getSummaryBySchool(schoolId, yearId)
+          fetchAllSchoolFeeSummaries(schoolId, yearId),
         ]);
         setClassrooms(classes);
         // Cards
@@ -815,9 +844,9 @@ const SchoolFeesTab: React.FC = () => {
 
       {/* Payment Sidebar (Add/Edit) */}
       {isPaymentSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex justify-end">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsPaymentSidebarOpen(false)} />
-          <div className={`relative w-96 max-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl`}>
+          <div className={`relative w-full max-w-md h-full overflow-y-auto shadow-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{paymentMode === 'add' ? 'Add Payment' : 'Edit Payment'}</h2>
@@ -963,9 +992,9 @@ const SchoolFeesTab: React.FC = () => {
 
       {/* Delete Dialog */}
       {isDeleteDialogOpen && selectedRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex justify-end">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteDialogOpen(false)} />
-          <div className={`relative w-[600px] max-w-full mx-4 rounded-lg shadow-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`relative w-full max-w-md h-full overflow-y-auto shadow-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-red-900 text-red-300' : 'bg-red-100 text-red-600'}`}>
@@ -1089,10 +1118,10 @@ const SchoolFeesTab: React.FC = () => {
 
       {/* View Payment Dialog */}
       {isViewDialogOpen && selectedRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex justify-end">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsViewDialogOpen(false)} />
-          <div className={`relative w-[900px] max-w-full mx-4 rounded-2xl shadow-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="p-8">
+          <div className={`relative w-full max-w-lg h-full overflow-y-auto shadow-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="p-6 sm:p-8">
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center">

@@ -3,9 +3,11 @@ import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { classroomService, Classroom } from '../../../services/classroomService';
 import { studentFeesService } from '../../../services/studentFeesService';
+import { FeeType, getLegacyMiscTabName } from '../../../services/feeTypeService';
 
 interface MiscFeesTabProps {
-  feeType: 'Admission' | 'Book' | 'Uniform' | 'Bag';
+  feeType: FeeType;
+  yearId: string;
 }
 
 interface StudentRow {
@@ -21,7 +23,9 @@ interface StudentRow {
 
 const paymentModes = ['Cash', 'UPI', 'Card', 'Net Banking', 'Cheque'];
 
-const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
+const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType: feeTypeConfig, yearId }) => {
+  const legacyTab = getLegacyMiscTabName(feeTypeConfig);
+  const feeTypeName = feeTypeConfig.name;
   const { isDarkMode } = useDarkMode();
   const { user } = useAuth();
   
@@ -52,15 +56,14 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
   });
 
   const schoolId = user?.schoolId;
-  const yearId = (user as any)?.yearId || '2025-2026';
 
   const loadData = async (isBackgroundReload = false) => {
-    if (!schoolId) return;
+    if (!schoolId || !legacyTab) return;
     try {
       if (!isBackgroundReload) setIsLoading(true);
       const [classes, summary] = await Promise.all([
         classroomService.getClassesBySchoolId(schoolId, yearId),
-        studentFeesService.getMiscFeeSummary(schoolId, feeType)
+        studentFeesService.getMiscFeeSummary(schoolId, legacyTab, yearId)
       ]);
       setClassrooms(classes);
       setTotalCollected(summary?.totalCollected || 0);
@@ -81,7 +84,7 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
 
   useEffect(() => {
     loadData();
-  }, [schoolId, yearId, feeType]);
+  }, [schoolId, yearId, legacyTab]);
 
   const filteredRows = useMemo(() => {
     return rows.filter(r => {
@@ -100,7 +103,7 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
   };
 
   const handleSaveFee = async () => {
-    if (!selectedStudent || !schoolId) return;
+    if (!selectedStudent || !schoolId || !legacyTab) return;
     try {
       setIsSaving(true);
       const parsedAmount = parseFloat(form.amount) || 0;
@@ -108,6 +111,7 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
         schoolId,
         studentId: selectedStudent.studentId,
         classId: selectedStudent.classId || classFilter,
+        yearId,
         paymentMode: form.paymentMode,
         transactionId: form.transactionId,
         remarks: form.remarks,
@@ -115,20 +119,20 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
         date: new Date().toISOString()
       };
 
-      if (feeType === 'Admission') {
+      if (legacyTab === 'Admission') {
         payload.formFeeAmount = parsedAmount;
-      } else if (feeType === 'Book') {
+      } else if (legacyTab === 'Book') {
         payload.bookSetAmount = parsedAmount;
-      } else if (feeType === 'Bag') {
+      } else if (legacyTab === 'Bag') {
         payload.bagAmount = parsedAmount;
       } else {
         payload.amount = parsedAmount;
       }
 
       if (editingCardId) {
-        await studentFeesService.updateMiscFee(feeType, editingCardId, payload);
+        await studentFeesService.updateMiscFee(legacyTab, editingCardId, payload);
       } else {
-        await studentFeesService.addMiscFee(feeType, payload);
+        await studentFeesService.addMiscFee(legacyTab, payload);
       }
       
       await loadData(true); // Background reload to get IDs without flashing loading indicator
@@ -152,10 +156,10 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
   };
 
   const confirmDeleteFee = async () => {
-    if (!selectedStudent || !schoolId || !feeToDelete) return;
+    if (!selectedStudent || !schoolId || !feeToDelete || !legacyTab) return;
     try {
       setIsDeleting(true);
-      await studentFeesService.deleteMiscFee(feeType, feeToDelete, schoolId, selectedStudent.studentId);
+      await studentFeesService.deleteMiscFee(legacyTab, feeToDelete, schoolId, selectedStudent.studentId);
       await loadData(true);
       setFeeToDelete(null);
     } catch (e) {
@@ -178,11 +182,20 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
   const getTransactionAmount = (tx: any) => tx.amount ?? tx.bookSetAmount ?? tx.bagAmount ?? tx.formFeeAmount ?? 0;
   const getTransactionId = (tx: any) => tx.feeId ?? tx.uniformFeeId ?? tx.bagFeeId ?? tx.admissionFormFeeId ?? tx.id;
 
+  if (!legacyTab) {
+    return (
+      <div className={`p-8 text-center rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200 text-gray-600'}`}>
+        <p className="font-medium">{feeTypeName}</p>
+        <p className="text-sm mt-2">Payment collection for this custom fee type will be available in a future update.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="grid gap-6 md:grid-cols-2">
         <div className={`p-6 rounded-xl border shadow-lg ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Collected ({feeType} Fees)</p>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Collected ({feeTypeName})</p>
           <p className={`mt-1 text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>₹ {totalCollected.toLocaleString()}</p>
         </div>
         <div className={`p-6 rounded-xl border shadow-lg ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -273,7 +286,7 @@ const MiscFeesTab: React.FC<MiscFeesTabProps> = ({ feeType }) => {
           <div className={`relative w-full max-w-md h-full shadow-2xl flex flex-col transition-transform transform ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700 text-white' : 'border-gray-200 text-gray-900'} flex items-center justify-between`}>
               <div>
-                <h3 className="text-xl font-bold">Manage {feeType} Fees</h3>
+                <h3 className="text-xl font-bold">Manage {feeTypeName}</h3>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{selectedStudent.studentName}</p>
               </div>
               <button onClick={() => setIsSidebarOpen(false)} className={`p-2 rounded-lg hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>

@@ -125,6 +125,7 @@ export const API_CONFIG = {
       GET_CURRENT: '/subscriptions/current/:schoolId',
       CAN_ADD_STUDENTS: '/subscriptions/can-add-students/:schoolId',
       DOWNLOAD_INVOICE: '/subscriptions/download-invoice',
+      SCHOOL_CUSTOM_PLANS: '/subscriptions/school-custom-plans/:schoolId',
     },
     SUBSCRIPTION_PLANS: {
       GET_CURRENT: '/master-admin/subscription-plans/current',
@@ -141,6 +142,11 @@ export const API_CONFIG = {
       UPDATE: '/fees/:id',
       DELETE: '/fees/:id',
       PAYMENT: '/fees/payment',
+      DASHBOARD: '/fees/:schoolId/years/:yearId/dashboard',
+      SUMMARY: '/fees/:schoolId/years/:yearId/summary/:feeTypeId',
+      STRUCTURE: '/fees/:schoolId/years/:yearId/structure/:feeTypeId',
+      PAYMENTS: '/fees/:schoolId/years/:yearId/payments',
+      EXPORT: '/fees/:schoolId/years/:yearId/reports/export',
     },
     EVENTS: {
       CREATE: '/events/:schoolId/events',
@@ -210,6 +216,10 @@ export const API_CONFIG = {
       GET_BY_ID: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
       UPDATE: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
       DELETE: '/class-schedules/:schoolId/:classId/schedules/:scheduleId',
+    },
+    FEE_TYPES: {
+      ACTIVE: '/fee-types/active',
+      SCHOOL: '/fee-types/school/:schoolId',
     },
     MISC_FEES: {
       ADMISSION: '/student-admissions/:schoolId/:studentId',

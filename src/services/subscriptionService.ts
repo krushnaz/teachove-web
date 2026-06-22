@@ -22,6 +22,7 @@ export interface CurrentSubscriptionDetails {
   expiryAt: { _seconds?: number } | string | null;
   isActive: boolean;
   remainingDays: number;
+  isFreeTrial?: boolean;
   planName?: string | null;
   planType?: string | null;
   purchasedAt?: { _seconds?: number } | null;
@@ -48,6 +49,7 @@ export interface SubscriptionPlan {
   duration: string;
   createdAt?: unknown;
   updatedAt?: unknown;
+  isCustomPlan?: boolean;
 }
 
 // Interfaces based on the API response
@@ -349,6 +351,32 @@ class SubscriptionService {
         ? this.convertFirebaseTimestamp(subscription.updated_at)
         : null,
     };
+  }
+
+  /**
+   * Get school-specific custom plans created by Master Admin (pending purchase)
+   */
+  async getSchoolCustomPlans(schoolId: string): Promise<SubscriptionPlan[]> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SUBSCRIPTIONS.SCHOOL_CUSTOM_PLANS.replace(':schoolId', schoolId);
+      const response = await apiClient.get<{ success?: boolean; plans?: Array<Record<string, unknown>> }>(endpoint);
+      const rawPlans = response.data?.plans ?? [];
+      return rawPlans.map((p) => ({
+        id: String(p.id ?? ''),
+        planName: String(p.planName ?? 'Custom Plan'),
+        description: p.description as string | undefined,
+        amount: Number(p.amount) || 0,
+        seats: Number(p.seats) || 0,
+        features: Array.isArray(p.features) ? p.features.map(String) : [],
+        isActive: p.isActive !== false,
+        planType: p.planType as string | undefined,
+        duration: String(p.duration ?? 'monthly'),
+        isCustomPlan: true,
+      }));
+    } catch (error) {
+      console.error('Error fetching school custom plans:', error);
+      return [];
+    }
   }
 
   /**

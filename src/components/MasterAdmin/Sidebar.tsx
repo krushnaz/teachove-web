@@ -14,6 +14,7 @@ import {
   DollarSign,
   Mail,
   Receipt,
+  Wallet,
 } from 'lucide-react';
 
 interface MasterAdminSidebarProps {
@@ -49,6 +50,7 @@ const MasterAdminSidebar: React.FC<MasterAdminSidebarProps> = ({ sidebarOpen, se
         { path: '/master-admin/vedant-books', label: 'Vedant Education Books', icon: BookOpen },
         { path: '/master-admin/question-papers', label: 'Question Papers', icon: FileQuestion },
         { path: '/master-admin/academic-years', label: 'Academic Years', icon: Calendar },
+        { path: '/master-admin/fee-types', label: 'Fee Types', icon: Wallet },
         { path: '/master-admin/migration', label: 'Manage Migration', icon: Database },
         { path: '/master-admin/admin-access', label: 'Admin Access', icon: Shield },
       ]

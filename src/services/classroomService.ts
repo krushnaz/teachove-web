@@ -61,16 +61,15 @@ export const classroomService = {
         .replace(':schoolId', schoolId)
         .replace(':yearId', academicYear);
       const response = await apiClient.get(endpoint);
-      
-      // Handle the response structure
+
       if (response.data.classes && Array.isArray(response.data.classes)) {
         return response.data.classes;
       }
-      
+
       return [];
     } catch (error) {
       console.error('Error fetching classrooms:', error);
-      throw new Error('Failed to fetch classrooms');
+      return [];
     }
   },
 

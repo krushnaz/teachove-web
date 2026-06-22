@@ -6,6 +6,7 @@ import {
   SubscriptionPlan,
   CurrentSubscriptionDetails,
 } from '../../../services/subscriptionService';
+import { Crown, Sparkles } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -116,6 +117,7 @@ const SubscriptionRequests: React.FC = () => {
   const { user, schoolDetails } = useAuth();
   const { isDarkMode } = useDarkMode();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [customPlans, setCustomPlans] = useState<SubscriptionPlan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscriptionDetails | null>(null);
   const [requests, setRequests] = useState<SubscriptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,26 +185,35 @@ const SubscriptionRequests: React.FC = () => {
 
   const schoolId = user?.schoolId ?? '';
 
-  const hasCurrent = Boolean(
-    currentSubscription?.isActive &&
-    currentSubscription?.expiryAt &&
-    (currentSubscription?.totalSeats ?? 0) > 0
+  const isFreeTrial = Boolean(
+    currentSubscription?.isFreeTrial === true ||
+      currentSubscription?.planName === 'Free Trial'
+  );
+  const hasPaidPlan = Boolean(
+    !isFreeTrial &&
+      currentSubscription?.isActive &&
+      currentSubscription?.expiryAt &&
+      (currentSubscription?.totalSeats ?? 0) > 0
   );
   const hasExpiredPlan = Boolean(
     currentSubscription &&
-    (currentSubscription.totalSeats ?? 0) > 0 &&
-    !currentSubscription.isActive
+      !isFreeTrial &&
+      (currentSubscription.totalSeats ?? 0) > 0 &&
+      !currentSubscription.isActive
   );
-  const currentPlanName = (currentSubscription?.planName ?? '').trim().toLowerCase();
+  const currentPlanName = isFreeTrial
+    ? 'free trial'
+    : (currentSubscription?.planName ?? '').trim().toLowerCase();
 
   const loadData = useCallback(async () => {
     if (!schoolId) return;
     try {
       setErrorMessage(null);
-      const [plansRes, currentRes, subsRes] = await Promise.all([
+      const [plansRes, currentRes, subsRes, customPlansRes] = await Promise.all([
         subscriptionService.getSubscriptionPlans(),
         subscriptionService.getCurrentSubscriptionDetails(schoolId),
         subscriptionService.getSubscriptionsBySchool(schoolId),
+        subscriptionService.getSchoolCustomPlans(schoolId),
       ]);
       const sortedPlans = [...plansRes].sort((a, b) => {
         const seatsA = a.seats || 0;
@@ -213,6 +224,7 @@ const SubscriptionRequests: React.FC = () => {
         return (a.amount || 0) - (b.amount || 0);
       });
       setPlans(sortedPlans);
+      setCustomPlans(customPlansRes || []);
       setCurrentSubscription(currentRes ?? null);
       const list = Array.isArray(subsRes) ? subsRes : (subsRes as any)?.subscriptions ?? [];
       setRequests(list.map(convertApiToSubscriptionRequest));
@@ -263,8 +275,9 @@ const SubscriptionRequests: React.FC = () => {
 
   const handlePurchaseSeatsForPlan = async () => {
     if (!selectedPlan || !schoolId) return;
+    const isCustomPlan = Boolean(selectedPlan.isCustomPlan);
     const isPackage = Boolean(selectedPlan.seats && selectedPlan.seats > 0);
-    const seats = isPackage ? (selectedPlan.seats || 0) : (parseInt(seatCount.trim(), 10) || 0);
+    const seats = isCustomPlan || isPackage ? (selectedPlan.seats || 0) : (parseInt(seatCount.trim(), 10) || 0);
     if (seats <= 0) {
       showToast('Enter a valid number of students', 'error');
       return;
@@ -273,8 +286,8 @@ const SubscriptionRequests: React.FC = () => {
     setIsCreatingPurchase(true);
     setSheetProcessing(true);
     try {
-      const payAmount = isPackage ? selectedPlan.amount : (seats * selectedPlan.amount);
-      const unitCost = isPackage ? (selectedPlan.amount / seats) : selectedPlan.amount;
+      const payAmount = isCustomPlan || isPackage ? selectedPlan.amount : (seats * selectedPlan.amount);
+      const unitCost = seats > 0 ? payAmount / seats : selectedPlan.amount;
 
       const res = await subscriptionService.createSubscription({
         num_of_users: seats,
@@ -470,6 +483,34 @@ const SubscriptionRequests: React.FC = () => {
           </div>
         )}
 
+        {isFreeTrial && (
+          <section className={`p-6 rounded-xl border shadow-sm mb-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <h2 className="text-lg font-bold mb-4">Current Plan</h2>
+            <div className={`rounded-xl border p-5 ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Crown className="h-5 w-5 text-amber-500" />
+                  <span className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Free Trial
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                    <Sparkles className="h-3 w-3" />
+                    Active
+                  </span>
+                </div>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Your school bypasses subscription limits. You can still purchase a plan below — it will apply when free trial is turned off.
+                </p>
+                {currentSubscription?.summary?.currentStudentCount != null && (
+                  <p className={`text-sm font-semibold ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}`}>
+                    Students enrolled: {currentSubscription.summary.currentStudentCount}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Plans Section */}
         <section className={`p-6 rounded-xl border shadow-sm mb-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center gap-2 mb-2">
@@ -477,13 +518,54 @@ const SubscriptionRequests: React.FC = () => {
             <h2 className="text-lg font-bold">Plans</h2>
           </div>
           <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {hasCurrent
-              ? 'Your current subscription is active till the valid date. You can add more students anytime.'
-              : 'Select a plan to purchase your first subscription.'}
+            {isFreeTrial
+              ? 'Browse and purchase a plan below.'
+              : hasPaidPlan
+                ? 'Your current subscription is active till the valid date. You can add more students anytime.'
+                : 'Select a plan to purchase your first subscription.'}
           </p>
+
+          {customPlans.length > 0 && (
+            <div className="space-y-3 mb-4">
+              <p className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                Your Custom Plan Offers
+              </p>
+              {customPlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`p-5 rounded-xl border-2 border-indigo-500/60 ${isDarkMode ? 'bg-indigo-950/20' : 'bg-indigo-50/50'}`}
+                >
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex gap-3 items-start flex-1">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg flex-shrink-0">✨</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-gray-900 dark:text-white">{plan.planName}</span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white uppercase">Custom for you</span>
+                        </div>
+                        <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          ₹{plan.amount.toLocaleString('en-IN')} • {plan.seats} Students • {plan.duration === 'yearly' ? 'Yearly' : 'Monthly'}
+                        </p>
+                        {plan.description && (
+                          <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{plan.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => openPurchaseSheet(plan)}
+                      className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md transition-colors whitespace-nowrap"
+                    >
+                      Purchase Custom Plan
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {(() => {
             const packagePlans = plans.filter(p => p.seats && p.seats > 0);
-            if (packagePlans.length === 0) {
+            if (packagePlans.length === 0 && customPlans.length === 0) {
               return (
                 <div className="space-y-3">
                   {/* Custom Plan / Contact Sales Card when no fixed plans are listed */}
@@ -510,8 +592,12 @@ const SubscriptionRequests: React.FC = () => {
               );
             }
 
-            const purchasedPlanObj = packagePlans.find(p => hasCurrent && p.planName.trim().toLowerCase() === currentPlanName);
-            const otherPlans = packagePlans.filter(p => !(hasCurrent && p.planName.trim().toLowerCase() === currentPlanName));
+            if (packagePlans.length === 0) {
+              return null;
+            }
+
+            const purchasedPlanObj = packagePlans.find(p => hasPaidPlan && p.planName.trim().toLowerCase() === currentPlanName);
+            const otherPlans = packagePlans.filter(p => !(hasPaidPlan && p.planName.trim().toLowerCase() === currentPlanName));
 
             return (
               <div className="space-y-3">
@@ -568,7 +654,7 @@ const SubscriptionRequests: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                ) : hasCurrent ? (
+                ) : hasPaidPlan ? (
                   <div
                     className={`p-5 rounded-xl border-2 bg-indigo-50/20 border-indigo-400 dark:border-indigo-600/50 dark:bg-indigo-950/10`}
                   >
@@ -618,7 +704,7 @@ const SubscriptionRequests: React.FC = () => {
                 {/* Other plans list */}
                 {otherPlans.map((plan) => {
                   const isRepurchasePlan = hasExpiredPlan && plan.planName.trim().toLowerCase() === currentPlanName;
-                  const buttonLabel = hasCurrent 
+                  const buttonLabel = hasPaidPlan 
                     ? 'Upgrade Plan' 
                     : isRepurchasePlan 
                       ? 'Repurchase' 
@@ -796,7 +882,7 @@ const SubscriptionRequests: React.FC = () => {
                 <>
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <h3 className="text-lg font-bold">
-                      {hasCurrent ? 'Upgrade / Buy More Seats' : hasExpiredPlan && selectedPlan.planName.trim().toLowerCase() === currentPlanName ? 'Repurchase subscription' : 'Purchase subscription'}
+                      {hasPaidPlan ? 'Upgrade / Buy More Seats' : hasExpiredPlan && selectedPlan.planName.trim().toLowerCase() === currentPlanName ? 'Repurchase subscription' : 'Purchase subscription'}
                     </h3>
                     <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
                       {selectedPlan.duration === 'yearly' ? 'Yearly' : 'Monthly'}
@@ -805,7 +891,9 @@ const SubscriptionRequests: React.FC = () => {
                   <div className={`p-4 rounded-xl border mb-4 ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
                     <p className="font-bold">{selectedPlan.planName}</p>
                     <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      ₹{selectedPlan.amount} per student • {selectedPlan.duration === 'yearly' ? 'Yearly' : 'Monthly'}
+                      {selectedPlan.isCustomPlan || (selectedPlan.seats && selectedPlan.seats > 0)
+                        ? `₹${selectedPlan.amount.toLocaleString('en-IN')} flat rate • ${selectedPlan.seats} students • ${selectedPlan.duration === 'yearly' ? 'Yearly' : 'Monthly'}`
+                        : `₹${selectedPlan.amount} per student • ${selectedPlan.duration === 'yearly' ? 'Yearly' : 'Monthly'}`}
                     </p>
                     {selectedPlan.description && <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">{selectedPlan.description}</p>}
                     {selectedPlan.features?.length > 0 && (
@@ -816,13 +904,13 @@ const SubscriptionRequests: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  {hasCurrent && currentSubscription && (
+                  {hasPaidPlan && currentSubscription && (
                     <p className={`text-xs mb-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Current subscription: {currentSubscription.totalSeats} students • valid upto {currentSubscription.expiryAt && (typeof currentSubscription.expiryAt === 'object' && '_seconds' in currentSubscription.expiryAt ? formatDate(new Date((currentSubscription.expiryAt as any)._seconds * 1000).toISOString()) : formatDate(String(currentSubscription.expiryAt)))}
                       {(currentSubscription.remainingDays ?? 0) > 0 && ` • ${currentSubscription.remainingDays} days left`}. When you add students, expiry extends proportionately.
                     </p>
                   )}
-                  {selectedPlan.seats && selectedPlan.seats > 0 ? (
+                  {(selectedPlan.isCustomPlan || (selectedPlan.seats && selectedPlan.seats > 0)) ? (
                     <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'} mb-3`}>
                       <span className="text-sm font-medium">Included Students: </span>
                       <span className="text-indigo-600 dark:text-indigo-400 font-bold">{selectedPlan.seats} Students</span>
@@ -830,7 +918,7 @@ const SubscriptionRequests: React.FC = () => {
                   ) : (
                     <>
                       <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {hasCurrent ? 'Add student count' : 'Student count'}
+                        {hasPaidPlan ? 'Add student count' : 'Student count'}
                       </label>
                       <input
                         type="number"
@@ -846,7 +934,7 @@ const SubscriptionRequests: React.FC = () => {
                     <div>
                       <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Payable</p>
                       <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                        ₹{(selectedPlan.seats && selectedPlan.seats > 0
+                        ₹{(selectedPlan.isCustomPlan || (selectedPlan.seats && selectedPlan.seats > 0)
                           ? selectedPlan.amount
                           : ((parseInt(seatCount, 10) || 0) * selectedPlan.amount)
                         ).toFixed(2)}
@@ -854,10 +942,10 @@ const SubscriptionRequests: React.FC = () => {
                     </div>
                     <button
                       onClick={handlePurchaseSeatsForPlan}
-                      disabled={isCreatingPurchase || (!selectedPlan.seats && (parseInt(seatCount, 10) || 0) <= 0)}
+                      disabled={isCreatingPurchase || (!(selectedPlan.isCustomPlan || selectedPlan.seats) && (parseInt(seatCount, 10) || 0) <= 0)}
                       className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 disabled:opacity-50"
                     >
-                      {isCreatingPurchase ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Pay now</span> : hasCurrent ? 'Pay for more students' : 'Pay now'}
+                      {isCreatingPurchase ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Pay now</span> : hasPaidPlan ? 'Pay for more students' : 'Pay now'}
                     </button>
                   </div>
                 </>

@@ -1,6 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
-import { SubscriptionRequest } from '../../../services/masterAdminSubscriptionService';
+import {
+  masterAdminSubscriptionService,
+  SubscriptionRequest,
+  SchoolCustomPlan,
+} from '../../../services/masterAdminSubscriptionService';
 import { School } from '../../../services/masterAdminSchoolService';
 import {
   formatPlanDate,
@@ -10,7 +14,9 @@ import {
   getSchoolSubscriptions,
   sortSubscriptionsNewestFirst,
 } from '../../../utils/schoolPlanHelpers';
-import { Calendar, CheckCircle, Clock, Crown, Users, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Crown, Plus, Users, XCircle } from 'lucide-react';
+import { toast } from 'react-toastify';
+import CreateSchoolCustomPlanModal from './CreateSchoolCustomPlanModal';
 
 interface SchoolSubscriptionSectionProps {
   school: School;
@@ -25,6 +31,44 @@ const SchoolSubscriptionSection: React.FC<SchoolSubscriptionSectionProps> = ({
 }) => {
   const { isDarkMode } = useDarkMode();
   const schoolId = school.id || school.schoolId || '';
+  const [customPlans, setCustomPlans] = useState<SchoolCustomPlan[]>([]);
+  const [loadingCustomPlans, setLoadingCustomPlans] = useState(false);
+  const [customModalOpen, setCustomModalOpen] = useState(false);
+  const [cancellingPlanId, setCancellingPlanId] = useState<string | null>(null);
+
+  const loadCustomPlans = useCallback(async () => {
+    if (!schoolId) return;
+    try {
+      setLoadingCustomPlans(true);
+      const all = await masterAdminSubscriptionService.getSchoolCustomPlans();
+      setCustomPlans(all.filter((p) => p.schoolId === schoolId));
+    } catch {
+      setCustomPlans([]);
+    } finally {
+      setLoadingCustomPlans(false);
+    }
+  }, [schoolId]);
+
+  useEffect(() => {
+    loadCustomPlans();
+  }, [loadCustomPlans]);
+
+  const handleCancelCustomPlan = async (planId: string) => {
+    setCancellingPlanId(planId);
+    try {
+      const success = await masterAdminSubscriptionService.cancelSchoolCustomPlan(planId);
+      if (success) {
+        toast.success('Custom plan cancelled');
+        await loadCustomPlans();
+      } else {
+        toast.error('Failed to cancel custom plan');
+      }
+    } catch {
+      toast.error('Failed to cancel custom plan');
+    } finally {
+      setCancellingPlanId(null);
+    }
+  };
 
   const schoolSubs = useMemo(
     () => sortSubscriptionsNewestFirst(getSchoolSubscriptions(schoolId, subscriptions)),
@@ -161,6 +205,104 @@ const SchoolSubscriptionSection: React.FC<SchoolSubscriptionSectionProps> = ({
         </div>
       </div>
 
+      {/* Custom plan offers for this school */}
+      <div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className={`text-lg font-semibold ${title}`}>Custom Plan Offers</h3>
+          <button
+            type="button"
+            onClick={() => setCustomModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add Custom Plan
+          </button>
+        </div>
+        <div className={`overflow-hidden rounded-xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          {loadingCustomPlans ? (
+            <div className={`flex h-32 items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+            </div>
+          ) : customPlans.length === 0 ? (
+            <div className={`py-10 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <Crown className={`mx-auto mb-3 h-10 w-10 ${muted}`} />
+              <p className={`font-medium ${title}`}>No custom plans for this school</p>
+              <p className={`mt-1 text-sm ${muted}`}>
+                Create a tailored plan with custom seats and pricing for this school to purchase.
+              </p>
+              <button
+                type="button"
+                onClick={() => setCustomModalOpen(true)}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+              >
+                <Plus className="h-4 w-4" />
+                Add Custom Plan
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead className={isDarkMode ? 'border-b border-gray-700 bg-gray-900' : 'border-b border-gray-200 bg-gray-50'}>
+                  <tr>
+                    {['Plan', 'Seats', 'Amount', 'Duration', 'Status', 'Action'].map((h) => (
+                      <th
+                        key={h}
+                        className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${muted}`}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
+                  {customPlans.map((plan) => (
+                    <tr key={plan.id} className={isDarkMode ? 'bg-gray-800/40' : 'bg-white'}>
+                      <td className={`px-4 py-3 text-sm font-medium ${title}`}>{plan.planName}</td>
+                      <td className={`px-4 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400`}>
+                        {plan.seats}
+                      </td>
+                      <td className={`px-4 py-3 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        ₹{plan.amount.toLocaleString('en-IN')}
+                      </td>
+                      <td className={`px-4 py-3 text-sm capitalize ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {plan.duration}
+                      </td>
+                      <td className="px-4 py-3">
+                        {plan.status === 'pending_purchase' ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                            <Clock className="h-3 w-3" /> Awaiting Purchase
+                          </span>
+                        ) : plan.status === 'purchased' ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            <CheckCircle className="h-3 w-3" /> Purchased
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                            <XCircle className="h-3 w-3" /> {plan.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {plan.status === 'pending_purchase' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCancelCustomPlan(plan.id)}
+                            disabled={cancellingPlanId === plan.id}
+                            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* History */}
       <div>
         <h3 className={`mb-4 text-lg font-semibold ${title}`}>Purchase History</h3>
@@ -212,6 +354,14 @@ const SchoolSubscriptionSection: React.FC<SchoolSubscriptionSectionProps> = ({
           )}
         </div>
       </div>
+
+      <CreateSchoolCustomPlanModal
+        open={customModalOpen}
+        onClose={() => setCustomModalOpen(false)}
+        schoolId={schoolId}
+        schoolName={school.schoolName}
+        onSuccess={loadCustomPlans}
+      />
     </div>
   );
 };

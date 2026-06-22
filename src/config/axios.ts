@@ -38,11 +38,15 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.code === 'ECONNABORTED') {
-      console.error('Request timeout');
+      console.error(
+        'Request timeout — is teachove-backend running? (npm run dev in teachove-backend)'
+      );
+    } else if (error.code === 'ERR_NETWORK' || (!error.response && error.request)) {
+      console.error(
+        'Cannot reach API server — check REACT_APP_API_BASE_URL and that backend is running on port 5000'
+      );
     } else if (error.response) {
       console.error('Server error:', error.response.status, error.response.data);
-    } else if (error.request) {
-      console.error('Network error:', error.message);
     }
     return Promise.reject(error);
   }
