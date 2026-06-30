@@ -1,15 +1,21 @@
 {
   "short_name": "TeachoVE",
-  "name": "TeachoVE",
+  "name": "TeachoVE — School ERP & School Management Software",
+  "description": "Cloud-based school ERP for India: student management, attendance, fees, and administration.",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "icon-192.png",
       "type": "image/png",
-      "sizes": "192x192 512x512"
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#2563eb",
   "background_color": "#ffffff"
 }

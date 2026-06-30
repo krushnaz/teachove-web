@@ -1,3 +1,13 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Allow: /login
+
+# Block authenticated dashboards and admin panels from indexing
+Disallow: /school-admin
+Disallow: /teacher-admin
+Disallow: /student-dashboard
+Disallow: /master-admin
+Disallow: /dashboard
+
+Sitemap: https://teachove.com/sitemap.xml

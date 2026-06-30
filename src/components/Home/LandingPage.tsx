@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
+import { SeoHead, landingPageJsonLd } from '../SEO/SeoHead';
 import Navigation from './Navigation';
 import HeroSection from './HeroSection';
 import AppsSection from './AppsSection';
 import FeaturesSection from './FeaturesSection';
 import BenefitsSection from './BenefitsSection';
 import StepsSection from './StepsSection';
+import TestimonialsSection from './TestimonialsSection';
 import ContactSection from './ContactSection';
 import Footer from './Footer';
 
@@ -35,12 +37,13 @@ const LandingPage: React.FC = () => {
         isDarkMode ? 'bg-slate-900' : 'bg-white'
       }`}
     >
-
+      <SeoHead jsonLd={landingPageJsonLd} />
       <Navigation />
       <HeroSection />
       <AppsSection />
       <FeaturesSection />
       <BenefitsSection />
+      <TestimonialsSection />
       <StepsSection />
       <ContactSection />
       <Footer />

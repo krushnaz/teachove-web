@@ -18,7 +18,7 @@ const steps = [
   {
     step: '03',
     title: 'Go Live',
-    desc: 'Start using Vedant Education and transform your school.',
+    desc: 'Start using TeachoVE and transform your school with our online School ERP.',
     Icon: Zap,
   },
 ];
@@ -46,7 +46,7 @@ const StepsSection: React.FC = () => {
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
-            Join hundreds of schools that trust Vedant Education
+            Join hundreds of schools across India that trust TeachoVE
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { SeoHead } from './SEO/SeoHead';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -78,7 +79,12 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex ${isDarkMode ? 'dark bg-slate-950' : 'bg-white'}`}>
-      
+      <SeoHead
+        title="Login | TeachoVE School ERP Portal"
+        description="Sign in to your TeachoVE school management software account — school admin, teacher, or student portal."
+        canonical="https://teachove.com/login"
+        noindex
+      />
       {/* --- Left Side: Form Section --- */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-20 xl:px-24 relative z-10">
         

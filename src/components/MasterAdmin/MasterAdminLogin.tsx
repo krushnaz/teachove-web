@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { SeoHead } from '../SEO/SeoHead';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
@@ -61,7 +62,12 @@ const MasterAdminLogin: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex flex-col lg:flex-row ${isDarkMode ? 'dark bg-slate-950' : 'bg-white'}`}>
-      
+      <SeoHead
+        title="Master Admin Login | TeachoVE"
+        description="TeachoVE master administrator login."
+        canonical="https://teachove.com/master-admin"
+        noindex
+      />
       {/* --- Left Side: Form Section --- */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-4 sm:px-8 lg:px-20 xl:px-24 py-6 sm:py-8 lg:py-0 relative z-10 min-h-0">
         

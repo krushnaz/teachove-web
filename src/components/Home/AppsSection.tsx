@@ -2,9 +2,9 @@ import React from 'react';
 import { Zap } from 'lucide-react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useReveal } from './utils/useReveal';
-import schoolAdminScreen from '../../assets/appScreenshorts/schoolAdminHomeScreen.jpg';
-import teacherAdminScreen from '../../assets/appScreenshorts/teacherAdminHomeScreen.jpg';
-import studentAdminScreen from '../../assets/appScreenshorts/studentAdminHomeScreen.jpg';
+import schoolAdminScreen from '../../assets/appScreenshorts/schoolAdminHomeScreen.webp';
+import teacherAdminScreen from '../../assets/appScreenshorts/teacherAdminHomeScreen.webp';
+import studentAdminScreen from '../../assets/appScreenshorts/studentAdminHomeScreen.webp';
 
 const apps = [
   {
@@ -136,7 +136,11 @@ const AppsSection: React.FC = () => {
                   >
                     <img
                       src={app.img}
-                      alt={app.title}
+                      alt={`${app.title} — TeachoVE school management software screenshot`}
+                      loading="lazy"
+                      decoding="async"
+                      width={120}
+                      height={260}
                       className="w-[120px] h-auto object-cover"
                     />
                   </div>
@@ -193,7 +197,11 @@ const AppsSection: React.FC = () => {
                     >
                       <img
                         src={app.img}
-                        alt={app.title}
+                        alt={`${app.title} — TeachoVE school ERP app interface`}
+                        loading="lazy"
+                        decoding="async"
+                        width={320}
+                        height={640}
                         className="w-[280px] md:w-[320px] lg:w-[300px] object-cover"
                       />
                     </div>

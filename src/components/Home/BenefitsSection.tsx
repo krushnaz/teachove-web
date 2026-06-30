@@ -61,7 +61,7 @@ const BenefitsSection: React.FC = () => {
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
-            Experience the difference with our comprehensive school management solution
+            Experience the difference with our cloud-based online school ERP — built for Indian schools
           </p>
         </div>
 

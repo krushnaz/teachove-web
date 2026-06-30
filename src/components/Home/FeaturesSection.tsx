@@ -88,7 +88,7 @@ const FeaturesSection: React.FC = () => {
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
-            One comprehensive app with three specialized panels — School Admin, Teacher Admin, and Student/Parent Access
+            One comprehensive school management app with three specialized panels — school administration software for admins, teacher management software for educators, and student/parent access for fee and attendance tracking
           </p>
         </div>
 

@@ -7,7 +7,7 @@ const testimonials = [
     name: 'Dr. Priya Sharma',
     role: 'Principal, ABC International School',
     content:
-      'Vedant Education has transformed how we manage our school. The system is intuitive, and the support team is exceptional. Our administrative efficiency has increased by 60%.',
+      'TeachoVE has transformed how we manage our school. The school ERP system is intuitive, and the support team is exceptional. Our administrative efficiency has increased by 60%.',
     rating: 5,
   },
   {

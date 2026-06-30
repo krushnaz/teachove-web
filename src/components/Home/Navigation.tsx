@@ -7,6 +7,7 @@ const Navigation: React.FC = () => {
 
   return (
     <nav
+      aria-label="Main navigation"
       className={`fixed w-full top-0 z-50 transition-all duration-300 border-b ${
         isDarkMode 
           ? 'bg-slate-900/95 border-slate-800' 
@@ -18,8 +19,10 @@ const Navigation: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3">
             <img 
-              src="/icon.png" 
-              alt="TeachoVE Logo" 
+              src="/icon-192.png" 
+              alt="TeachoVE — School ERP and school management software logo" 
+              width={64}
+              height={64}
               className="h-14 sm:h-16 w-auto object-contain"
             />
             <span

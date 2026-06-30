@@ -28,9 +28,9 @@ const HeroSection: React.FC = () => {
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}
         >
-          The Future of{' '}
+          India's Leading{' '}
           <span className="text-blue-600 dark:text-blue-500">
-            School Management
+            School ERP System
           </span>
         </h1>
 
@@ -40,7 +40,8 @@ const HeroSection: React.FC = () => {
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
           }`}
         >
-          Everything Your School Needs, in One Place — uniting administrators, teachers, and students to simplify education.
+          All-in-one school management software for administrators, teachers, and parents —
+          student management, attendance management, fee management, and school administration in one online School ERP.
         </p>
 
         {/* CTA Buttons */}
