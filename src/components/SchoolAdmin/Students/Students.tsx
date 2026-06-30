@@ -276,8 +276,8 @@ const Students: React.FC = () => {
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (student.rollNo && String(student.rollNo).toLowerCase().includes(searchTerm.toLowerCase())); // Add rollNo to search
+                         (student.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (student.rollNo && String(student.rollNo).toLowerCase().includes(searchTerm.toLowerCase()));
     const studentClass = student.className && student.section
       ? `${student.className}-${student.section}`
       : student.classId;
@@ -493,7 +493,17 @@ const Students: React.FC = () => {
                   } outline-none cursor-pointer`}
                 >
                   <option value="all">All Classes</option>
-                  {Array.from(new Set(students.map(s => s.className && s.section ? `${s.className}-${s.section}` : s.classId))).map((classInfo) => (
+                  {Array.from(
+                    new Set(
+                      students
+                        .map((s) =>
+                          s.className && s.section
+                            ? `${s.className}-${s.section}`
+                            : s.classId
+                        )
+                        .filter((c): c is string => Boolean(c))
+                    )
+                  ).map((classInfo) => (
                     <option key={classInfo} value={classInfo}>{classInfo}</option>
                   ))}
                 </select>

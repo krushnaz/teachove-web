@@ -15,6 +15,8 @@ import {
   Mail,
   Receipt,
   Wallet,
+  HardDrive,
+  BarChart3,
 } from 'lucide-react';
 
 interface MasterAdminSidebarProps {
@@ -53,6 +55,8 @@ const MasterAdminSidebar: React.FC<MasterAdminSidebarProps> = ({ sidebarOpen, se
         { path: '/master-admin/fee-types', label: 'Fee Types', icon: Wallet },
         { path: '/master-admin/migration', label: 'Manage Migration', icon: Database },
         { path: '/master-admin/admin-access', label: 'Admin Access', icon: Shield },
+        { path: '/master-admin/uploads', label: 'Upload Analytics', icon: HardDrive },
+        { path: '/master-admin/analysis', label: 'Platform Analysis', icon: BarChart3 },
       ]
     }
   ], []);

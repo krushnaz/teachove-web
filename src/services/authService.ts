@@ -1,6 +1,7 @@
 import { API_CONFIG } from '../config/api';
 import { ApiResponse } from '../models';
 import { apiHelper } from '../utils/apiHelper';
+import { getSessionMeta } from '../utils/deviceInfo';
 
 // Extended LoginResponse interface for student login
 interface ExtendedLoginResponse {
@@ -51,6 +52,8 @@ interface ExtendedLoginResponse {
 // Local storage keys
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
+const SESSION_ID_KEY = 'auth_session_id';
+const DEVICE_ID_KEY = 'teachove_device_id';
 const TEACHER_ID_KEY = 'teacher_id';
 const SCHOOL_DETAILS_KEY = 'school_details';
 const CLASS_DETAILS_KEY = 'class_details';
@@ -77,6 +80,18 @@ class AuthService {
   // Remove auth token from localStorage
   removeToken(): void {
     localStorage.removeItem(TOKEN_KEY);
+  }
+
+  getSessionId(): string | null {
+    return localStorage.getItem(SESSION_ID_KEY);
+  }
+
+  setSessionId(sessionId: string): void {
+    localStorage.setItem(SESSION_ID_KEY, sessionId);
+  }
+
+  removeSessionId(): void {
+    localStorage.removeItem(SESSION_ID_KEY);
   }
 
   // Get user data from localStorage
@@ -162,6 +177,35 @@ class AuthService {
     return !!this.getToken() && !!this.getUser();
   }
 
+  async validateSession(sessionId: string): Promise<{
+    exists: boolean;
+    active: boolean;
+    status: string | null;
+    logoutType: string | null;
+  }> {
+    const response = await this.makeRequest<{
+      success: boolean;
+      data: {
+        exists: boolean;
+        active: boolean;
+        status: string | null;
+        logoutType: string | null;
+      };
+    }>(`/auth/session/${sessionId}/status`);
+    return response.data;
+  }
+
+  /** Clear local auth state without calling logout API (e.g. after admin revoke). */
+  clearLocalSession(): void {
+    this.removeToken();
+    this.removeUser();
+    this.removeSessionId();
+    this.removeTeacherId();
+    this.removeSchoolDetails();
+    this.removeClassDetails();
+    this.removeClassTeacher();
+  }
+
   // Generic API request method
   private async makeRequest<T>(
     endpoint: string,
@@ -188,7 +232,8 @@ class AuthService {
       const credentials = {
         phoneNo,
         password,
-        role
+        role,
+        sessionMeta: getSessionMeta(),
       };
 
       const response = await this.makeRequest<ExtendedLoginResponse>(
@@ -213,6 +258,14 @@ class AuthService {
       // Store schoolId as a simple identifier for authentication
       // Since there's no JWT token, we'll use the schoolId as our auth identifier
       this.setToken(response.user.schoolId);
+
+      const session = (response as ExtendedLoginResponse & { session?: { sessionId?: string; deviceId?: string } }).session;
+      if (session?.sessionId) {
+        this.setSessionId(session.sessionId);
+      }
+      if (session?.deviceId) {
+        localStorage.setItem(DEVICE_ID_KEY, session.deviceId);
+      }
       
       // Store teacherId if it exists (for teacher role)
       if (response.user.teacherId) {
@@ -251,7 +304,8 @@ class AuthService {
     try {
       const credentials = {
         email,
-        password
+        password,
+        sessionMeta: getSessionMeta(),
       };
 
       const url = `${this.baseURL}/masterAdminAuth/login`;
@@ -280,6 +334,13 @@ class AuthService {
         
         // Store a token identifier (using email as identifier for master admin)
         this.setToken(userData.email || 'master_admin');
+
+        if (responseData.session?.sessionId) {
+          this.setSessionId(responseData.session.sessionId);
+        }
+        if (responseData.session?.deviceId) {
+          localStorage.setItem(DEVICE_ID_KEY, responseData.session.deviceId);
+        }
         
         console.log('Master admin login successful:', userData);
 
@@ -312,11 +373,15 @@ class AuthService {
 
   // Logout method
   async logout(): Promise<void> {
+    const sessionId = this.getSessionId();
+
     try {
-      // Call logout endpoint if available (commented out since it might not exist)
-      // await this.makeRequest(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {
-      //   method: 'POST',
-      // });
+      if (sessionId) {
+        await this.makeRequest('/auth/logout', {
+          method: 'POST',
+          data: { sessionId },
+        });
+      }
     } catch (error) {
       console.error('Logout API call failed:', error);
       // Continue with local logout even if API call fails
@@ -324,6 +389,7 @@ class AuthService {
       // Clear local storage
       this.removeToken();
       this.removeUser();
+      this.removeSessionId();
       this.removeTeacherId();
       this.removeSchoolDetails();
       this.removeClassDetails();

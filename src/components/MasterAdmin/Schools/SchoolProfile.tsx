@@ -17,19 +17,23 @@ import {
   CheckCircle,
   XCircle,
   BarChart3,
-  TrendingUp,
   Download,
   Upload,
   Sparkles,
   Crown,
+  Monitor,
+  HardDrive,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import MasterAdminLayout from '../Layout';
 import BulkUploadStudentsModal from '../../shared/BulkUploadStudentsModal';
 import SchoolPlanBadge from './SchoolPlanBadge';
 import SchoolSubscriptionSection from './SchoolSubscriptionSection';
+import AuthSessionsPanel from '../AuthSessions/AuthSessionsPanel';
+import UploadTrackingPanel from '../Uploads/UploadTrackingPanel';
+import SchoolAnalysisPanel from '../Analysis/SchoolAnalysisPanel';
 
-type ProfileTab = 'overview' | 'plans' | 'teachers' | 'students' | 'analysis';
+type ProfileTab = 'overview' | 'plans' | 'teachers' | 'students' | 'analysis' | 'sessions' | 'uploads';
 
 interface SchoolStats {
   teacherCount: number;
@@ -193,6 +197,8 @@ const SchoolProfile: React.FC = () => {
     { id: 'teachers', label: 'Teachers', icon: Users },
     { id: 'students', label: 'Students', icon: GraduationCap },
     { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+    { id: 'sessions', label: 'Sessions', icon: Monitor },
+    { id: 'uploads', label: 'Uploads', icon: HardDrive },
   ];
 
   return (
@@ -416,8 +422,33 @@ const SchoolProfile: React.FC = () => {
               />
             )}
 
-            {activeTab === 'analysis' && (
-              <AnalysisTab school={school} stats={stats} />
+            {activeTab === 'sessions' && schoolId && (
+              <AuthSessionsPanel
+                schoolId={schoolId}
+                title="School Auth Sessions"
+                showRevoke
+                limit={200}
+              />
+            )}
+
+            {activeTab === 'uploads' && schoolId && (
+              <UploadTrackingPanel
+                schoolId={schoolId}
+                title="School File Uploads"
+                showSchoolColumn={false}
+                limit={200}
+              />
+            )}
+
+            {activeTab === 'analysis' && schoolId && (
+              <SchoolAnalysisPanel
+                schoolId={schoolId}
+                schoolName={school.schoolName}
+                teacherCount={stats.teacherCount}
+                studentCount={stats.studentCount}
+                onViewSessions={() => setActiveTab('sessions')}
+                onViewUploads={() => setActiveTab('uploads')}
+              />
             )}
           </div>
         </div>
@@ -888,86 +919,6 @@ const StudentsTab: React.FC<{
         schoolId={schoolId}
         onSuccess={onRefresh}
       />
-    </div>
-  );
-};
-
-// Analysis Tab Component
-const AnalysisTab: React.FC<{ school: School; stats: SchoolStats }> = ({ school, stats }) => {
-  const { isDarkMode } = useDarkMode();
-
-  return (
-    <div className="space-y-6">
-      <h3 className={`text-xl font-bold ${
-        isDarkMode ? 'text-white' : 'text-gray-900'
-      }`}>
-        School Analysis
-      </h3>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className={`rounded-xl border p-6 ${
-          isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-        }`}>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className={`font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              Teacher to Student Ratio
-            </h4>
-            <TrendingUp className={`w-5 h-5 ${
-              isDarkMode ? 'text-indigo-400' : 'text-indigo-600'
-            }`} />
-          </div>
-          <p className={`text-3xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
-            {stats.teacherCount > 0 
-              ? (stats.studentCount / stats.teacherCount).toFixed(1)
-              : '0'
-            }
-          </p>
-          <p className={`text-sm mt-2 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            Students per teacher
-          </p>
-        </div>
-
-        <div className={`rounded-xl border p-6 ${
-          isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-        }`}>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className={`font-semibold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              Total Users
-            </h4>
-            <Users className={`w-5 h-5 ${
-              isDarkMode ? 'text-indigo-400' : 'text-indigo-600'
-            }`} />
-          </div>
-          <p className={`text-3xl font-bold ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
-            {stats.teacherCount + stats.studentCount}
-          </p>
-          <p className={`text-sm mt-2 ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            Teachers + Students
-          </p>
-        </div>
-      </div>
-
-      {/* Additional Analysis Placeholder */}
-      <div className={`rounded-xl border p-6 ${
-        isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-      }`}>
-        <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-          Additional analytics and insights will be displayed here.
-        </p>
-      </div>
     </div>
   );
 };

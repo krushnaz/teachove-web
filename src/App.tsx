@@ -43,6 +43,7 @@ import {
   Homework,
   ClassSchedule,
   StudentResult,
+  TeacherAdminQuestionPapers,
 } from './components/TeacherAdmin';
 import StudentAttendance from './components/TeacherAdmin/Attendance/StudentAttendance';
 
@@ -60,6 +61,9 @@ import { StudentProfile } from './components/Students/Profile';
 import { StudentFees } from './components/Students/Fees';
 import { StudentLeaves } from './components/Students/Leaves';
 import { MasterAdminLogin, MasterAdminDashboard, GetInTouchMessages, SubscriptionLedger } from './components/MasterAdmin';
+import AdminAccess from './components/MasterAdmin/AuthSessions/AdminAccess';
+import UploadAnalytics from './components/MasterAdmin/Uploads/UploadAnalytics';
+import PlatformAnalysis from './components/MasterAdmin/Analysis/PlatformAnalysis';
 import MasterAdminLayout from './components/MasterAdmin/Layout';
 import { Schools } from './components/MasterAdmin/Schools';
 import SchoolProfile from './components/MasterAdmin/Schools/SchoolProfile';
@@ -109,7 +113,7 @@ function App() {
                         <Route path="fees" element={<SchoolAdminStudentFees />} />
                         <Route path="announcements" element={<SchoolAdminAnnouncements />} />
                         <Route path="events" element={<SchoolAdminEvents />} />
-                        <Route path="question-papers" element={<SchoolAdminQuestionPapers />} />
+                        <Route path="question-papers/*" element={<SchoolAdminQuestionPapers />} />
                         <Route path="leaves" element={<SchoolAdminLeaveManagement />} />
                         <Route path="settings" element={<SchoolAdminSettings />} />
                         <Route path="subscription-request" element={<SchoolAdminSubscriptionRequests />} />
@@ -136,6 +140,7 @@ function App() {
                         <Route path="exam-schedule" element={<ExamTimetable />} />
                         <Route path="events" element={<Events />} />
                         <Route path="homework" element={<Homework />} />
+                        <Route path="question-papers/*" element={<TeacherAdminQuestionPapers />} />
                         <Route path="announcements" element={<TeacherAnnouncements />} />
                         <Route path="leave" element={<TeacherLeave />} />
                         <Route path="class-schedule" element={<ClassSchedule />} />
@@ -263,11 +268,23 @@ function App() {
                 path="/master-admin/admin-access"
                 element={
                   <ProtectedRoute requiredRole="master_admin">
-                    <MasterAdminLayout title="Admin Access">
-                      <div className="text-center py-12">
-                        <p className="text-gray-500 dark:text-gray-400">Admin Access page coming soon...</p>
-                      </div>
-                    </MasterAdminLayout>
+                    <AdminAccess />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/uploads"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <UploadAnalytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/master-admin/analysis"
+                element={
+                  <ProtectedRoute requiredRole="master_admin">
+                    <PlatformAnalysis />
                   </ProtectedRoute>
                 }
               />

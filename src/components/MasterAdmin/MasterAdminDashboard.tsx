@@ -4,6 +4,10 @@ import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import MasterAdminLayout from './Layout';
 import { masterAdminService, type EarningsPeriod, type EarningsByPeriodResponse } from '../../services/masterAdminService';
+import { authSessionService, type SessionOverview } from '../../services/authSessionService';
+import AuthSessionsPanel from './AuthSessions/AuthSessionsPanel';
+import UploadTrackingPanel from './Uploads/UploadTrackingPanel';
+import { masterAdminUploadService, type UploadOverview } from '../../services/masterAdminUploadService';
 import { 
   Shield, 
   Users, 
@@ -16,6 +20,9 @@ import {
   ArrowUpRight,
   ChevronRight,
   Calendar,
+  Monitor,
+  HardDrive,
+  Upload,
   DollarSign,
 } from 'lucide-react';
 
@@ -56,6 +63,10 @@ const MasterAdminDashboard: React.FC = () => {
   const [earningsLoading, setEarningsLoading] = useState(true);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [sessionOverview, setSessionOverview] = useState<SessionOverview | null>(null);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [uploadOverview, setUploadOverview] = useState<UploadOverview | null>(null);
+  const [uploadsLoading, setUploadsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,6 +90,38 @@ const MasterAdminDashboard: React.FC = () => {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setSessionsLoading(true);
+        const overview = await authSessionService.getOverview();
+        setSessionOverview(overview);
+      } catch (error) {
+        console.error('Error fetching session overview:', error);
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
+
+    fetchSessions();
+  }, []);
+
+  useEffect(() => {
+    const fetchUploads = async () => {
+      try {
+        setUploadsLoading(true);
+        const overview = await masterAdminUploadService.getOverview();
+        setUploadOverview(overview);
+      } catch (error) {
+        console.error('Error fetching upload overview:', error);
+      } finally {
+        setUploadsLoading(false);
+      }
+    };
+
+    fetchUploads();
   }, []);
 
   useEffect(() => {
@@ -388,6 +431,106 @@ const MasterAdminDashboard: React.FC = () => {
               <p>Paid Subscriptions: {finance.paidSubscriptions.toLocaleString('en-IN')} of {finance.totalSubscriptions.toLocaleString('en-IN')} total</p>
             </div>
           )}
+        </div>
+
+        {/* Auth Sessions Overview */}
+        <div>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className={`text-lg sm:text-xl font-bold ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              Auth Sessions
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <StatCard
+              title="Active Sessions"
+              value={sessionsLoading ? '—' : (sessionOverview?.active ?? 0)}
+              icon={Monitor}
+              colorClass={{
+                bg: 'bg-indigo-500',
+                bgLight: isDarkMode ? 'bg-indigo-900/30' : 'bg-indigo-50',
+                text: 'text-indigo-600 dark:text-indigo-400'
+              }}
+              loading={sessionsLoading}
+            />
+            <StatCard
+              title="Logged Out"
+              value={sessionsLoading ? '—' : (sessionOverview?.loggedOut ?? 0)}
+              icon={Shield}
+              colorClass={{
+                bg: 'bg-slate-500',
+                bgLight: isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50',
+                text: 'text-slate-600 dark:text-slate-400'
+              }}
+              loading={sessionsLoading}
+            />
+            <StatCard
+              title="Total Tracked"
+              value={sessionsLoading ? '—' : (sessionOverview?.total ?? 0)}
+              icon={Users}
+              colorClass={{
+                bg: 'bg-cyan-500',
+                bgLight: isDarkMode ? 'bg-cyan-900/30' : 'bg-cyan-50',
+                text: 'text-cyan-600 dark:text-cyan-400'
+              }}
+              loading={sessionsLoading}
+            />
+          </div>
+          <div className={`rounded-xl border p-4 sm:p-6 ${
+            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          }`}>
+            <AuthSessionsPanel title="Recent Sessions" compact showRevoke limit={10} />
+          </div>
+        </div>
+
+        {/* Upload Analytics Overview */}
+        <div>
+          <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            File Upload Analytics
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <StatCard
+              title="Total Uploads"
+              value={uploadsLoading ? '—' : (uploadOverview?.totalUploads ?? 0)}
+              icon={Upload}
+              colorClass={{
+                bg: 'bg-violet-500',
+                bgLight: isDarkMode ? 'bg-violet-900/30' : 'bg-violet-50',
+                text: 'text-violet-600 dark:text-violet-400'
+              }}
+              loading={uploadsLoading}
+            />
+            <StatCard
+              title="Storage Used"
+              value={uploadsLoading ? '—' : (uploadOverview?.totalSizeLabel ?? '0 B')}
+              icon={HardDrive}
+              colorClass={{
+                bg: 'bg-fuchsia-500',
+                bgLight: isDarkMode ? 'bg-fuchsia-900/30' : 'bg-fuchsia-50',
+                text: 'text-fuchsia-600 dark:text-fuchsia-400'
+              }}
+              loading={uploadsLoading}
+            />
+            <StatCard
+              title="Schools with Uploads"
+              value={uploadsLoading ? '—' : (uploadOverview?.topSchools?.length ?? 0)}
+              icon={School}
+              colorClass={{
+                bg: 'bg-teal-500',
+                bgLight: isDarkMode ? 'bg-teal-900/30' : 'bg-teal-50',
+                text: 'text-teal-600 dark:text-teal-400'
+              }}
+              loading={uploadsLoading}
+            />
+          </div>
+          <div className={`rounded-xl border p-4 sm:p-6 ${
+            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          }`}>
+            <UploadTrackingPanel title="Recent Uploads" showSchoolColumn limit={10} />
+          </div>
         </div>
 
         {/* Quick Actions Section */}

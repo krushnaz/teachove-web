@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { authService } from '../services';
+import { sessionSocketService } from '../services/sessionSocketService';
 
 interface User {
   studentId?: string;
@@ -80,44 +82,128 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [classTeacher, setClassTeacher] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const forcedLogoutRef = useRef(false);
+
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setSchoolDetails(null);
+    setClassDetails(null);
+    setClassTeacher(null);
+  }, []);
+
+  const redirectToLogin = useCallback((role?: string) => {
+    if (role === 'master_admin') {
+      navigate('/master-admin');
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const handleSessionInvalid = useCallback((message?: string, role?: string) => {
+    if (forcedLogoutRef.current) return;
+    forcedLogoutRef.current = true;
+    sessionSocketService.disconnect();
+    authService.clearLocalSession();
+    clearAuthState();
+    toast.error(message || 'Your session has ended. Please log in again.');
+    redirectToLogin(role);
+    setTimeout(() => {
+      forcedLogoutRef.current = false;
+    }, 1000);
+  }, [clearAuthState, redirectToLogin]);
 
   // Check if user is authenticated on app load
-  const checkAuth = () => {
+  const checkAuth = useCallback(async () => {
     try {
       const storedUser = authService.getUser();
       const storedSchoolDetails = authService.getSchoolDetails();
       const storedClassDetails = authService.getClassDetails();
       const storedClassTeacher = authService.getClassTeacher();
       const token = authService.getToken();
+      const sessionId = authService.getSessionId();
       
       if (storedUser && token) {
+        if (sessionId) {
+          try {
+            const status = await authService.validateSession(sessionId);
+            if (!status.active) {
+              authService.clearLocalSession();
+              clearAuthState();
+              console.log('Session no longer active:', status);
+              return;
+            }
+          } catch (error) {
+            console.error('Session validation failed:', error);
+          }
+        }
+
         setUser(storedUser);
         setSchoolDetails(storedSchoolDetails);
         setClassDetails(storedClassDetails);
         setClassTeacher(storedClassTeacher);
         console.log('User session restored:', storedUser);
       } else {
-        setUser(null);
-        setSchoolDetails(null);
-        setClassDetails(null);
-        setClassTeacher(null);
+        clearAuthState();
         console.log('No valid session found');
       }
     } catch (error) {
       console.error('Error checking auth:', error);
-      setUser(null);
-      setSchoolDetails(null);
-      setClassDetails(null);
-      setClassTeacher(null);
+      clearAuthState();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clearAuthState]);
 
   // Check authentication on mount
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
+
+  // WebSocket: listen for admin session revoke
+  useEffect(() => {
+    const sessionId = authService.getSessionId();
+    if (!user || !sessionId) {
+      sessionSocketService.disconnect();
+      return;
+    }
+
+    sessionSocketService.connect(sessionId, (payload) => {
+      handleSessionInvalid(
+        payload.message || 'Your session was revoked by an administrator.',
+        user.role
+      );
+    });
+
+    return () => {
+      sessionSocketService.disconnect();
+    };
+  }, [user, handleSessionInvalid]);
+
+  // Re-validate session when tab becomes visible again (refresh/focus)
+  useEffect(() => {
+    const handleVisibility = async () => {
+      if (document.visibilityState !== 'visible' || !user) return;
+      const sessionId = authService.getSessionId();
+      if (!sessionId) return;
+
+      try {
+        const status = await authService.validateSession(sessionId);
+        if (!status.active) {
+          handleSessionInvalid(
+            status.logoutType === 'revoked_by_admin'
+              ? 'Your session was revoked by an administrator.'
+              : 'Your session has ended. Please log in again.',
+            user.role
+          );
+        }
+      } catch (error) {
+        console.error('Session re-validation failed:', error);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [user, handleSessionInvalid]);
 
   // Redirect user based on their role when authenticated (only on initial load)
   useEffect(() => {
@@ -197,33 +283,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       const currentUser = user;
+      sessionSocketService.disconnect();
       await authService.logout();
-      setUser(null);
-      setSchoolDetails(null);
-      setClassDetails(null);
-      setClassTeacher(null);
+      clearAuthState();
       
-      // Redirect to appropriate login page based on role
-      if (currentUser?.role === 'master_admin') {
-        navigate('/master-admin');
-      } else {
-        navigate('/login');
-      }
+      redirectToLogin(currentUser?.role);
       console.log('User logged out');
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if logout API fails, clear local session
       const currentUser = user;
-      setUser(null);
-      setSchoolDetails(null);
-      setClassDetails(null);
-      setClassTeacher(null);
-      
-      if (currentUser?.role === 'master_admin') {
-        navigate('/master-admin');
-      } else {
-        navigate('/login');
-      }
+      authService.clearLocalSession();
+      clearAuthState();
+      redirectToLogin(currentUser?.role);
     }
   };
 

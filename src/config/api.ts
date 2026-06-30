@@ -162,6 +162,18 @@ export const API_CONFIG = {
       GET_CLASSES: '/question-papers/classes',
       GET_PAPERS: '/question-papers/:classId/:testType',
     },
+    GENERATED_QUESTION_PAPERS: {
+      LIST: '/generated-question-papers/:schoolId/current/papers',
+      GET: '/generated-question-papers/:schoolId/current/papers/:paperId',
+      CREATE: '/generated-question-papers/:schoolId/current/papers',
+      UPDATE: '/generated-question-papers/:schoolId/current/papers/:paperId',
+      DELETE: '/generated-question-papers/:schoolId/current/papers/:paperId',
+      DUPLICATE: '/generated-question-papers/:schoolId/current/papers/:paperId/duplicate',
+      ARCHIVE: '/generated-question-papers/:schoolId/current/papers/:paperId/archive',
+      VERSIONS: '/generated-question-papers/:schoolId/current/papers/:paperId/versions',
+      UPLOAD_IMAGE: '/generated-question-papers/:schoolId/upload-image',
+      QUESTION_BANK: '/generated-question-papers/:schoolId/question-bank',
+    },
     HOMEWORKS: {
       CREATE: '/homeworks/:schoolId/homeworks',
       GET_BY_DATE: '/homeworks/:schoolId/homeworks/date/:date',

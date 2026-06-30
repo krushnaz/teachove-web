@@ -123,13 +123,13 @@ const AddStudentDrawer: React.FC<AddStudentDrawerProps> = ({
     if (open) {
       if (student) {
         setForm({
-          name: student.name,
-          email: student.email,
+          name: student.name ?? '',
+          email: student.email ?? '',
           password: '',
-          phoneNo: student.phoneNo,
-          admissionYear: student.admissionYear,
-          classId: student.classId,
-          rollNo: student.rollNo ? String(student.rollNo) : '', // Add rollNo field
+          phoneNo: student.phoneNo ?? '',
+          admissionYear: student.admissionYear ?? '',
+          classId: student.classId ?? '',
+          rollNo: student.rollNo != null ? String(student.rollNo) : '',
         });
         setPreviewUrl(student.profilePic || '');
       } else {
