@@ -1,13 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { CalendarDays, Clock3, Eye, FileText, History, Link2, X } from 'lucide-react';
 import { eventService } from '../../../services/eventService';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { Event } from '../../../services/eventService';
 import { toast } from 'react-toastify';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherFilterBar,
+  TeacherSearchInput,
+  TeacherSelect,
+  TeacherPanel,
+  TeacherCardGrid,
+  TeacherItemCard,
+  TeacherButton,
+  TeacherLoading,
+  TeacherError,
+  TeacherEmpty,
+} from '../shared';
 
 const StudentEvents: React.FC = () => {
   const { user } = useAuth();
-  const { isDarkMode } = useDarkMode();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,31 +34,30 @@ const StudentEvents: React.FC = () => {
   const [showAttachmentDialog, setShowAttachmentDialog] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
 
-  // Fetch events for the school
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        if (user?.schoolId) {
-          const response = await eventService.getEvents(user.schoolId);
-          setEvents(response.events || []);
-        } else {
-          setError('School ID not found');
-        }
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setError('Failed to load events');
-        toast.error('Failed to load events');
-      } finally {
-        setLoading(false);
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      if (user?.schoolId) {
+        const response = await eventService.getEvents(user.schoolId);
+        setEvents(response.events || []);
+      } else {
+        setError('School ID not found');
       }
-    };
+    } catch (fetchError) {
+      console.error('Error fetching events:', fetchError);
+      setError('Failed to load events');
+      toast.error('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (user?.schoolId) {
       fetchEvents();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.schoolId]);
 
   // Filter and sort events
@@ -181,36 +195,8 @@ const StudentEvents: React.FC = () => {
     return { status: 'upcoming', text: 'Upcoming', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className={`mt-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading events...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Error Loading Events</h3>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <TeacherLoading message="Loading events..." />;
+  if (error) return <TeacherError title="Error Loading Events" message={error} onRetry={fetchEvents} />;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -226,408 +212,186 @@ const StudentEvents: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>School Events</h1>
-        <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Stay updated with upcoming school activities</p>
-      </div>
+    <TeacherPageShell>
+      <TeacherPageHeader title="School Events" description="Stay updated with upcoming school activities." />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Total Events</p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{events.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Upcoming</p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {events.filter(event => isUpcoming(event.date)).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>This Week</p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {events.filter(event => {
-                  const eventDate = new Date(event.date);
-                  const diffTime = eventDate.getTime() - today.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  return diffDays >= 0 && diffDays <= 7;
-                }).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Past Events</p>
-              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {events.filter(event => !isUpcoming(event.date)).length}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TeacherStatsGrid cols={4}>
+        <TeacherStatCard title="Total Events" value={events.length} icon={CalendarDays} color="indigo" />
+        <TeacherStatCard
+          title="Upcoming"
+          value={events.filter((event) => isUpcoming(event.date)).length}
+          icon={Clock3}
+          color="emerald"
+        />
+        <TeacherStatCard
+          title="This Week"
+          value={
+            events.filter((event) => {
+              const eventDate = new Date(event.date);
+              const diffTime = eventDate.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              return diffDays >= 0 && diffDays <= 7;
+            }).length
+          }
+          icon={CalendarDays}
+          color="amber"
+        />
+        <TeacherStatCard
+          title="Past Events"
+          value={events.filter((event) => !isUpcoming(event.date)).length}
+          icon={History}
+          color="violet"
+        />
+      </TeacherStatsGrid>
 
-      {/* Filters */}
-      <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-2 border rounded-md leading-5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                    isDarkMode 
-                      ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' 
-                      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
-                  }`}
-                />
-              </div>
-            </div>
-            
-            <div className="sm:w-48">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'upcoming' | 'past')}
-                className={`block w-full px-3 py-2 border rounded-md leading-5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                  isDarkMode 
-                    ? 'border-gray-600 bg-gray-700 text-white' 
-                    : 'border-gray-300 bg-white text-gray-900'
-                }`}
-              >
-                <option value="all">All Events</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="past">Past Events</option>
-              </select>
-            </div>
-            
-            <div className="sm:w-48">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'title')}
-                className={`block w-full px-3 py-2 border rounded-md leading-5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                  isDarkMode 
-                    ? 'border-gray-600 bg-gray-700 text-white' 
-                    : 'border-gray-300 bg-white text-gray-900'
-                }`}
-              >
-                <option value="date">Sort by Date</option>
-                <option value="title">Sort by Title</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TeacherFilterBar>
+        <TeacherSearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Search events..." />
+        <TeacherSelect
+          value={filterType}
+          onChange={(value) => setFilterType(value as 'all' | 'upcoming' | 'past')}
+          options={[
+            { value: 'all', label: 'All Events' },
+            { value: 'upcoming', label: 'Upcoming' },
+            { value: 'past', label: 'Past Events' },
+          ]}
+          className="sm:w-44"
+        />
+        <TeacherSelect
+          value={sortBy}
+          onChange={(value) => setSortBy(value as 'date' | 'title')}
+          options={[
+            { value: 'date', label: 'Sort by Date' },
+            { value: 'title', label: 'Sort by Title' },
+          ]}
+          className="sm:w-44"
+        />
+      </TeacherFilterBar>
 
-      {/* Events Grid */}
-      <div className="space-y-8">
-        {/* Upcoming Events Section */}
-        {upcomingEvents.length > 0 && (
-          <div>
-            <div className="flex items-center mb-6">
-              <div className="flex-1">
-                <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Upcoming Events</h2>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {upcomingEvents.length} event{upcomingEvents.length !== 1 ? 's' : ''} scheduled
-                </p>
-              </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-green-900' : 'bg-green-100'}`}>
-                <svg className={`w-6 h-6 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcomingEvents.map((event) => {
-                const eventStatus = getEventStatus(event.date);
-                return (
-                  <div key={event.eventId} className={`rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                    {/* Event Header */}
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white line-clamp-2">{event.title}</h3>
-                          <p className="text-blue-100 text-sm mt-1">
-                            {formatDate(event.date)} • {formatTime(event.time)}
-                          </p>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${eventStatus.color}`}>
-                          {eventStatus.text}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Event Content */}
-                    <div className="p-6">
-                      <p className={`text-sm line-clamp-3 mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {event.description}
-                      </p>
-                      
-                      {/* Event Details */}
-                      <div className="space-y-2">
-                        <div className={`flex items-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {formatDate(event.date)}
-                        </div>
-                        <div className={`flex items-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {formatTime(event.time)}
-                        </div>
-                        {event.filePath && (
-                          <button 
-                            onClick={() => handleAttachmentClick(event.filePath!)}
-                            className={`flex items-center text-sm transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                          >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            View Attachment
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Event Footer */}
-                    <div className={`px-6 py-3 border-t ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Created {formatCreatedDate(event.createdDate)}
-                        </span>
-                        <button 
-                          onClick={() => handleViewDetails(event)}
-                          className={`text-sm font-medium transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Past Events Section */}
-        {pastEvents.length > 0 && (
-          <div>
-            <div className="flex items-center mb-6">
-              <div className="flex-1">
-                <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Past Events</h2>
-                <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {pastEvents.length} event{pastEvents.length !== 1 ? 's' : ''} completed
-                </p>
-              </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <svg className={`w-6 h-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pastEvents.map((event) => {
-                const eventStatus = getEventStatus(event.date);
-                return (
-                  <div key={event.eventId} className={`rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-200 opacity-75 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                    {/* Event Header */}
-                    <div className="bg-gradient-to-r from-gray-500 to-gray-600 px-6 py-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white line-clamp-2">{event.title}</h3>
-                          <p className="text-gray-200 text-sm mt-1">
-                            {formatDate(event.date)} • {formatTime(event.time)}
-                          </p>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${eventStatus.color}`}>
-                          {eventStatus.text}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Event Content */}
-                    <div className="p-6">
-                      <p className={`text-sm line-clamp-3 mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {event.description}
-                      </p>
-                      
-                      {/* Event Details */}
-                      <div className="space-y-2">
-                        <div className={`flex items-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {formatDate(event.date)}
-                        </div>
-                        <div className={`flex items-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {formatTime(event.time)}
-                        </div>
-                        {event.filePath && (
-                          <button 
-                            onClick={() => handleAttachmentClick(event.filePath!)}
-                            className={`flex items-center text-sm transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                          >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            View Attachment
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Event Footer */}
-                    <div className={`px-6 py-3 border-t ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Created {formatCreatedDate(event.createdDate)}
-                        </span>
-                        <button 
-                          onClick={() => handleViewDetails(event)}
-                          className={`text-sm font-medium transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Empty State */}
-      {filteredAndSortedEvents.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <h3 className={`mt-2 text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>No events found</h3>
-          <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {events.length === 0 
-              ? "No events have been created yet."
-              : "Try adjusting your search criteria or filters."
+      {filteredAndSortedEvents.length === 0 ? (
+        <TeacherPanel>
+          <TeacherEmpty
+            icon={CalendarDays}
+            title="No events found"
+            description={
+              events.length === 0
+                ? 'No events have been created yet.'
+                : 'Try adjusting your search criteria or filters.'
             }
-          </p>
+          />
+        </TeacherPanel>
+      ) : (
+        <div className="space-y-6">
+          {upcomingEvents.length > 0 && (
+            <TeacherPanel title={`Upcoming Events (${upcomingEvents.length})`}>
+              <TeacherCardGrid cols={3}>
+                {upcomingEvents.map((event) => {
+                  const eventStatus = getEventStatus(event.date);
+                  return (
+                    <TeacherItemCard key={event.eventId}>
+                      <div className="p-4 sm:p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white line-clamp-2">
+                            {event.title}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            {eventStatus.text}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                          {event.description}
+                        </p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                          <div>{formatDate(event.date)}</div>
+                          <div>{formatTime(event.time)}</div>
+                          <div>Created {formatCreatedDate(event.createdDate)}</div>
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <TeacherButton compact variant="secondary" icon={Eye} onClick={() => handleViewDetails(event)}>
+                            Details
+                          </TeacherButton>
+                          {event.filePath && (
+                            <TeacherButton
+                              compact
+                              variant="ghost"
+                              icon={Link2}
+                              onClick={() => handleAttachmentClick(event.filePath!)}
+                            >
+                              Attachment
+                            </TeacherButton>
+                          )}
+                        </div>
+                      </div>
+                    </TeacherItemCard>
+                  );
+                })}
+              </TeacherCardGrid>
+            </TeacherPanel>
+          )}
+
+          {pastEvents.length > 0 && (
+            <TeacherPanel title={`Past Events (${pastEvents.length})`}>
+              <TeacherCardGrid cols={3}>
+                {pastEvents.map((event) => (
+                  <TeacherItemCard key={event.eventId} className="opacity-80">
+                    <div className="p-4 sm:p-5 space-y-3">
+                      <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white line-clamp-2">
+                        {event.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                        {event.description}
+                      </p>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                        <div>{formatDate(event.date)}</div>
+                        <div>{formatTime(event.time)}</div>
+                        <div>Created {formatCreatedDate(event.createdDate)}</div>
+                      </div>
+                      <TeacherButton compact variant="secondary" icon={Eye} onClick={() => handleViewDetails(event)}>
+                        Details
+                      </TeacherButton>
+                    </div>
+                  </TeacherItemCard>
+                ))}
+              </TeacherCardGrid>
+            </TeacherPanel>
+          )}
         </div>
       )}
 
       {/* Event Details Dialog */}
       {showEventDialog && selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className={`rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-white">{selectedEvent.title}</h3>
-                <button
-                  onClick={closeEventDialog}
-                  className="text-white hover:text-gray-200 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Date & Time</h4>
-                  <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                    {formatDate(selectedEvent.date)} at {formatTime(selectedEvent.time)}
-                  </p>
-                </div>
-                
-                <div>
-                  <h4 className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Description</h4>
-                  <p className={`whitespace-pre-wrap ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {selectedEvent.description}
-                  </p>
-                </div>
-                
-                {selectedEvent.filePath && (
-                  <div>
-                    <h4 className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Attachment</h4>
-                    <button
-                      onClick={() => handleAttachmentClick(selectedEvent.filePath!)}
-                      className={`inline-flex items-center transition-colors ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                      </svg>
-                      View Attachment
-                    </button>
-                  </div>
-                )}
-                
-                <div>
-                  <h4 className={`text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Created</h4>
-                  <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                    {formatCreatedDate(selectedEvent.createdDate)}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className={`px-6 py-4 rounded-b-lg flex justify-end ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-              <button
-                onClick={closeEventDialog}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Close
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{selectedEvent.title}</h3>
+              <button onClick={closeEventDialog} className="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                <X size={20} />
               </button>
+            </div>
+            <div className="p-5 space-y-4 text-sm">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Date & Time</p>
+                <p className="text-gray-900 dark:text-gray-100">
+                  {formatDate(selectedEvent.date)} at {formatTime(selectedEvent.time)}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Description</p>
+                <p className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">{selectedEvent.description}</p>
+              </div>
+              {selectedEvent.filePath && (
+                <TeacherButton compact variant="secondary" icon={Link2} onClick={() => handleAttachmentClick(selectedEvent.filePath!)}>
+                  View Attachment
+                </TeacherButton>
+              )}
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Created</p>
+                <p className="text-gray-900 dark:text-gray-100">{formatCreatedDate(selectedEvent.createdDate)}</p>
+              </div>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <TeacherButton variant="secondary" onClick={closeEventDialog}>
+                Close
+              </TeacherButton>
             </div>
           </div>
         </div>
@@ -635,59 +399,30 @@ const StudentEvents: React.FC = () => {
 
       {/* Attachment Preview Dialog */}
       {showAttachmentDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className={`rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className={`px-6 py-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex items-center justify-between">
-                <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Attachment Preview</h3>
-                <button
-                  onClick={closeAttachmentDialog}
-                  className={`transition-colors ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="text-center">
-                <div className="mb-4">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                </div>
-                <h4 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Attachment Preview</h4>
-                <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Click the button below to open the attachment in a new tab.
-                </p>
-                <a
-                  href={attachmentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  Open Attachment
-                </a>
-              </div>
-            </div>
-            
-            <div className={`px-6 py-4 rounded-b-lg flex justify-end ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-              <button
-                onClick={closeAttachmentDialog}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                Close
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="rounded-xl shadow-xl max-w-xl w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Attachment Preview</h3>
+              <button onClick={closeAttachmentDialog} className="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+                <X size={20} />
               </button>
+            </div>
+            <div className="p-5 text-center">
+              <FileText className="mx-auto mb-3 text-gray-400" size={36} />
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Open this attachment in a new tab.</p>
+              <a href={attachmentUrl} target="_blank" rel="noopener noreferrer">
+                <TeacherButton icon={Link2}>Open Attachment</TeacherButton>
+              </a>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <TeacherButton variant="secondary" onClick={closeAttachmentDialog}>
+                Close
+              </TeacherButton>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </TeacherPageShell>
   );
 };
 

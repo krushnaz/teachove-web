@@ -889,14 +889,14 @@ const ClassSchedule: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Header Shimmer */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
             <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-64 mb-2 animate-pulse"></div>
             <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-32 animate-pulse"></div>
-            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-36 animate-pulse"></div>
+          <div className="flex items-center gap-2 flex-nowrap flex-shrink-0">
+            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-24 animate-pulse"></div>
+            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-28 animate-pulse"></div>
           </div>
         </div>
 
@@ -937,12 +937,12 @@ const ClassSchedule: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Class Schedule</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage weekly class timetables</p>
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1 pr-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Class Schedule</h1>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1">Manage weekly class timetables</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex items-center gap-2 flex-nowrap flex-shrink-0 self-start">
           <Tooltip title="Refresh Timetable">
             <IconButton 
               onClick={handleRefresh} 

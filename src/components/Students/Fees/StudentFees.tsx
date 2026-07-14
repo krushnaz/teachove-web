@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { CalendarDays, CreditCard, IndianRupee, ReceiptText, Download } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { studentFeesService, Payment } from '../../../services/studentFeesService';
-import { CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
-
-interface StudentPaymentsResponse {
-  payments: Payment[];
-  academicYear: string;
-  studentId: string;
-}
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherHeaderActions,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherPanel,
+  TeacherCardGrid,
+  TeacherItemCard,
+  TeacherButton,
+  TeacherLoading,
+  TeacherError,
+  TeacherEmpty,
+} from '../shared';
 
 const StudentFees: React.FC = () => {
   const { user, schoolDetails } = useAuth();
-  const { isDarkMode } = useDarkMode();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [academicYear, setAcademicYear] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -148,183 +154,89 @@ const StudentFees: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <CircularProgress size={48} />
-          <p className={`mt-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading payment history...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Error Loading Payments</h3>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>{error}</p>
-          <button 
-            onClick={fetchPayments} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <TeacherLoading message="Loading payment history..." />;
+  if (error) return <TeacherError title="Error Loading Payments" message={error} onRetry={fetchPayments} />;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Fee Payments</h1>
-          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>View your payment history for academic year {academicYear}</p>
-        </div>
-        
-        {payments.length > 0 && (
-          <button
-            onClick={handleDownloadReceipt}
-            disabled={downloadingReceipt}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              downloadingReceipt
-                ? 'bg-gray-400 cursor-not-allowed'
-                : isDarkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {downloadingReceipt ? (
-              <>
-                <CircularProgress size={20} className="text-white" />
-                <span>Downloading...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Download Receipt</span>
-              </>
-            )}
-          </button>
-        )}
-      </div>
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Fee Payments"
+        description={`View your payment history for academic year ${academicYear}`}
+        action={
+          payments.length > 0 ? (
+            <TeacherHeaderActions>
+              <TeacherButton
+                onClick={handleDownloadReceipt}
+                loading={downloadingReceipt}
+                icon={Download}
+                compact
+              >
+                Download Receipt
+              </TeacherButton>
+            </TeacherHeaderActions>
+          ) : undefined
+        }
+      />
 
-      {/* Summary Card */}
-      <div className={`rounded-xl p-6 border ${isDarkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-purple-50 border-gray-200'}`}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Academic Year</p>
-            <p className={`text-2xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{academicYear}</p>
-          </div>
-          <div>
-            <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Payments</p>
-            <p className={`text-2xl font-bold mt-1 ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{payments.length}</p>
-          </div>
-          <div>
-            <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Amount Paid</p>
-            <p className={`text-2xl font-bold mt-1 ${isDarkMode ? 'text-green-300' : 'text-green-600'}`}>{formatCurrency(getTotalPaid())}</p>
-          </div>
-        </div>
-      </div>
+      <TeacherStatsGrid cols={3}>
+        <TeacherStatCard title="Academic Year" value={academicYear || '-'} icon={CalendarDays} color="indigo" />
+        <TeacherStatCard title="Total Payments" value={payments.length} icon={ReceiptText} color="blue" />
+        <TeacherStatCard title="Total Paid" value={formatCurrency(getTotalPaid())} icon={IndianRupee} color="emerald" />
+      </TeacherStatsGrid>
 
-      {/* Payment List */}
       {payments.length === 0 ? (
-        <div className={`rounded-xl p-12 border text-center ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <svg className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>No Payments Found</h3>
-          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No payment records available for this academic year.</p>
-        </div>
+        <TeacherPanel>
+          <TeacherEmpty
+            icon={ReceiptText}
+            title="No Payments Found"
+            description="No payment records available for this academic year."
+          />
+        </TeacherPanel>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {payments.map((payment, index) => (
-            <div 
-              key={payment.paymentId}
-              className={`rounded-xl p-6 border transition-all hover:shadow-lg ${
-                isDarkMode 
-                  ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
-                  : 'bg-white border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                {/* Payment Number Badge */}
-                <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
-                  isDarkMode ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-600'
-                }`}>
-                  <span className="text-lg font-bold">#{payments.length - index}</span>
-                </div>
-
-                {/* Payment Details */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {formatCurrency(payment.amount)}
-                    </h3>
-                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                      isDarkMode ? 'bg-indigo-900/30 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
-                    }`}>
-                      {payment.feeType || 'School Fee'}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                      isDarkMode ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-700'
-                    }`}>
-                      {getPaymentModeIcon(payment.paymentMode)}
-                      {payment.paymentMode}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <span className="font-medium">Date:</span> {formatDate(payment.date)}
-                    </p>
-                    
-                    {payment.transactionId && (
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <span className="font-medium">Transaction ID:</span> {payment.transactionId}
-                      </p>
-                    )}
-                    
-                    {payment.remarks && (
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <span className="font-medium">Remarks:</span> {payment.remarks}
-                      </p>
-                    )}
-                    
-                    <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                      Payment ID: {payment.paymentId}
-                    </p>
+        <>
+          <TeacherCardGrid cols={1}>
+            {payments.map((payment, index) => (
+              <TeacherItemCard key={payment.paymentId}>
+                <div className="p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 flex items-center justify-center font-bold text-sm">
+                      #{payments.length - index}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(payment.amount)}
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                          {payment.feeType || 'School Fee'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                          <CreditCard size={12} />
+                          {payment.paymentMode}
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                        <p>Date: {formatDate(payment.date)}</p>
+                        {payment.transactionId && <p>Transaction ID: {payment.transactionId}</p>}
+                        {payment.remarks && <p>Remarks: {payment.remarks}</p>}
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Payment ID: {payment.paymentId}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              </TeacherItemCard>
+            ))}
+          </TeacherCardGrid>
 
-      {/* Info Footer */}
-      {payments.length > 0 && (
-        <div className={`rounded-xl p-4 border ${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
-          <div className="flex items-start gap-3">
-            <svg className={`w-5 h-5 mt-0.5 flex-shrink-0 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-900'}`}>Payment Information</p>
-              <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                Click the "Download Receipt" button in the header to download a complete payment receipt with all transactions. For any payment-related queries, please contact the school office.
-              </p>
-            </div>
-          </div>
-        </div>
+          <TeacherPanel>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Use <span className="font-semibold">Download Receipt</span> from the header to download a complete
+              payment receipt with all transactions. For payment-related queries, contact the school office.
+            </p>
+          </TeacherPanel>
+        </>
       )}
-    </div>
+    </TeacherPageShell>
   );
 };
 

@@ -8,6 +8,14 @@ import { examTimetableService } from '../../../services/examTimetableService';
 import { Student, StudentResult, CreateResultRequest, UpdateResultRequest, EXAM_TYPES, GRADE_SCALE } from '../../../models';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherFilterBar,
+  TeacherSearchInput,
+  TeacherSelect,
+  TeacherPanel,
+} from '../shared';
 
 interface StudentResultState {
   studentId: string;
@@ -1121,47 +1129,31 @@ const StudentResults: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Results</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage and track student examination results</p>
-        </div>
-      </div>
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Student Results"
+        description="Manage and track student examination results"
+      />
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <input
-            type="text"
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-          />
-        </div>
-        <div>
-          <select
-            value={selectedExamType}
-            onChange={(e) => setSelectedExamType(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-          >
-            <option value="">All Exam Types</option>
-            {EXAM_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <TeacherFilterBar>
+        <TeacherSearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Search students..."
+        />
+        <TeacherSelect
+          value={selectedExamType}
+          onChange={setSelectedExamType}
+          className="sm:w-48"
+          options={[
+            { value: '', label: 'All Exam Types' },
+            ...EXAM_TYPES.map((type) => ({ value: type.value, label: type.label })),
+          ]}
+        />
+      </TeacherFilterBar>
 
       {/* Results Table */}
-      <div className={`rounded-xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Students & Results</h3>
-        </div>
+      <TeacherPanel title="Students & Results" noPadding>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -1282,7 +1274,7 @@ const StudentResults: React.FC = () => {
             </p>
           </div>
         )}
-      </div>
+      </TeacherPanel>
 
       {/* Result Modal */}
       <EditResultPickerModal
@@ -1348,7 +1340,7 @@ const StudentResults: React.FC = () => {
         pauseOnHover
         theme={isDarkMode ? 'dark' : 'light'}
       />
-    </div>
+    </TeacherPageShell>
   );
 };
 

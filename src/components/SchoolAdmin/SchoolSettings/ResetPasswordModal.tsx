@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { schoolProfileService } from '../../../services/schoolProfileService';
 import { 
   X, 
   Mail, 
@@ -22,8 +23,8 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
   const { isDarkMode } = useDarkMode();
   const { user } = useAuth();
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email');
-  const [email, setEmail] = useState(user?.email || '');
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,16 +36,37 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      setStep('email');
-      setEmail(user?.email || '');
-      setOtp(['', '', '', '']);
-      setPassword('');
-      setConfirmPassword('');
-      setError('');
-      setSuccess('');
-    }
-  }, [isOpen, user?.email]);
+    const fetchLatestEmail = async () => {
+      if (isOpen) {
+        setStep('email');
+        setOtp(['', '', '', '', '', '']);
+        setPassword('');
+        setConfirmPassword('');
+        setError('');
+        setSuccess('');
+        
+        if (user?.schoolId) {
+          try {
+            setLoading(true);
+            const profile = await schoolProfileService.getSchoolProfile(user.schoolId);
+            if (profile && profile.email) {
+              setEmail(profile.email);
+            } else {
+              setEmail(user?.email || '');
+            }
+          } catch (err) {
+            console.error('Error fetching latest school email:', err);
+            setEmail(user?.email || '');
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          setEmail(user?.email || '');
+        }
+      }
+    };
+    fetchLatestEmail();
+  }, [isOpen, user?.schoolId, user?.email]);
 
   const handleSendOTP = async () => {
     if (!email) {
@@ -56,12 +78,12 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
     setError('');
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await schoolProfileService.resetPassword(email);
       setStep('otp');
       setSuccess('OTP sent successfully to your email');
-    } catch (error) {
-      setError('Failed to send OTP. Please try again.');
+    } catch (err: any) {
+      console.error('Error sending OTP:', err);
+      setError(err?.response?.data?.message || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -75,12 +97,12 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (value && index < 5) {
       otpInputRefs.current[index + 1]?.focus();
     }
 
     // Auto-verify when all digits are entered
-    if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 4) {
+    if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 6) {
       setTimeout(() => {
         handleVerifyOTP(newOtp.join(''));
       }, 500);
@@ -98,19 +120,14 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
     setError('');
     
     try {
-      // Simulate OTP verification
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      if (otpCode === '1234') { // Mock verification
-        setStep('password');
-        setSuccess('OTP verified successfully');
-      } else {
-        setError('Invalid OTP. Please try again.');
-        setOtp(['', '', '', '']);
-        otpInputRefs.current[0]?.focus();
-      }
-    } catch (error) {
-      setError('Failed to verify OTP. Please try again.');
+      await schoolProfileService.verifyOtp(email, otpCode);
+      setStep('password');
+      setSuccess('OTP verified successfully');
+    } catch (err: any) {
+      console.error('Error verifying OTP:', err);
+      setError(err?.response?.data?.message || 'Invalid OTP. Please try again.');
+      setOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
@@ -136,16 +153,17 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
     setError('');
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const otpCode = otp.join('');
+      await schoolProfileService.resetPasswordWithOtp(email, otpCode, password);
       setSuccess('Password reset successfully!');
       
       // Close modal after success
       setTimeout(() => {
         onClose();
       }, 2000);
-    } catch (error) {
-      setError('Failed to reset password. Please try again.');
+    } catch (err: any) {
+      console.error('Error resetting password:', err);
+      setError(err?.response?.data?.message || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -191,7 +209,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
                 </h2>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   {step === 'email' && 'Enter your email to receive OTP'}
-                  {step === 'otp' && 'Enter the 4-digit OTP sent to your email'}
+                  {step === 'otp' && 'Enter the 6-digit OTP sent to your email'}
                   {step === 'password' && 'Enter your new password'}
                 </p>
               </div>
@@ -301,9 +319,9 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
             <div className="space-y-6">
               <div>
                 <label className={`block text-sm font-medium mb-4 text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Enter 4-digit OTP sent to {email}
+                  Enter 6-digit OTP sent to {email}
                 </label>
-                <div className="flex justify-center space-x-3">
+                <div className="flex justify-center space-x-2">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -316,7 +334,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
                       value={digit}
                       onChange={(e) => handleOTPChange(index, e.target.value)}
                       onKeyDown={(e) => handleOTPKeyDown(index, e)}
-                      className={`w-12 h-12 text-center text-xl font-bold rounded-lg border ${
+                      className={`w-10 h-10 text-center text-xl font-bold rounded-lg border ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -328,8 +346,9 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
 
               <div className="text-center">
                 <button
-                  onClick={() => handleSendOTP()}
-                  className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                  onClick={handleSendOTP}
+                  disabled={loading}
+                  className={`text-sm font-medium ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} disabled:opacity-50`}
                 >
                   Resend OTP
                 </button>

@@ -113,4 +113,14 @@ export const schoolProfileService = {
   resetPassword: async (email: string): Promise<void> => {
     await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
   },
+
+  // Verify OTP
+  verifyOtp: async (email: string, otp: string): Promise<void> => {
+    await apiClient.post('/auth/verify-otp', { email, otp });
+  },
+
+  // Reset password with OTP
+  resetPasswordWithOtp: async (email: string, otp: string, newPassword: string): Promise<void> => {
+    await apiClient.post('/auth/reset-password', { email, otp, newPassword });
+  },
 };

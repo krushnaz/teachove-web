@@ -46,7 +46,16 @@ apiClient.interceptors.response.use(
         'Cannot reach API server — check REACT_APP_API_BASE_URL and that backend is running on port 5000'
       );
     } else if (error.response) {
-      console.error('Server error:', error.response.status, error.response.data);
+      const status = error.response.status;
+      const data = error.response.data as { message?: string; error?: string } | undefined;
+      const isEmptyResult404 =
+        status === 404 &&
+        (data?.message?.toLowerCase().includes('not found') ||
+          data?.message?.toLowerCase().includes('no timetables') ||
+          data?.error === 'Announcement not found');
+      if (!isEmptyResult404) {
+        console.error('Server error:', status, error.response.data);
+      }
     }
     return Promise.reject(error);
   }

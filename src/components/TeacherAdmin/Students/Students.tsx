@@ -9,6 +9,22 @@ import BulkUploadStudentsModal from '../../shared/BulkUploadStudentsModal';
 import SubscriptionStudentBlockModal from '../../shared/SubscriptionStudentBlockModal';
 import { toast } from 'react-toastify';
 import { classroomService } from '../../../services/classroomService';
+import { Users, UserCheck, School, BarChart3, Plus, Upload, Edit2, Trash2 } from 'lucide-react';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherFilterBar,
+  TeacherSearchInput,
+  TeacherButton,
+  TeacherHeaderActions,
+  TeacherTableWrapper,
+  TeacherTable,
+  TeacherLoading,
+  TeacherError,
+  TeacherEmpty,
+} from '../shared';
 
 const Students: React.FC = () => {
   const { user } = useAuth();
@@ -301,244 +317,127 @@ const Students: React.FC = () => {
     return a.name.localeCompare(b.name);
   });
 
-  // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading students...</p>
-        </div>
-      </div>
-    );
+    return <TeacherLoading message="Loading students..." />;
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Students</h3>
-          <p className="text-gray-600">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <TeacherError
+        title="Error Loading Students"
+        message={error}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   return (
-    <div>
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">My Students</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Students</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{students.filter(s => s.isActive !== false).length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">My Class</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">1</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Attendance Rate</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">96.8%</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Students"
+        description={`Manage students in ${teacherClassLabel}.`}
+        action={
+          <TeacherHeaderActions>
+            <TeacherButton
+              variant="secondary"
+              icon={Upload}
+              compact
+              onClick={handleBulkUploadClick}
+              disabled={addStudentCheckLoading || !user?.classId}
+              loading={addStudentCheckLoading}
+            >
+              <span className="hidden sm:inline">Upload Excel</span>
+              <span className="sm:hidden">Upload</span>
+            </TeacherButton>
+            <TeacherButton
+              icon={Plus}
+              compact
+              onClick={handleAddStudentClick}
+              disabled={addStudentCheckLoading}
+              loading={addStudentCheckLoading}
+            >
+              Add Student
+            </TeacherButton>
+          </TeacherHeaderActions>
+        }
+      />
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+      <TeacherStatsGrid>
+        <TeacherStatCard title="My Students" value={students.length} icon={Users} color="indigo" />
+        <TeacherStatCard
+          title="Active Students"
+          value={students.filter((s) => s.isActive !== false).length}
+          icon={UserCheck}
+          color="emerald"
+        />
+        <TeacherStatCard title="My Class" value={teacherClassLabel} icon={School} color="violet" />
+        <TeacherStatCard title="Attendance Rate" value="96.8%" icon={BarChart3} color="amber" />
+      </TeacherStatsGrid>
+
+      <TeacherFilterBar>
+        <TeacherSearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Search students..."
+        />
+      </TeacherFilterBar>
+
+      <TeacherTableWrapper>
+        <TeacherTable
+          headers={['Roll No', 'Student', 'Email', 'Class', 'Phone', 'Year', 'Status', 'Actions']}
+          minWidth="900px"
+        >
+          {filteredStudents.map((student) => (
+            <tr key={student.studentId} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+              <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                {student.rollNo || '-'}
+              </td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                <div className="flex items-center gap-3">
+                  {student.profilePic ? (
+                    <img src={student.profilePic} alt={student.name} className="h-9 w-9 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700" />
+                  ) : (
+                    <div className="h-9 w-9 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+                      {student.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{student.name}</span>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleBulkUploadClick}
-            disabled={addStudentCheckLoading || !user?.classId}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed mr-2"
-          >
-            Upload Excel
-          </button>
-          <button
-            onClick={handleAddStudentClick}
-            disabled={addStudentCheckLoading}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {addStudentCheckLoading ? (
-              <>
-                <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Checking...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Student
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Students Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Roll No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Student</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Class</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Admission Year</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredStudents.map((student, index) => (
-                <tr key={student.studentId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                    {student.rollNo || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {student.profilePic ? (
-                        <img
-                          src={student.profilePic}
-                          alt={student.name}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                          {student.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{student.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                    {student.className && student.section
-                      ? `${student.className}-${student.section}`
-                      : student.classId}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.phoneNo}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{student.admissionYear}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      student.isActive !== false
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {student.isActive !== false ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditStudentClick(student)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Edit Student"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(student)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                        title="Delete Student"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
+              </td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 dark:text-gray-400 max-w-[160px] truncate">
+                {student.email}
+              </td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                {student.className && student.section ? `${student.className}-${student.section}` : student.classId}
+              </td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 dark:text-white whitespace-nowrap">{student.phoneNo}</td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 dark:text-white whitespace-nowrap">{student.admissionYear}</td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                  student.isActive !== false
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                    : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
+                }`}>
+                  {student.isActive !== false ? 'Active' : 'Inactive'}
+                </span>
+              </td>
+              <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                <div className="flex gap-2">
+                  <button onClick={() => handleEditStudentClick(student)} className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Edit">
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => handleDeleteClick(student)} className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20" title="Delete">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </TeacherTable>
         {filteredStudents.length === 0 && (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No students found</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Try adjusting your search criteria.</p>
-          </div>
+          <TeacherEmpty icon={Users} title="No students found" description="Try adjusting your search criteria." />
         )}
-      </div>
+      </TeacherTableWrapper>
 
       <BulkUploadStudentsModal
         open={bulkUploadOpen}
@@ -597,34 +496,18 @@ const Students: React.FC = () => {
                 <span className="text-sm text-gray-600 dark:text-gray-400">Deleting student...</span>
               </div>
             )}
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={handleCancelDelete}
-                disabled={deleteLoading}
-                className={`px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none ${
-                  deleteLoading
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-600'
-                }`}
-              >
+            <div className="flex justify-end gap-3">
+              <TeacherButton variant="secondary" onClick={handleCancelDelete} disabled={deleteLoading}>
                 Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={deleteLoading}
-                className={`px-4 py-2 rounded-md bg-red-600 text-white font-semibold shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
-                  deleteLoading
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-red-700'
-                }`}
-              >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
-              </button>
+              </TeacherButton>
+              <TeacherButton variant="danger" onClick={handleConfirmDelete} loading={deleteLoading}>
+                Delete
+              </TeacherButton>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </TeacherPageShell>
   );
 };
 

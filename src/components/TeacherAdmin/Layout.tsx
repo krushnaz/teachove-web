@@ -9,19 +9,18 @@ interface TeacherAdminLayoutProps {
   subtitle?: string;
 }
 
-const TeacherAdminLayout: React.FC<TeacherAdminLayoutProps> = ({ 
-  children, 
-  title = "Dashboard",
-  subtitle = "Welcome back, Teacher"
+const TeacherAdminLayout: React.FC<TeacherAdminLayoutProps> = ({
+  children,
+  title = 'Dashboard',
+  subtitle = 'Welcome back, Teacher',
 }) => {
   const { isDarkMode } = useDarkMode();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Sticky Header (offset for fixed sidebar on large screens) */}
-      <div className="sticky top-0 z-50 lg:ml-64">
-        <TeacherAdminHeader 
+    <div className={`h-screen flex flex-col ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="flex-shrink-0 z-40">
+        <TeacherAdminHeader
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           title={title}
@@ -29,16 +28,16 @@ const TeacherAdminLayout: React.FC<TeacherAdminLayoutProps> = ({
         />
       </div>
 
-      <div className="flex">
-        {/* Fixed Sidebar (independent from main scroll) */}
-        <TeacherAdminSidebar 
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-shrink-0">
+          <TeacherAdminSidebar
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
+        </div>
 
-        {/* Scrollable Main Content */}
-        <div className="flex-1 min-h-screen overflow-y-auto lg:ml-64">
-          <div className="p-4 lg:p-8">
+        <div className="flex-1 overflow-y-auto bg-[#F8FAFC] dark:bg-gray-900">
+          <div className="p-2 sm:p-4 lg:p-8 min-h-full">
             {children}
           </div>
         </div>

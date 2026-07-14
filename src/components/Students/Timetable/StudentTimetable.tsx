@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { classScheduleService, ClassSchedule } from '../../../services/classScheduleService';
-import { Chip, Tooltip, CircularProgress } from '@mui/material';
+import { classScheduleService } from '../../../services/classScheduleService';
+import { Chip, Tooltip } from '@mui/material';
 import { AccessTime, Subject, Person } from '@mui/icons-material';
+import { RefreshCcw, CalendarDays, Clock3 } from 'lucide-react';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherHeaderActions,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherButton,
+  TeacherLoading,
+} from '../shared';
 
 // Types
 interface TimeSlot {
@@ -22,13 +32,6 @@ interface ClassTimetable {
   className: string;
   slots: TimeSlot[];
 }
-
-// Shimmer Loading Components
-const ShimmerCard: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <div className={`animate-pulse ${className}`}>
-    <div className="bg-gray-300 dark:bg-gray-700 rounded-xl h-full"></div>
-  </div>
-);
 
 const StudentTimetable: React.FC = () => {
   const { isDarkMode } = useDarkMode();
@@ -199,67 +202,44 @@ const StudentTimetable: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Header Shimmer */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-64 mb-2 animate-pulse"></div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-32 animate-pulse"></div>
-          </div>
-        </div>
+  const totalSlots = timetable?.slots.length ?? 0;
+  const breakSlots = timetable?.slots.filter((slot) => slot.isBreakPeriod).length ?? 0;
+  const teachingSlots = totalSlots - breakSlots;
 
-        {/* Timetable Shimmer */}
-        <div className={`rounded-xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm p-6`}>
-          <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-40 mb-4 animate-pulse"></div>
-          <ShimmerCard className="h-96" />
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <TeacherLoading message="Loading timetable..." />;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Your Timetable</h1>
-          <p className="text-gray-600 dark:text-gray-400">View your weekly class schedule</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Tooltip title="Refresh Timetable">
-            <button 
-              onClick={handleRefresh} 
-              disabled={refreshing}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              {refreshing ? (
-                <>
-                  <CircularProgress size={16} color="inherit" />
-                  <span>Refreshing...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>Refresh</span>
-                </>
-              )}
-            </button>
-          </Tooltip>
-        </div>
-      </div>
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Your Timetable"
+        description="View your weekly class schedule."
+        action={
+          <TeacherHeaderActions>
+            <Tooltip title="Refresh Timetable">
+              <span>
+                <TeacherButton
+                  compact
+                  variant="secondary"
+                  icon={RefreshCcw}
+                  onClick={handleRefresh}
+                  loading={refreshing}
+                >
+                  Refresh
+                </TeacherButton>
+              </span>
+            </Tooltip>
+          </TeacherHeaderActions>
+        }
+      />
 
-      {/* Timetable */}
+      <TeacherStatsGrid cols={3}>
+        <TeacherStatCard title="Total Slots" value={totalSlots} icon={CalendarDays} color="indigo" />
+        <TeacherStatCard title="Class Periods" value={teachingSlots} icon={Clock3} color="blue" />
+        <TeacherStatCard title="Break Periods" value={breakSlots} icon={CalendarDays} color="amber" />
+      </TeacherStatsGrid>
+
       <div className={`rounded-xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -419,7 +399,7 @@ const StudentTimetable: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </TeacherPageShell>
   );
 };
 

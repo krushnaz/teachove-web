@@ -161,9 +161,10 @@ export const examTimetableService = {
       }
 
       return [];
-    } catch (error: any) {
-      // 404 means "no timetables found for this class" — return empty array, not an error
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      // Empty result may still return 404 on older backend — treat as no timetables
+      if (status === 404) {
         return [];
       }
       console.error('Error fetching exam timetables by class:', error);

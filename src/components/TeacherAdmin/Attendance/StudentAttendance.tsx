@@ -8,6 +8,16 @@ import { authService } from '../../../services/authService';
 import { Student } from '../../../models';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Calendar, Download, CheckCircle, XCircle } from 'lucide-react';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherHeaderActions,
+  TeacherButton,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherPanel,
+} from '../shared';
 
 interface AttendanceRecord {
   studentId: string;
@@ -502,22 +512,23 @@ const StudentAttendance: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Header Shimmer */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
             <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-64 mb-2 animate-pulse"></div>
             <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-32 animate-pulse"></div>
-            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-36 animate-pulse"></div>
+          <div className="flex items-center gap-2 flex-nowrap flex-shrink-0">
+            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-24 animate-pulse"></div>
+            <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded-lg w-28 animate-pulse"></div>
           </div>
         </div>
 
         {/* Date Selection and Stats Shimmer */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <ShimmerCard className="lg:col-span-1 h-48" />
-          <ShimmerCard className="lg:col-span-3 h-48" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <ShimmerCard className="h-24" />
+          <ShimmerCard className="h-24" />
         </div>
+        <ShimmerCard className="h-32" />
 
         {/* Table Shimmer */}
         <div className={`rounded-xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
@@ -555,43 +566,51 @@ const StudentAttendance: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Attendance</h1>
-          <p className="text-gray-600 dark:text-gray-400">Mark and manage student attendance</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => setShowCalendar(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            View Calendar
-          </button>
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download Report
-          </button>
-        </div>
-      </div>
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Student Attendance"
+        description="Mark and manage student attendance"
+        action={
+          <TeacherHeaderActions>
+            <TeacherButton
+              variant="secondary"
+              icon={Calendar}
+              compact
+              onClick={() => setShowCalendar(true)}
+            >
+              <span className="hidden sm:inline">View Calendar</span>
+              <span className="sm:hidden">Calendar</span>
+            </TeacherButton>
+            <TeacherButton
+              variant="secondary"
+              icon={Download}
+              compact
+              onClick={() => setShowReportModal(true)}
+            >
+              <span className="hidden sm:inline">Download Report</span>
+              <span className="sm:hidden">Report</span>
+            </TeacherButton>
+          </TeacherHeaderActions>
+        }
+      />
 
-      {/* Date Selection and Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Date Selection */}
-        <div className="lg:col-span-1">
-          <div className={`rounded-xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Select Date to View Past Attendance</h3>
-            
-            {/* Custom Date Input */}
+      <TeacherStatsGrid cols={2}>
+        <TeacherStatCard
+          title="Present"
+          value={attendanceData?.totalPresent || 0}
+          icon={CheckCircle}
+          color="emerald"
+        />
+        <TeacherStatCard
+          title="Absent"
+          value={attendanceData?.totalAbsent || 0}
+          icon={XCircle}
+          color="rose"
+        />
+      </TeacherStatsGrid>
+
+      {/* Date Selection */}
+      <TeacherPanel title="Select Date to View Past Attendance">
             <div className="relative">
               <input
                 type="date"
@@ -644,44 +663,7 @@ const StudentAttendance: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className={`rounded-xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Present</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {attendanceData?.totalPresent || 0}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={`rounded-xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Absent</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {attendanceData?.totalAbsent || 0}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </TeacherPanel>
 
       {/* Attendance Table */}
       <div className={`rounded-xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
@@ -903,7 +885,7 @@ const StudentAttendance: React.FC = () => {
         pauseOnHover
         theme={isDarkMode ? 'dark' : 'light'}
       />
-    </div>
+    </TeacherPageShell>
   );
 };
 

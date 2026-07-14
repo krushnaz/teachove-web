@@ -3,6 +3,20 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { teacherLeaveService } from '../../../services/teacherLeaveService';
 import { authService } from '../../../services/authService';
 import { toast } from 'react-toastify';
+import { FileText, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherHeaderActions,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherFilterBar,
+  TeacherSelect,
+  TeacherButton,
+  TeacherPanel,
+  TeacherLoading,
+  TeacherEmpty,
+} from '../shared';
 import StudentLeavesTab from './StudentLeavesTab';
 
 type TabKey = 'teacher' | 'student';
@@ -141,44 +155,27 @@ const TeacherLeave: React.FC = () => {
 
   // Loading state
   if (loading && tab === 'teacher') {
-    return (
-      <div>
-        {/* Tab bar shimmer */}
-        <div className="flex gap-4 mb-6">
-          <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-          <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-        </div>
-        {/* Stats shimmer */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                <div className="ml-4 space-y-2">
-                  <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                  <div className="h-6 w-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Table shimmer */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-4 space-y-3">
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 dark:bg-gray-700/50 rounded animate-pulse"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <TeacherLoading message="Loading leave requests..." />;
   }
 
   return (
-    <div>
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Leave Management"
+        description="Apply for leave and review student leave requests."
+        action={
+          tab === 'teacher' ? (
+            <TeacherHeaderActions>
+              <TeacherButton icon={Plus} compact onClick={openApply}>
+                Apply Leave
+              </TeacherButton>
+            </TeacherHeaderActions>
+          ) : undefined
+        }
+      />
+
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2">
         <button
           onClick={() => setTab('teacher')}
           className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -203,97 +200,29 @@ const TeacherLeave: React.FC = () => {
 
       {tab === 'teacher' && (
         <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Leaves</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-                </div>
-              </div>
-            </div>
+          <TeacherStatsGrid>
+            <TeacherStatCard title="Total Leaves" value={stats.total} icon={FileText} color="indigo" />
+            <TeacherStatCard title="Pending" value={stats.pending} icon={Clock} color="amber" />
+            <TeacherStatCard title="Approved" value={stats.approved} icon={CheckCircle} color="emerald" />
+            <TeacherStatCard title="Rejected" value={stats.rejected} icon={XCircle} color="rose" />
+          </TeacherStatsGrid>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pending}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Approved</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.approved}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Rejected</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.rejected}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                <div className="sm:w-48">
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                onClick={openApply}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Apply Leave
-              </button>
-            </div>
-          </div>
+          <TeacherFilterBar>
+            <TeacherSelect
+              value={filterStatus}
+              onChange={setFilterStatus}
+              className="sm:w-48"
+              options={[
+                { value: '', label: 'All Status' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'rejected', label: 'Rejected' },
+              ]}
+            />
+          </TeacherFilterBar>
 
           {/* Leaves Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <TeacherPanel title="My Leave Requests" noPadding>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
@@ -347,17 +276,13 @@ const TeacherLeave: React.FC = () => {
             </div>
 
             {filteredLeaves.length === 0 && (
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No leave requests yet</h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Click "Apply Leave" to submit your first leave request.
-                </p>
-              </div>
+              <TeacherEmpty
+                icon={FileText}
+                title="No leave requests yet"
+                description='Click "Apply Leave" to submit your first leave request.'
+              />
             )}
-          </div>
+          </TeacherPanel>
         </>
       )}
 
@@ -447,7 +372,7 @@ const TeacherLeave: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </TeacherPageShell>
   );
 };
 

@@ -4,6 +4,19 @@ import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTeacherProfile } from '../../../contexts/TeacherProfileContext';
 import { classroomService } from '../../../services/classroomService';
+import {
+  Users,
+  Building2,
+  FileText,
+  BarChart3,
+  CalendarCheck,
+  BookOpen,
+  PenLine,
+  Calendar,
+  MessageSquare,
+  ChevronRight,
+  CalendarDays,
+} from 'lucide-react';
 
 // Shimmer Loading Component
 const ShimmerCard: React.FC<{ className?: string }> = ({ className = "" }) => (
@@ -37,18 +50,18 @@ const ShimmerWelcome: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => (
 
 // Shimmer for stats cards
 const ShimmerStats: React.FC = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     {[...Array(4)].map((_, index) => (
-      <ShimmerCard key={index} className="h-32" />
+      <ShimmerCard key={index} className="h-28 sm:h-32" />
     ))}
   </div>
 );
 
 // Shimmer for quick actions
 const ShimmerQuickActions: React.FC = () => (
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
     {[...Array(6)].map((_, index) => (
-      <ShimmerCard key={index} className="h-40" />
+      <ShimmerCard key={index} className="h-20 sm:h-24" />
     ))}
   </div>
 );
@@ -150,126 +163,88 @@ const TeacherAdminDashboard: React.FC = () => {
       : 'My Class';
 
   const stats = [
-    { 
-      title: 'My Students', 
-      value: '45', 
-      change: '+3 this week', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-        </svg>
-      ),
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      textColor: 'text-blue-600 dark:text-blue-400'
+    {
+      title: 'My Students',
+      value: '45',
+      change: '+3 this week',
+      icon: Users,
+      bgLight: 'bg-indigo-50 dark:bg-indigo-900/20',
+      textColor: 'text-indigo-600 dark:text-indigo-400',
     },
-    { 
-      title: 'Classes Today', 
-      value: '4', 
-      change: '2 completed', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      ),
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      textColor: 'text-green-600 dark:text-green-400'
+    {
+      title: 'Classes Today',
+      value: '4',
+      change: '2 completed',
+      icon: Building2,
+      bgLight: 'bg-emerald-50 dark:bg-emerald-900/20',
+      textColor: 'text-emerald-600 dark:text-emerald-400',
     },
-    { 
-      title: 'Homework Pending', 
-      value: '12', 
-      change: 'Due today', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      color: 'from-yellow-500 to-yellow-600',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+    {
+      title: 'Homework Pending',
+      value: '12',
+      change: 'Due today',
+      icon: FileText,
+      bgLight: 'bg-amber-50 dark:bg-amber-900/20',
+      textColor: 'text-amber-600 dark:text-amber-400',
     },
-    { 
-      title: 'Attendance Rate', 
-      value: '96.8%', 
-      change: '+1.2%', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      textColor: 'text-purple-600 dark:text-purple-400'
+    {
+      title: 'Attendance Rate',
+      value: '96.8%',
+      change: '+1.2%',
+      icon: BarChart3,
+      bgLight: 'bg-violet-50 dark:bg-violet-900/20',
+      textColor: 'text-violet-600 dark:text-violet-400',
     },
   ];
 
   const quickActions = [
-    { 
-      title: 'Mark Attendance', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'from-blue-500 to-blue-600', 
+    {
+      title: 'Mark Attendance',
+      icon: CalendarCheck,
+      bgLight: 'bg-indigo-50 dark:bg-indigo-900/20',
+      text: 'text-indigo-600 dark:text-indigo-400',
       link: '/teacher-admin/student-attendance',
-      description: 'Mark student attendance'
+      description: 'Mark student attendance',
     },
-    { 
-      title: 'Assign Homework', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-      color: 'from-green-500 to-green-600', 
+    {
+      title: 'Assign Homework',
+      icon: BookOpen,
+      bgLight: 'bg-emerald-50 dark:bg-emerald-900/20',
+      text: 'text-emerald-600 dark:text-emerald-400',
       link: '/teacher-admin/homework',
-      description: 'Create new assignments'
+      description: 'Create new assignments',
     },
-    { 
-      title: 'Grade Assignments', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      ),
-      color: 'from-yellow-500 to-yellow-600', 
-      link: '/teacher-admin/result',
-      description: 'Review and grade work'
+    {
+      title: 'Grade Assignments',
+      icon: PenLine,
+      bgLight: 'bg-amber-50 dark:bg-amber-900/20',
+      text: 'text-amber-600 dark:text-amber-400',
+      link: '/teacher-admin/student-results',
+      description: 'Review and grade work',
     },
-    { 
-      title: 'View Schedule', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      color: 'from-purple-500 to-purple-600', 
+    {
+      title: 'View Schedule',
+      icon: Calendar,
+      bgLight: 'bg-violet-50 dark:bg-violet-900/20',
+      text: 'text-violet-600 dark:text-violet-400',
       link: '/teacher-admin/class-schedule',
-      description: 'Check your timetable'
+      description: 'Check your timetable',
     },
-    { 
-      title: 'Student Reports', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      color: 'from-red-500 to-red-600', 
+    {
+      title: 'Student Reports',
+      icon: BarChart3,
+      bgLight: 'bg-rose-50 dark:bg-rose-900/20',
+      text: 'text-rose-600 dark:text-rose-400',
       link: '/teacher-admin/students',
-      description: 'View student progress'
+      description: 'View student progress',
     },
-    { 
-      title: 'Send Message', 
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ),
-      color: 'from-indigo-500 to-indigo-600', 
+    {
+      title: 'Send Message',
+      icon: MessageSquare,
+      bgLight: 'bg-sky-50 dark:bg-sky-900/20',
+      text: 'text-sky-600 dark:text-sky-400',
       link: '/teacher-admin/announcements',
-      description: 'Communicate with students'
+      description: 'Communicate with students',
     },
   ];
 
@@ -369,41 +344,23 @@ const TeacherAdminDashboard: React.FC = () => {
   // Show loading state with shimmer effects
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        {/* Welcome Section Shimmer */}
+      <div className="space-y-3 sm:space-y-6 -m-2 sm:-m-4 lg:-m-8 p-2 sm:p-4 lg:p-8">
         <ShimmerWelcome isDarkMode={isDarkMode} />
-        
-        {/* Stats Cards Shimmer */}
         <ShimmerStats />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Quick Actions Shimmer */}
-          <div className="lg:col-span-2">
-            <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-32 animate-pulse"></div>
-                <div className="w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
-              </div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="xl:col-span-2">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4 animate-pulse" />
               <ShimmerQuickActions />
             </div>
           </div>
-
-          {/* Recent Activities Shimmer */}
-          <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-40 animate-pulse"></div>
-              <div className="w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-4 animate-pulse" />
             <ShimmerRecentActivities />
           </div>
         </div>
-
-        {/* Today's Schedule Shimmer */}
-        <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-36 animate-pulse"></div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20 animate-pulse"></div>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="h-5 w-36 bg-gray-200 dark:bg-gray-700 rounded mb-4 animate-pulse" />
           <ShimmerSchedule />
         </div>
       </div>
@@ -435,136 +392,177 @@ const TeacherAdminDashboard: React.FC = () => {
     );
   }
 
+  const todayDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
   return (
-    <div className="space-y-8">
-      {/* Welcome Section with Teacher + School */}
-      <div className={`rounded-2xl overflow-hidden border ${isDarkMode ? 'border-gray-700' : 'border-blue-100'} shadow-lg`}>
-        <div className={`${isDarkMode ? 'bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800' : 'bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50'} h-28`} />
-        <div className="p-6 pt-0 -mt-12">
-          <div className="flex items-end justify-between">
-            <div className="flex items-end gap-4">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white dark:ring-gray-800 shadow-xl">
-                <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+    <div className="space-y-3 sm:space-y-6 font-sans">
+      {/* Hero Header */}
+      <div className="bg-white dark:bg-gray-800 rounded-none sm:rounded-xl p-4 sm:p-6 border-b sm:border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-3 border border-indigo-100 dark:border-indigo-800/30">
+          <CalendarDays size={13} />
+          {todayDate}
+        </div>
+
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden ring-2 ring-white dark:ring-gray-800 shadow-md flex-shrink-0">
+              {teacherProfile?.teacher?.profilePic ? (
+                <img
+                  src={teacherProfile.teacher.profilePic}
+                  alt={teacherName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white text-lg sm:text-xl font-bold">
                   {teacherName.charAt(0)}
                 </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Welcome back, {teacherName}!</h1>
-                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>Teacher</span>
-                </div>
-                <div className="mt-1 flex flex-wrap items-center gap-3">
-                  {teacherEmail && (
-                    <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{teacherEmail}</span>
-                  )}
-                  <span className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>Teaching: {classLoading ? 'Loading…' : currentClassName}</span>
-                </div>
-              </div>
+              )}
             </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:block">
-                {schoolLogo ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg border-4 border-white dark:border-gray-700">
-                    <img src={schoolLogo} alt={schoolName} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                    {schoolName.charAt(0)}
-                  </div>
-                )}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                  Welcome, {teacherName}
+                </h1>
+                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-semibold">
+                  Teacher
+                </span>
               </div>
-              <div className="text-right">
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-sm`}>{schoolName}</p>
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Academic Year: {teacherProfile?.school?.currentAcademicYear || '-'}</p>
+              {teacherEmail && (
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                  {teacherEmail}
+                </p>
+              )}
+              <span className="inline-block mt-2 text-[10px] sm:text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                Teaching: {classLoading ? 'Loading…' : currentClassName}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 self-start">
+            {schoolLogo ? (
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <img src={schoolLogo} alt={schoolName} className="w-full h-full object-cover" />
               </div>
+            ) : (
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                {schoolName.charAt(0)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{schoolName}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                Academic Year: {teacherProfile?.school?.currentAcademicYear || '-'}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div key={index} className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm hover:shadow-lg transition-all duration-300 group`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                {stat.icon}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between h-full"
+            >
+              <div className="flex justify-between items-start mb-2 sm:mb-3">
+                <div className={`p-2 sm:p-2.5 rounded-lg ${stat.bgLight} ${stat.textColor}`}>
+                  <Icon size={18} className="sm:w-5 sm:h-5" />
+                </div>
+                <span className={`text-[10px] sm:text-xs font-medium ${stat.textColor} text-right leading-tight`}>
+                  {stat.change}
+                </span>
               </div>
-              <div className={`text-sm font-medium ${stat.textColor}`}>
-                {stat.change}
+              <div>
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                  {stat.value}
+                </h3>
+                <p className="text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                  {stat.title}
+                </p>
               </div>
             </div>
-            <div>
-              <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-1`}>
-                {stat.value}
-              </p>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {stat.title}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 pb-4 sm:pb-0">
         {/* Quick Actions */}
-        <div className="lg:col-span-2">
-          <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Quick Actions
-              </h3>
-              <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-blue-400' : 'bg-blue-500'}`}></div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {quickActions.map((action, index) => (
+        <div className="xl:col-span-2 space-y-3 sm:space-y-4">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white px-1">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            {quickActions.map((action, index) => {
+              const Icon = action.icon;
+              return (
                 <Link
                   key={index}
                   to={action.link}
-                  className={`group p-6 rounded-xl border transition-all duration-300 hover:shadow-lg hover:scale-105 ${isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'}`}
+                  className="flex items-start p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-indigo-500/30 dark:hover:border-indigo-400/30 transition-all duration-200 w-full text-left group"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    {action.icon}
+                  <div
+                    className={`p-2 sm:p-2.5 rounded-lg mr-3 flex-shrink-0 ${action.bgLight} ${action.text}`}
+                  >
+                    <Icon size={18} />
                   </div>
-                  <h4 className={`font-semibold mb-2 mt-4 ${isDarkMode ? 'text-white group-hover:text-blue-400' : 'text-gray-900 group-hover:text-blue-600'} transition-colors duration-300`}>
-                    {action.title}
-                  </h4>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {action.description}
-                  </p>
+                  <div className="w-full flex justify-between items-center overflow-hidden min-w-0">
+                    <div className="min-w-0 pr-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                        {action.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
+                        {action.description}
+                      </p>
+                    </div>
+                    <ChevronRight
+                      size={16}
+                      className="text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex-shrink-0 transition-colors"
+                    />
+                  </div>
                 </Link>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Recent Activities */}
-        <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Recent Activities
-            </h3>
-            <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-green-400' : 'bg-green-500'}`}></div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex flex-col">
+          <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="font-bold text-base text-gray-900 dark:text-white">Recent Activities</h3>
           </div>
-          <div className="space-y-4">
+          <div className="p-3 sm:p-4 flex-1 space-y-2 sm:space-y-3">
             {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  activity.status === 'completed' 
-                    ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400' 
-                    : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400'
-                }`}>
+              <div
+                key={index}
+                className="flex items-start gap-3 p-2.5 sm:p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    activity.status === 'completed'
+                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                      : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
+                  }`}
+                >
                   {activity.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} truncate`}>
+                  <p className="text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 line-clamp-2">
                     {activity.action}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{activity.time}</p>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${
-                  activity.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'
-                }`}></div>
+                <div
+                  className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${
+                    activity.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
+                />
               </div>
             ))}
           </div>
@@ -572,49 +570,56 @@ const TeacherAdminDashboard: React.FC = () => {
       </div>
 
       {/* Today's Schedule */}
-      <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Today's Schedule
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+            Today&apos;s Schedule
           </h3>
-          <Link 
+          <Link
             to="/teacher-admin/class-schedule"
-            className={`text-sm font-medium ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors duration-200`}
+            className="text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors whitespace-nowrap"
           >
             View All →
           </Link>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {todaySchedule.map((classItem, index) => (
-            <div key={index} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${
-              isDarkMode 
-                ? `border-gray-700 ${classItem.status === 'current' ? 'bg-blue-900/20 border-blue-600' : 'bg-gray-700'}`
-                : `border-gray-200 ${classItem.status === 'current' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`
-            }`}>
-              <div className="flex items-center space-x-4">
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg ${classItem.color}`}>
+            <div
+              key={index}
+              className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 rounded-xl border transition-all duration-200 ${
+                isDarkMode
+                  ? `border-gray-700 ${classItem.status === 'current' ? 'bg-indigo-900/20 border-indigo-600' : 'bg-gray-800/50'}`
+                  : `border-gray-200 ${classItem.status === 'current' ? 'bg-indigo-50 border-indigo-200' : 'bg-gray-50'}`
+              }`}
+            >
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-sm flex-shrink-0 ${classItem.color}`}
+                >
                   {classItem.time.split(':')[0]}
                 </div>
-                <div>
-                  <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
                     {classItem.subject}
                   </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                     {classItem.class} • {classItem.room}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+              <div className="flex items-center justify-between sm:justify-end sm:flex-col sm:items-end gap-2 pl-[60px] sm:pl-0">
+                <div className="text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200">
                   {classItem.time}
                 </div>
-                <div className={`text-xs px-2 py-1 rounded-full ${
-                  classItem.status === 'completed' 
-                    ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                    : classItem.status === 'current'
-                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                }`}>
+                <div
+                  className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full capitalize ${
+                    classItem.status === 'completed'
+                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                      : classItem.status === 'current'
+                        ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                  }`}
+                >
                   {classItem.status}
                 </div>
               </div>
@@ -624,44 +629,47 @@ const TeacherAdminDashboard: React.FC = () => {
       </div>
 
       {/* Performance Overview */}
-      <div className={`rounded-2xl p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border shadow-sm`}>
-        <h3 className={`text-xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6 text-gray-900 dark:text-white">
           Class Performance Overview
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-6">
           <div className="text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">85%</div>
-            <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Average Score
+            <div className="text-xl sm:text-4xl font-bold text-emerald-600 mb-0.5 sm:mb-2">85%</div>
+            <div className="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+              Avg Score
             </div>
-            <div className="text-xs text-green-500 mt-1">+5% from last month</div>
+            <div className="text-[9px] sm:text-xs text-emerald-500 mt-0.5 hidden sm:block">+5% from last month</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-2">42</div>
-            <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Students Present
+            <div className="text-xl sm:text-4xl font-bold text-indigo-600 mb-0.5 sm:mb-2">42</div>
+            <div className="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+              Present
             </div>
-            <div className="text-xs text-blue-500 mt-1">96.8% attendance</div>
+            <div className="text-[9px] sm:text-xs text-indigo-500 mt-0.5 hidden sm:block">96.8% attendance</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-bold text-yellow-600 mb-2">8</div>
-            <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Assignments Due
+            <div className="text-xl sm:text-4xl font-bold text-amber-600 mb-0.5 sm:mb-2">8</div>
+            <div className="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+              Due
             </div>
-            <div className="text-xs text-yellow-500 mt-1">3 due today</div>
+            <div className="text-[9px] sm:text-xs text-amber-500 mt-0.5 hidden sm:block">3 due today</div>
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
               Overall Class Performance
             </span>
-            <span className="text-sm font-bold text-green-600">Excellent</span>
+            <span className="text-xs sm:text-sm font-bold text-emerald-600">Excellent</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-            <div className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full shadow-sm" style={{ width: '85%' }}></div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 sm:h-3">
+            <div
+              className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2 sm:h-3 rounded-full"
+              style={{ width: '85%' }}
+            />
           </div>
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-[10px] sm:text-xs text-gray-500">
             <span>0%</span>
             <span>50%</span>
             <span>100%</span>

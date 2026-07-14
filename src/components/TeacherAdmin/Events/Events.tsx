@@ -3,6 +3,21 @@ import { eventService } from '../../../services/eventService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Event } from '../../../services/eventService';
 import { toast } from 'react-toastify';
+import { Calendar, Clock, CalendarDays, History } from 'lucide-react';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherFilterBar,
+  TeacherSearchInput,
+  TeacherSelect,
+  TeacherLoading,
+  TeacherError,
+  TeacherPanel,
+  TeacherEmpty,
+  TeacherCardGrid,
+} from '../shared';
 
 const Events: React.FC = () => {
   const { user } = useAuth();
@@ -186,156 +201,71 @@ const Events: React.FC = () => {
     return { status: 'upcoming', text: 'Upcoming', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
   };
 
-  // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading events...</p>
-        </div>
-      </div>
-    );
+    return <TeacherLoading message="Loading events..." />;
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Error Loading Events</h3>
-          <p className="text-gray-600 dark:text-gray-300">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <TeacherError
+        title="Error Loading Events"
+        message={error}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
-  return (
-    <div>
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Events</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{events.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Upcoming</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {events.filter(event => isUpcoming(event.date)).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">This Week</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {events.filter(event => {
-                  const eventDate = new Date(event.date);
-                  const today = new Date();
-                  const diffTime = eventDate.getTime() - today.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  return diffDays >= 0 && diffDays <= 7;
-                }).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Past Events</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {events.filter(event => !isUpcoming(event.date)).length}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+  const thisWeekCount = events.filter((event) => {
+    const eventDate = new Date(event.date);
+    const today = new Date();
+    const diffTime = eventDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 7;
+  }).length;
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-            
-            <div className="sm:w-48">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'upcoming' | 'past')}
-                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Events</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="past">Past Events</option>
-              </select>
-            </div>
-            
-            <div className="sm:w-48">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'title')}
-                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="date">Sort by Date</option>
-                <option value="title">Sort by Title</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+  return (
+    <TeacherPageShell>
+      <TeacherPageHeader title="Events" description="Browse upcoming and past school events." />
+
+      <TeacherStatsGrid>
+        <TeacherStatCard title="Total Events" value={events.length} icon={Calendar} color="indigo" />
+        <TeacherStatCard
+          title="Upcoming"
+          value={events.filter((event) => isUpcoming(event.date)).length}
+          icon={Clock}
+          color="emerald"
+        />
+        <TeacherStatCard title="This Week" value={thisWeekCount} icon={CalendarDays} color="amber" />
+        <TeacherStatCard
+          title="Past Events"
+          value={events.filter((event) => !isUpcoming(event.date)).length}
+          icon={History}
+          color="violet"
+        />
+      </TeacherStatsGrid>
+
+      <TeacherFilterBar>
+        <TeacherSearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Search events..." />
+        <TeacherSelect
+          value={filterType}
+          onChange={(v) => setFilterType(v as typeof filterType)}
+          className="sm:w-44"
+          options={[
+            { value: 'all', label: 'All Events' },
+            { value: 'upcoming', label: 'Upcoming' },
+            { value: 'past', label: 'Past Events' },
+          ]}
+        />
+        <TeacherSelect
+          value={sortBy}
+          onChange={(v) => setSortBy(v as typeof sortBy)}
+          className="sm:w-40"
+          options={[
+            { value: 'date', label: 'Sort by Date' },
+            { value: 'title', label: 'Sort by Title' },
+          ]}
+        />
+      </TeacherFilterBar>
 
       {/* Events Grid */}
       <div className="space-y-8">
@@ -371,7 +301,7 @@ const Events: React.FC = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <TeacherCardGrid cols={3}>
                     {upcomingEvents.map((event) => {
                       const eventStatus = getEventStatus(event.date);
                       return (
@@ -442,7 +372,7 @@ const Events: React.FC = () => {
                         </div>
                       );
                     })}
-                  </div>
+                  </TeacherCardGrid>
                 </div>
               )}
 
@@ -462,7 +392,7 @@ const Events: React.FC = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <TeacherCardGrid cols={3}>
                     {pastEvents.map((event) => {
                       const eventStatus = getEventStatus(event.date);
                       return (
@@ -533,7 +463,7 @@ const Events: React.FC = () => {
                         </div>
                       );
                     })}
-                  </div>
+                  </TeacherCardGrid>
                 </div>
               )}
             </>
@@ -543,18 +473,17 @@ const Events: React.FC = () => {
 
       {/* Empty State */}
       {filteredAndSortedEvents.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No events found</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {events.length === 0 
-              ? "No events have been created yet."
-              : "Try adjusting your search criteria or filters."
+        <TeacherPanel>
+          <TeacherEmpty
+            icon={Calendar}
+            title="No events found"
+            description={
+              events.length === 0
+                ? 'No events have been created yet.'
+                : 'Try adjusting your search criteria or filters.'
             }
-          </p>
-        </div>
+          />
+        </TeacherPanel>
       )}
 
       {/* Event Details Dialog */}
@@ -681,7 +610,7 @@ const Events: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </TeacherPageShell>
   );
 };
 

@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
-import { X, Mail, Send, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
+import { schoolProfileService } from '../../../services/schoolProfileService';
+import { 
+  X, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  CheckCircle, 
+  AlertCircle,
+  ArrowLeft,
+  Shield
+} from 'lucide-react';
 
 interface ResetPasswordModalProps {
   isOpen: boolean;
@@ -12,161 +23,389 @@ interface ResetPasswordModalProps {
 const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
   isOpen,
   onClose,
-  email,
+  email: initialEmail,
   onReset
 }) => {
   const { isDarkMode } = useDarkMode();
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<'email' | 'otp' | 'password'>('email');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [email, setEmail] = useState(initialEmail);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (isOpen) {
+      setStep('email');
+      setEmail(initialEmail);
+      setOtp(['', '', '', '', '', '']);
+      setPassword('');
+      setConfirmPassword('');
+      setError('');
+      setSuccess('');
+    }
+  }, [isOpen, initialEmail]);
+
+  const handleSendOTP = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
     
-    if (step === 'email') {
-      try {
-        setLoading(true);
-        setError(null);
-        await onReset(email);
-        setStep('otp');
-      } catch (err) {
-        setError('Failed to send OTP. Please try again.');
-        console.error('Error sending OTP:', err);
-      } finally {
-        setLoading(false);
-      }
-    } else if (step === 'otp') {
-      if (otp.length === 6) {
-        setStep('password');
-      } else {
-        setError('Please enter a valid 6-digit OTP');
-      }
-    } else if (step === 'password') {
-      if (newPassword.length < 8) {
-        setError('Password must be at least 8 characters long');
-        return;
-      }
-      try {
-        setLoading(true);
-        setError(null);
-        // Here you would typically verify OTP and update password
-        // For now, we'll just show success
-        setSuccess(true);
-      } catch (err) {
-        setError('Failed to update password. Please try again.');
-        console.error('Error updating password:', err);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      await onReset(email);
+      setStep('otp');
+      setSuccess('OTP sent successfully to your email');
+    } catch (err: any) {
+      console.error('Error sending OTP:', err);
+      setError(err?.response?.data?.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setSuccess(false);
-    setError(null);
-    setStep('email');
-    setOtp('');
-    setNewPassword('');
-    onClose();
+  const handleOTPChange = (index: number, value: string) => {
+    if (value.length > 1) return; // Only allow single digit
+    
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-verify when all digits are entered
+    if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 6) {
+      setTimeout(() => {
+        handleVerifyOTP(newOtp.join(''));
+      }, 500);
+    }
+  };
+
+  const handleOTPKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerifyOTP = async (otpCode: string) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      await schoolProfileService.verifyOtp(email, otpCode);
+      setStep('password');
+      setSuccess('OTP verified successfully');
+    } catch (err: any) {
+      console.error('Error verifying OTP:', err);
+      setError(err?.response?.data?.message || 'Invalid OTP. Please try again.');
+      setOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!password || !confirmPassword) {
+      setError('Please fill in all password fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    
+    try {
+      const otpCode = otp.join('');
+      await schoolProfileService.resetPasswordWithOtp(email, otpCode, password);
+      setSuccess('Password reset successfully!');
+      
+      // Close modal after success
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error resetting password:', err);
+      setError(err?.response?.data?.message || 'Failed to reset password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (step === 'otp') {
+      setStep('email');
+    } else if (step === 'password') {
+      setStep('otp');
+    }
+    setError('');
+    setSuccess('');
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'} rounded-2xl shadow-2xl max-w-md w-full`}>
-        {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-          <h2 className={`text-2xl font-bold flex items-center ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-            <Mail className="w-6 h-6 mr-3 text-blue-600" />
-            Reset Password
-          </h2>
-          <button
-            onClick={handleClose}
-            className={`${isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Content */}
+      <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto`}>
         <div className="p-6">
-          {!success ? (
-            <>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                  Forgot your password?
-                </h3>
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  We'll send a password reset link to your email address:
-                </p>
-                <p className="text-blue-600 font-medium mt-2">{email}</p>
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              {step !== 'email' && (
+                <button
+                  onClick={handleBack}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' 
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
               )}
-
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-yellow-800 mb-2">What happens next?</h4>
-                    <ul className="text-sm text-yellow-700 space-y-1">
-                      <li>• You'll receive an email with a reset link</li>
-                      <li>• Click the link to set a new password</li>
-                      <li>• The link expires in 24 hours</li>
-                    </ul>
-                  </div>
-
-                  <div className="flex justify-end space-x-4 pt-4">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className={`px-6 py-2 border rounded-lg transition-colors ${
-                        isDarkMode 
-                          ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>{loading ? 'Sending...' : 'Send Reset Link'}</span>
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
+                <Shield className={`w-6 h-6 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
               </div>
-              <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                Password Updated!
-              </h3>
-              <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Your password has been successfully updated. You can now log in with your new password.
-              </p>
+              <div>
+                <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Reset Password
+                </h2>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {step === 'email' && 'Verify your email to receive OTP'}
+                  {step === 'otp' && 'Enter the 6-digit OTP sent to your email'}
+                  {step === 'password' && 'Enter your new password'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className={`p-2 rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="flex items-center space-x-4">
+              {['email', 'otp', 'password'].map((stepName, index) => {
+                const isCurrentStep = step === stepName;
+                const isCompleted = (stepName === 'email' && step !== 'email') || 
+                                  (stepName === 'otp' && step === 'password');
+                const isActive = isCurrentStep || isCompleted;
+                
+                return (
+                  <div key={stepName} className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      isCurrentStep
+                        ? `${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`
+                        : isCompleted
+                        ? `${isDarkMode ? 'bg-green-600 text-white' : 'bg-green-500 text-white'}`
+                        : `${isDarkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-300 text-gray-600'}`
+                    }`}>
+                      {isActive ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        index + 1
+                      )}
+                    </div>
+                    {index < 2 && (
+                      <div className={`w-12 h-0.5 mx-2 ${
+                        isCompleted
+                          ? `${isDarkMode ? 'bg-green-600' : 'bg-green-500'}`
+                          : `${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`
+                      }`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Error/Success Messages */}
+          {error && (
+            <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${isDarkMode ? 'bg-red-900/20 border border-red-700/30' : 'bg-red-50 border border-red-200'}`}>
+              <AlertCircle className={`w-4 h-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+              <span className={`text-sm ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${isDarkMode ? 'bg-green-900/20 border border-green-700/30' : 'bg-green-50 border border-green-200'}`}>
+              <CheckCircle className={`w-4 h-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+              <span className={`text-sm ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>{success}</span>
+            </div>
+          )}
+
+          {/* Step Content */}
+          {step === 'email' && (
+            <div className="space-y-6">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    placeholder="Enter your email address"
+                  />
+                </div>
+              </div>
+
               <button
-                onClick={handleClose}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                onClick={handleSendOTP}
+                disabled={loading}
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                  loading
+                    ? `${isDarkMode ? 'bg-gray-600 text-gray-400' : 'bg-gray-300 text-gray-500'} cursor-not-allowed`
+                    : `${isDarkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`
+                }`}
               >
-                Got it!
+                {loading ? 'Sending OTP...' : 'Send OTP'}
+              </button>
+            </div>
+          )}
+
+          {step === 'otp' && (
+            <div className="space-y-6">
+              <div>
+                <label className={`block text-sm font-medium mb-4 text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Enter 6-digit OTP sent to {email}
+                </label>
+                <div className="flex justify-center space-x-2">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => {
+                        otpInputRefs.current[index] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOTPChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOTPKeyDown(index, e)}
+                      className={`w-10 h-10 text-center text-xl font-bold rounded-lg border ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={handleSendOTP}
+                  disabled={loading}
+                  className={`text-sm font-medium ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} disabled:opacity-50`}
+                >
+                  Resend OTP
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 'password' && (
+            <div className="space-y-6">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full pl-10 pr-12 py-3 rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full pl-10 pr-12 py-3 rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleResetPassword}
+                disabled={loading}
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                  loading
+                    ? `${isDarkMode ? 'bg-gray-600 text-gray-400' : 'bg-gray-300 text-gray-500'} cursor-not-allowed`
+                    : `${isDarkMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`
+                }`}
+              >
+                {loading ? 'Resetting Password...' : 'Reset Password'}
               </button>
             </div>
           )}
@@ -176,4 +415,4 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
   );
 };
 
-export default ResetPasswordModal; 
+export default ResetPasswordModal;

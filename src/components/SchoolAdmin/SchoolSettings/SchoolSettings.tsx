@@ -5,10 +5,7 @@ import {
   Key, 
   GraduationCap, 
   Shield, 
-  Bell, 
-  Database, 
   Users, 
-  Mail,
   CheckCircle
 } from 'lucide-react';
 import ResetPasswordModal from './ResetPasswordModal';
@@ -49,38 +46,6 @@ const SchoolSettings: React.FC = () => {
           description: 'Promote students to next academic year',
           icon: <Users className="w-5 h-5" />,
           action: () => setShowStudentPromotion(true)
-        }
-      ]
-    },
-    {
-      id: 'notifications',
-      title: 'Notifications',
-      description: 'Configure email and system notifications',
-      icon: <Bell className="w-6 h-6" />,
-      color: 'from-yellow-500 to-orange-600',
-      items: [
-        {
-          id: 'email-notifications',
-          title: 'Email Notifications',
-          description: 'Manage email notification preferences',
-          icon: <Mail className="w-5 h-5" />,
-          action: () => console.log('Email notifications')
-        }
-      ]
-    },
-    {
-      id: 'data',
-      title: 'Data Management',
-      description: 'Backup, export, and manage school data',
-      icon: <Database className="w-6 h-6" />,
-      color: 'from-green-500 to-emerald-600',
-      items: [
-        {
-          id: 'data-backup',
-          title: 'Data Backup',
-          description: 'Create and manage data backups',
-          icon: <Database className="w-5 h-5" />,
-          action: () => console.log('Data backup')
         }
       ]
     }
@@ -125,7 +90,7 @@ const SchoolSettings: React.FC = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
               <div className="flex items-center justify-between">
                 <div>
@@ -134,30 +99,6 @@ const SchoolSettings: React.FC = () => {
                 </div>
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-green-900/20' : 'bg-green-50'}`}>
                   <Shield className={`w-6 h-6 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-                </div>
-              </div>
-            </div>
-
-            <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Last Backup</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>2 days ago</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
-                  <Database className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                </div>
-              </div>
-            </div>
-
-            <div className={`${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'} rounded-xl p-6 shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Notifications</p>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Enabled</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-yellow-900/20' : 'bg-yellow-50'}`}>
-                  <Bell className={`w-6 h-6 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
                 </div>
               </div>
             </div>

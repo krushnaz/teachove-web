@@ -2,6 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { studentLeavesService, StudentLeave } from '../../../services/studentLeavesService';
 import { toast } from 'react-toastify';
+import { FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
+import {
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherFilterBar,
+  TeacherSelect,
+  TeacherPanel,
+  TeacherLoading,
+} from '../shared';
 
 const StudentLeavesTab: React.FC = () => {
   const { user } = useAuth();
@@ -124,114 +133,33 @@ const StudentLeavesTab: React.FC = () => {
   }, [leaves, filterStatus]);
 
   if (loading) {
-    return (
-      <div>
-        {/* Stats shimmer */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                <div className="ml-4 space-y-2">
-                  <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                  <div className="h-6 w-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Table shimmer */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4 space-y-3">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-100 dark:bg-gray-700/50 rounded animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    );
+    return <TeacherLoading message="Loading student leave requests..." />;
   }
 
   return (
-    <div>
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Requests</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <TeacherStatsGrid>
+        <TeacherStatCard title="Total Requests" value={stats.total} icon={FileText} color="indigo" />
+        <TeacherStatCard title="Pending" value={stats.pending} icon={Clock} color="amber" />
+        <TeacherStatCard title="Approved" value={stats.approved} icon={CheckCircle} color="emerald" />
+        <TeacherStatCard title="Rejected" value={stats.rejected} icon={XCircle} color="rose" />
+      </TeacherStatsGrid>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pending}</p>
-            </div>
-          </div>
-        </div>
+      <TeacherFilterBar>
+        <TeacherSelect
+          value={filterStatus}
+          onChange={setFilterStatus}
+          className="sm:w-48"
+          options={[
+            { value: '', label: 'All Status' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'approved', label: 'Approved' },
+            { value: 'rejected', label: 'Rejected' },
+          ]}
+        />
+      </TeacherFilterBar>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Approved</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.approved}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Rejected</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.rejected}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="sm:w-48">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Leaves Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <TeacherPanel title="Student Leave Requests" noPadding>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
@@ -345,7 +273,7 @@ const StudentLeavesTab: React.FC = () => {
             </p>
           </div>
         )}
-      </div>
+      </TeacherPanel>
 
       {/* View Details Dialog */}
       {viewDialogOpen && selectedLeave && (

@@ -1,39 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { classroomService, Classroom, Subject } from '../../../services/classroomService';
-import { homeworkService, HomeworkPayload, UpdateHomeworkRequest } from '../../../services/homeworkService';
+import { homeworkService, HomeworkPayload } from '../../../services/homeworkService';
 import { authService } from '../../../services/authService';
-import { Card, CardHeader, CardContent, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Chip, Skeleton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Tooltip, CircularProgress } from '@mui/material';
-import { Add, Edit, Delete, CloudUpload, ChevronLeft, ChevronRight, Today, Assignment, AttachFile, Refresh } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-
-// Shimmer Loading Components
-const ShimmerTableRow: React.FC = () => (
-  <tr className="animate-pulse">
-    <td className="px-6 py-4 whitespace-nowrap">
-      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-32"></div>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-24"></div>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-20"></div>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-16"></div>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-12"></div>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap text-center">
-      <div className="flex space-x-2">
-        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-16"></div>
-        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-16"></div>
-      </div>
-    </td>
-  </tr>
-);
+import {
+  Plus,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Paperclip,
+  Pencil,
+  Trash2,
+  BookOpen,
+  CalendarDays,
+  Upload,
+  X,
+} from 'lucide-react';
+import {
+  TeacherPageShell,
+  TeacherPageHeader,
+  TeacherHeaderActions,
+  TeacherStatsGrid,
+  TeacherStatCard,
+  TeacherButton,
+  TeacherPanel,
+  TeacherEmpty,
+} from '../shared';
 
 type HomeworkItem = {
   schoolId: string;
@@ -75,9 +68,12 @@ const getFileNameFromUrl = (url: string): string => {
   }
 };
 
+const inputClass =
+  'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors';
+const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
+
 const Homework: React.FC = () => {
   const { user } = useAuth();
-  const { isDarkMode } = useDarkMode();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [days, setDays] = useState<Date[]>(rangeDays(new Date()));
   const [classes, setClasses] = useState<Classroom[]>([]);
@@ -112,12 +108,12 @@ const Homework: React.FC = () => {
         const cls = await classroomService.getClassesBySchoolId(user.schoolId);
         setClasses(cls);
         // Load homework dates for calendar indicators
-      try {
-        const teacherId = authService.getTeacherId();
-        const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
-        setMarkedDates(Array.isArray(dates) ? dates : []);
-      } catch (error) {
-        console.error('Error fetching homework dates:', error);
+        try {
+          const teacherId = authService.getTeacherId();
+          const dates = await homeworkService.getHomeworkDates(user.schoolId, teacherId || undefined);
+          setMarkedDates(Array.isArray(dates) ? dates : []);
+        } catch (error) {
+          console.error('Error fetching homework dates:', error);
         }
       } finally {
         setLoadingClasses(false);
@@ -140,6 +136,13 @@ const Homework: React.FC = () => {
     return homeworks;
   }, [homeworks]);
 
+  const stats = useMemo(() => {
+    const total = homeworks.length;
+    const withAttachments = homeworks.filter(h => !!h.file).length;
+    const classesCount = new Set(homeworks.map(h => h.className).filter(Boolean)).size;
+    return { total, withAttachments, classesCount };
+  }, [homeworks]);
+
   // Load homework from API for selected date
   useEffect(() => {
     const run = async () => {
@@ -149,7 +152,7 @@ const Homework: React.FC = () => {
         setLoadingHomework(true);
         const teacherId = authService.getTeacherId();
         const items = await homeworkService.getHomeworkByDate(schoolId, selectedKey, teacherId || undefined);
-        
+
         // Normalize API items to local HomeworkItem shape
         const mapped: HomeworkItem[] = items.map(i => ({
           homeworkId: i.homeworkId || '',
@@ -164,7 +167,7 @@ const Homework: React.FC = () => {
           schoolId: schoolId,
           className: i.className || '', // Use className directly from API response
         }));
-        
+
         // Replace homework items for the selected date
         setHomeworks(mapped);
       } catch (error) {
@@ -220,7 +223,7 @@ const Homework: React.FC = () => {
         toast.error('Teacher ID not found');
         return;
       }
-      
+
       if (editing) {
         // Update existing homework
         const updatedItem = await homeworkService.updateHomework(user.schoolId, editing.homeworkId!, {
@@ -234,7 +237,7 @@ const Homework: React.FC = () => {
           isActive: true,
           file: file || undefined, // Pass the file for upload
         });
-        
+
         const newItem: HomeworkItem = {
           schoolId: user.schoolId,
           classId: form.classId,
@@ -248,7 +251,7 @@ const Homework: React.FC = () => {
           isActive: true,
           createdAt: new Date().toISOString(),
         };
-        
+
         setHomeworks(prev => prev.map(h => h.homeworkId === editing.homeworkId ? newItem : h));
         toast.success('Homework updated successfully!');
       } else {
@@ -263,7 +266,7 @@ const Homework: React.FC = () => {
           teacherId: teacherId,
           file: file || undefined, // Pass the file for upload
         } as HomeworkPayload);
-        
+
         const newItem: HomeworkItem = {
           schoolId: user.schoolId,
           classId: form.classId,
@@ -277,11 +280,11 @@ const Homework: React.FC = () => {
           isActive: true,
           createdAt: new Date().toISOString(),
         };
-        
+
         setHomeworks(prev => [newItem, ...prev]);
         toast.success('Homework sent successfully!');
       }
-      
+
       // Refresh homework dates for calendar indicators
       try {
         const teacherId = authService.getTeacherId();
@@ -290,7 +293,7 @@ const Homework: React.FC = () => {
       } catch (error) {
         console.error('Error refreshing homework dates:', error);
       }
-      
+
       setOpen(false);
     } catch (error) {
       toast.error(editing ? 'Failed to update homework' : 'Failed to send homework');
@@ -305,7 +308,7 @@ const Homework: React.FC = () => {
     try {
       await homeworkService.deleteHomework(user.schoolId, confirmDelete.homeworkId!);
       setHomeworks(prev => prev.filter(h => h.homeworkId !== confirmDelete.homeworkId));
-      
+
       // Refresh homework dates for calendar indicators
       try {
         const teacherId = authService.getTeacherId();
@@ -314,7 +317,7 @@ const Homework: React.FC = () => {
       } catch (error) {
         console.error('Error refreshing homework dates:', error);
       }
-      
+
       toast.success('Homework deleted successfully!');
       setConfirmDelete(null);
     } catch (error) {
@@ -332,14 +335,14 @@ const Homework: React.FC = () => {
     setRefreshing(true);
     try {
       const teacherId = authService.getTeacherId();
-      
+
       // Refresh homework dates for calendar indicators
       const dates = await homeworkService.getHomeworkDates(schoolId, teacherId || undefined);
       setMarkedDates(Array.isArray(dates) ? dates : []);
-      
+
       // Refresh homework for selected date
       const items = await homeworkService.getHomeworkByDate(schoolId, selectedKey, teacherId || undefined);
-      
+
       // Normalize API items to local HomeworkItem shape
       const mapped: HomeworkItem[] = items.map(i => ({
         homeworkId: i.homeworkId || '',
@@ -354,7 +357,7 @@ const Homework: React.FC = () => {
         schoolId: schoolId,
         className: i.className || '',
       }));
-      
+
       setHomeworks(mapped);
       toast.success('Data refreshed successfully!');
     } catch (error) {
@@ -365,189 +368,300 @@ const Homework: React.FC = () => {
     }
   };
 
-  return (
-    <div>
-      <Card className="mb-6 dark:bg-gray-800 dark:border dark:border-gray-700">
-        <CardHeader
-          title="Homework"
-          subheader="Send daily homework to selected class"
-          sx={{ '& .MuiCardHeader-title': { color: isDarkMode ? '#ffffff' : '#111827' }, '& .MuiCardHeader-subheader': { color: isDarkMode ? '#9CA3AF' : '#6B7280' } }}
-          action={
-            <div className="flex items-center gap-2">
-              <Tooltip title="Refresh Data">
-                <IconButton 
-                  onClick={handleRefresh} 
-                  disabled={refreshing}
-                  sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}
-                >
-                  {refreshing ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    <Refresh />
-                  )}
-                </IconButton>
-              </Tooltip>
-              <Button startIcon={<Add sx={{ color: isDarkMode ? '#E5E7EB' : undefined }} />} variant="contained" onClick={openAdd}>Send Homework</Button>
-            </div>
-          }
-        />
-        <CardContent>
-          {/* Horizontal Calendar */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <IconButton onClick={() => shiftDays(-7)} aria-label="Prev week" sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}><ChevronLeft /></IconButton>
-              <Chip icon={<Today sx={{ color: isDarkMode ? '#E5E7EB' : undefined }} />} label={monthLabel} color="primary" />
-              <IconButton onClick={() => shiftDays(7)} aria-label="Next week" sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}><ChevronRight /></IconButton>
-            </div>
-          </div>
-          <div className="flex overflow-x-auto gap-3 pb-2">
-            {days.map(d => {
-              const key = dateKey(d);
-              const isSel = key === selectedKey;
-              const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-              const dateNum = d.getDate();
-              const hasHomework = markedDates.includes(key);
-              return (
-                <div key={key} className={`rounded-xl border px-4 py-2 min-w-[84px] text-center cursor-pointer transition-all ${isSel ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-transparent shadow' : (isDarkMode ? 'bg-gray-900/40 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50')}`}
-                  onClick={() => setSelectedDate(d)}
-                >
-                  <div className="text-[10px] uppercase tracking-wider">{weekday}</div>
-                  <div className="text-xl font-bold">{dateNum}</div>
-                  {loadingHomework && isSel ? (
-                    <div className="mt-1 w-2 h-2 rounded-full mx-auto animate-pulse bg-white/60" />
-                  ) : hasHomework && !isSel ? (
-                    <div className="mt-1 w-2 h-2 rounded-full mx-auto" style={{ backgroundColor: isDarkMode ? '#60A5FA' : '#3B82F6' }} />
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
+  const isLoadingList = loadingClasses || loadingHomework;
 
-          {/* Homework Table */}
-          <TableContainer component={Paper} className="mt-4 dark:bg-gray-800 dark:border dark:border-gray-700" sx={{ boxShadow: 'none', borderRadius: '12px' }}>
-            <Table size="small" sx={{ '& td, & th': { borderColor: isDarkMode ? '#374151' : '#E5E7EB' } }}>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: isDarkMode ? '#111827' : '#F9FAFB' }}>
-                  <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#E5E7EB' : '#111827' }}>Title</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#E5E7EB' : '#111827' }}>Class</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#E5E7EB' : '#111827' }}>Subject</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#E5E7EB' : '#111827' }}>Deadline</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#E5E7EB' : '#111827' }}>File</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600, color: isDarkMode ? '#E5E7EB' : '#111827' }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loadingClasses || loadingHomework ? (
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={`shimmer-${i}`}>
-                      <TableCell colSpan={6}>
-                        <Skeleton variant="rounded" height={28} />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 6, color: isDarkMode ? '#9CA3AF' : undefined }}>
-                      <Assignment sx={{ mr: 1, verticalAlign: 'middle', color: isDarkMode ? '#9CA3AF' : undefined }} /> No homework for this date
-                    </TableCell>
-                  </TableRow>
+  return (
+    <TeacherPageShell>
+      <TeacherPageHeader
+        title="Homework"
+        description="Send daily homework to your class and track it by date."
+        action={
+          <TeacherHeaderActions>
+            <TeacherButton
+              variant="secondary"
+              compact
+              onClick={handleRefresh}
+              loading={refreshing}
+              icon={RefreshCw}
+              aria-label="Refresh"
+            >
+              <span className="hidden sm:inline">Refresh</span>
+            </TeacherButton>
+            <TeacherButton icon={Plus} compact onClick={openAdd} disabled={loadingClasses}>
+              Send Homework
+            </TeacherButton>
+          </TeacherHeaderActions>
+        }
+      />
+
+      <TeacherStatsGrid cols={3}>
+        <TeacherStatCard title="Homework Today" value={stats.total} icon={BookOpen} color="indigo" />
+        <TeacherStatCard title="With Attachments" value={stats.withAttachments} icon={Paperclip} color="emerald" />
+        <TeacherStatCard title="Classes" value={stats.classesCount} icon={CalendarDays} color="violet" />
+      </TeacherStatsGrid>
+
+      {/* Calendar */}
+      <TeacherPanel>
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
+          <button
+            onClick={() => shiftDays(-7)}
+            aria-label="Previous week"
+            className="p-2 rounded-lg text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+            <CalendarDays size={15} />
+            {monthLabel}
+          </span>
+          <button
+            onClick={() => shiftDays(7)}
+            aria-label="Next week"
+            className="p-2 rounded-lg text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+        <div className="flex overflow-x-auto gap-2 sm:gap-3 pb-2">
+          {days.map(d => {
+            const key = dateKey(d);
+            const isSel = key === selectedKey;
+            const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const dateNum = d.getDate();
+            const hasHomework = markedDates.includes(key);
+            return (
+              <button
+                key={key}
+                onClick={() => setSelectedDate(d)}
+                className={`rounded-xl border px-3 sm:px-4 py-2 min-w-[72px] sm:min-w-[84px] text-center cursor-pointer transition-all ${
+                  isSel
+                    ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/20'
+                    : 'bg-white dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                <div className="text-[10px] uppercase tracking-wider">{weekday}</div>
+                <div className="text-lg sm:text-xl font-bold">{dateNum}</div>
+                {loadingHomework && isSel ? (
+                  <div className="mt-1 w-2 h-2 rounded-full mx-auto animate-pulse bg-white/60" />
+                ) : hasHomework && !isSel ? (
+                  <div className="mt-1 w-2 h-2 rounded-full mx-auto bg-indigo-500 dark:bg-indigo-400" />
                 ) : (
-                  filtered.map(h => (
-                    <TableRow key={h.homeworkId} hover>
-                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.title}</TableCell>
-                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.className || '-'}</TableCell>
-                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.subjectName}</TableCell>
-                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.deadline}</TableCell>
-                      <TableCell sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }}>{h.file ? (
-                        <Tooltip title={`Click to view: ${getFileNameFromUrl(h.file)}`}>
-                          <Chip 
-                            size="small" 
-                            icon={<AttachFile sx={{ color: isDarkMode ? '#E5E7EB' : '#111827' }} />}
-                            label={getFileNameFromUrl(h.file)}
-                            onClick={() => window.open(h.file, '_blank')}
-                            sx={{ 
-                              cursor: 'pointer',
-                              color: isDarkMode ? '#E5E7EB' : '#111827',
-                              backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
-                              '&:hover': {
-                                backgroundColor: isDarkMode ? '#4B5563' : '#E5E7EB'
-                              }
-                            }}
-                          />
-                        </Tooltip>
-                      ) : '-'}</TableCell>
-                       <TableCell align="right">
-                         <Tooltip title="Edit"><IconButton size="small" onClick={() => openEdit(h)} sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}><Edit fontSize="small" /></IconButton></Tooltip>
-                         <Tooltip title="Delete"><IconButton size="small" onClick={() => setConfirmDelete(h)} sx={{ color: isDarkMode ? '#E5E7EB' : undefined }}><Delete fontSize="small" /></IconButton></Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  <div className="mt-1 w-2 h-2 mx-auto" />
                 )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+              </button>
+            );
+          })}
+        </div>
+      </TeacherPanel>
+
+      {/* Homework Table */}
+      <TeacherPanel title="Homework for Selected Date" noPadding>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse" style={{ minWidth: '720px' }}>
+            <thead>
+              <tr className="bg-gray-50 dark:bg-gray-900/50">
+                {['Title', 'Class', 'Subject', 'Deadline', 'File', 'Actions'].map((h, idx) => (
+                  <th
+                    key={h}
+                    className={`px-4 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
+                      idx === 5 ? 'text-right' : ''
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {isLoadingList ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={`shimmer-${i}`}>
+                    <td colSpan={6} className="px-4 sm:px-6 py-3">
+                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                    </td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <TeacherEmpty
+                      icon={BookOpen}
+                      title="No homework for this date"
+                      description='Click "Send Homework" to assign homework for the selected date.'
+                    />
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(h => (
+                  <tr key={h.homeworkId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-gray-900 dark:text-white">{h.title}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 dark:text-gray-300">{h.className || '-'}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 dark:text-gray-300">{h.subjectName}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{h.deadline}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">
+                      {h.file ? (
+                        <button
+                          onClick={() => window.open(h.file, '_blank')}
+                          title={`View: ${getFileNameFromUrl(h.file)}`}
+                          className="inline-flex items-center gap-1.5 max-w-[180px] px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <Paperclip size={13} className="flex-shrink-0" />
+                          <span className="truncate">{getFileNameFromUrl(h.file)}</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          onClick={() => openEdit(h)}
+                          title="Edit"
+                          className="p-2 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(h)}
+                          title="Delete"
+                          className="p-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </TeacherPanel>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: isDarkMode ? { backgroundColor: '#111827', color: '#E5E7EB' } : undefined }}>
-        <DialogTitle sx={isDarkMode ? { color: '#FFFFFF' } : undefined}>{editing ? 'Edit Homework' : 'Send Homework'}</DialogTitle>
-        <DialogContent dividers sx={isDarkMode ? { borderColor: '#374151' } : undefined}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextField select label="Class" fullWidth value={form.classId} onChange={(e) => setForm({ ...form, classId: e.target.value })}
-              InputLabelProps={{ sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            >
-              {classes.map(c => (<MenuItem key={c.classId} value={c.classId}>{`${c.className}-${c.section}`}</MenuItem>))}
-            </TextField>
-            <TextField select label="Subject" fullWidth value={form.subjectName} onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
-              InputLabelProps={{ sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            >
-              {subjects.length === 0 ? (<MenuItem value="" disabled>Select class first</MenuItem>) : subjects.map(s => (<MenuItem key={s.subjectName} value={s.subjectName}>{s.subjectName}</MenuItem>))}
-            </TextField>
-            <TextField label="Title" fullWidth value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              InputLabelProps={{ sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              className="md:col-span-2" sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            />
-            <TextField label="Description" fullWidth multiline minRows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              InputLabelProps={{ sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }}
-              className="md:col-span-2" sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            />
-            <TextField label="Deadline" type="date" fullWidth InputLabelProps={{ shrink: true, sx: isDarkMode ? { color: '#9CA3AF' } : undefined }} value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-              InputProps={{ sx: isDarkMode ? { color: '#E5E7EB' } : undefined }} sx={isDarkMode ? { '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#374151' }, '&:hover fieldset': { borderColor: '#4B5563' } } } : undefined}
-            />
-            <Button variant={isDarkMode ? 'contained' : 'outlined'} component="label" startIcon={<CloudUpload sx={{ color: isDarkMode ? '#E5E7EB' : undefined }} />} sx={isDarkMode ? { backgroundColor: '#1F2937', color: '#E5E7EB', '&:hover': { backgroundColor: '#374151' } } : undefined}>
-              {file ? file.name : 'Upload File'}
-              <input type="file" hidden onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            </Button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {editing ? 'Edit Homework' : 'Send Homework'}
+              </h3>
+              <button
+                onClick={() => setOpen(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Class</label>
+                  <select
+                    value={form.classId}
+                    onChange={(e) => setForm({ ...form, classId: e.target.value })}
+                    className={inputClass}
+                  >
+                    {classes.map(c => (
+                      <option key={c.classId} value={c.classId}>{`${c.className}-${c.section}`}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Subject</label>
+                  <select
+                    value={form.subjectName}
+                    onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
+                    className={inputClass}
+                  >
+                    {subjects.length === 0 ? (
+                      <option value="" disabled>Select class first</option>
+                    ) : (
+                      <>
+                        <option value="">Select subject</option>
+                        {subjects.map(s => (
+                          <option key={s.subjectName} value={s.subjectName}>{s.subjectName}</option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Title</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="Enter homework title"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Description</label>
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Enter homework details..."
+                  className={inputClass}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Deadline</label>
+                  <input
+                    type="date"
+                    value={form.deadline}
+                    onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Attachment</label>
+                  <label className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    <Upload size={16} />
+                    <span className="text-sm truncate">{file ? file.name : 'Upload File'}</span>
+                    <input type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <TeacherButton variant="secondary" onClick={() => setOpen(false)} disabled={saving}>
+                Cancel
+              </TeacherButton>
+              <TeacherButton onClick={handleSave} loading={saving}>
+                {editing ? 'Update' : 'Send'}
+              </TeacherButton>
+            </div>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving} startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}>
-            {editing ? 'Update' : 'Send'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </div>
+      )}
 
       {/* Delete Dialog */}
-      <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} PaperProps={{ sx: isDarkMode ? { backgroundColor: '#111827', color: '#E5E7EB' } : undefined }}>
-        <DialogTitle sx={isDarkMode ? { color: '#FFFFFF' } : undefined}>Delete Homework</DialogTitle>
-        <DialogContent sx={isDarkMode ? { color: '#E5E7EB' } : undefined}>
-          Are you sure you want to delete "{confirmDelete?.title}"?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDelete(null)} disabled={deleting}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleting} startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : undefined}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delete Homework</h3>
+            </div>
+            <div className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+              Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">"{confirmDelete.title}"</span>? This action cannot be undone.
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <TeacherButton variant="secondary" onClick={() => setConfirmDelete(null)} disabled={deleting}>
+                Cancel
+              </TeacherButton>
+              <TeacherButton variant="danger" onClick={handleDelete} loading={deleting}>
+                Delete
+              </TeacherButton>
+            </div>
+          </div>
+        </div>
+      )}
+    </TeacherPageShell>
   );
 };
 
 export default Homework;
-
-

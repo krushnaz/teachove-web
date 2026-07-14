@@ -235,7 +235,12 @@ export const announcementService = {
       }
       
       return [];
-    } catch (error) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      // Empty result used to return 404; treat as no announcements
+      if (axiosError.response?.status === 404) {
+        return [];
+      }
       console.error('Error fetching announcements by class or teacher:', error);
       throw new Error('Failed to fetch announcements');
     }
